@@ -1,3 +1,5 @@
+import Cards from "@/components/Cards/Cards";
+import Cookies from "@/components/Cookies/Cookies";
 import Link from "next/link";
 // import Payment from "@/authentication/Payment";
 
@@ -50,6 +52,14 @@ export default function Home() {
               About
             </Link>
           </li>
+          <li>
+            <Link 
+              href="/user/bookingStatus" 
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Booking Status
+            </Link>
+          </li>
           {/* <li>
             <Link 
               href="/payment" 
@@ -60,6 +70,11 @@ export default function Home() {
           </li> */}
         </ul>
       </nav>
+
+      <div>
+        {/* <Cookies/> */}
+        {/* <Cards/> */}
+      </div>
 
       {/* If you want to render the Payment component on this page, remove the comment */}
       {/* <Payment /> */}
