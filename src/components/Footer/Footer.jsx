@@ -14,11 +14,40 @@ export default function Footer() {
   ];
 
   const pathname = usePathname();
-  const authPages = ["/auth/login.html", "/auth/signup", "/auth/register"];
+  const authPages = ["/auth/login", "/auth/signup", "/auth/resetpassword"];
 
   if (authPages.includes(pathname)) {
     return null; // Hide footer on auth pages
   }
+
+  // Define footer sections with individual routes for each link
+  const footerSections = [
+    {
+      title: "Company",
+      links: [
+        { name: "About", route: "/about" },
+        { name: "Meet the Team", route: "/team" },
+        { name: "Accounts Review", route: "/reviews" },
+      ],
+    },
+    {
+      title: "Helpful Links",
+      links: [
+        { name: "Contact Us", route: "/contacts" },
+        { name: "About Us", route: "/about" },
+        { name: "FAQs", route: "/faqs" },
+        { name: "Live Chat", route: "/livechat" },
+      ],
+    },
+    {
+      title: "Legal",
+      links: [
+        { name: "Accessibility", route: "/accessibility" },
+        { name: "Refund Policy", route: "/refund-policy" },
+        { name: "Privacy Policy", route: "/privacy-policy" },
+      ],
+    },
+  ];
 
   return (
     <footer className="bg-gray-50 shadow-md w-full">
@@ -50,27 +79,14 @@ export default function Footer() {
 
             {/* Right Section */}
             <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-3 items-end">
-              {[
-                {
-                  title: "Company",
-                  links: ["About", "Meet the Team", "Accounts Review"],
-                },
-                {
-                  title: "Helpful Links",
-                  links: ["Contact-us", "About-us", "FAQs", "Live Chat"],
-                },
-                {
-                  title: "Legal",
-                  links: ["Accessibility", "Refund Policy", "Privacy Policy"],
-                },
-              ].map((section, index) => (
+              {footerSections.map((section, index) => (
                 <div key={index} className="w-auto h-40">
                   <p className="font-medium text-gray-900">{section.title}</p>
                   <ul className="mt-4 space-y-2 text-sm">
                     {section.links.map((link, i) => (
                       <li key={i}>
-                        <Link href="#" className="text-gray-700 transition hover:opacity-75">
-                          {link}
+                        <Link href={link.route} className="text-gray-700 transition hover:opacity-75">
+                          {link.name}
                         </Link>
                       </li>
                     ))}

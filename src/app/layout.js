@@ -21,7 +21,8 @@ export default function RootLayout({ children }) {
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 flex justify-center items-center pt-[64px] pb-[64px] overflow-y-auto">
+          {/* flex-1 flex justify-center items-center pt-[64px] pb-[64px] overflow-y-auto */}
+          <main className="flex-1 flex justify-center items-center overflow-y-auto">
             {children}
           </main>
 
@@ -30,7 +31,7 @@ export default function RootLayout({ children }) {
           </div>
 
           {/* Fixed Footer */}
-          <footer className="">
+          <footer className=" w-full bottom-0">
             <Footer/>
           </footer>
           
