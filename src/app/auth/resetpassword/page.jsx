@@ -2,6 +2,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { FiMail, FiHash, FiLock } from "react-icons/fi";
+import { TbPasswordMobilePhone } from "react-icons/tb";
+import img from "../../../../public/Google.png";
+
 
 const cardAnimation = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -36,7 +40,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 lg:p-12">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 lg:p-12 bg-gray-50">
       {/* Reset Password Card */}
       <motion.div
         initial="hidden"
@@ -48,23 +52,32 @@ const ResetPassword = () => {
           Trouble logging in?
         </h2>
         <p className="text-center text-gray-700 mb-4">
-          Enter your email and enter the recieved OTP to Reset the Password
+          Enter your email and the received OTP to reset your password.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email Field */}
-          <input
-            type="email"
-            placeholder="Enter email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-            required
-          />
+          <div className="relative">
+            <FiMail
+              size={20}
+              className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500"
+            />
+            <input
+              type="email"
+              placeholder="Enter email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+              required
+            />
+          </div>
 
           {/* Send OTP Link */}
           <div className="flex justify-end">
-            <button type="button" className="text-xs text-blue-600 hover:underline">
+            <button
+              type="button"
+              className="text-xs text-blue-600 hover:underline"
+            >
               Send OTP
             </button>
           </div>
@@ -74,36 +87,54 @@ const ResetPassword = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Enter OTP
             </label>
+            <div className="relative">
+              <TbPasswordMobilePhone
+                size={20}
+                className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500"
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="w-full px-4 py-3 pl-10 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+                required
+              />
+            </div>
+          </div>
+
+          {/* New Password Field */}
+          <div className="relative">
+            <FiLock
+              size={20}
+              className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500"
+            />
             <input
-              type="text"
-              inputMode="numeric"
-              placeholder="Enter OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="w-full px-4 py-3 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+              type="password"
+              placeholder="Enter new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
               required
             />
           </div>
 
-          {/* New Password Field */}
-          <input
-            type="password"
-            placeholder="Enter new password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-            required
-          />
-
           {/* Confirm Password Field */}
-          <input
-            type="password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-            required
-          />
+          <div className="relative">
+            <FiLock
+              size={20}
+              className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500"
+            />
+            <input
+              type="password"
+              placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+              required
+            />
+          </div>
 
           {/* Reset Password Button */}
           <motion.button
@@ -118,7 +149,10 @@ const ResetPassword = () => {
 
           {/* Create New Account Link */}
           <div className="text-center text-gray-700 mt-4">
-            <Link href="/auth/signup" className="text-blue-600 font-semibold hover:underline">
+            <Link
+              href="/auth/signup"
+              className="text-blue-600 font-semibold hover:underline"
+            >
               Create new account
             </Link>
           </div>
@@ -132,7 +166,10 @@ const ResetPassword = () => {
         variants={cardAnimation}
         className="w-full max-w-md lg:max-w-lg mt-6 shadow-lg rounded-xl border border-gray-200 bg-white py-4 text-center"
       >
-        <Link href="/auth/login" className="text-blue-600 font-semibold hover:underline text-base">
+        <Link
+          href="/auth/login"
+          className="text-blue-600 font-semibold hover:underline text-base"
+        >
           Back to Login
         </Link>
       </motion.div>

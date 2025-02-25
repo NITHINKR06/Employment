@@ -2,6 +2,9 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import img from "../../../../public/Google.png";
+import Image from "next/image";
 
 const cardAnimation = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -18,6 +21,10 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // State for toggling password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const handleSignup = (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
@@ -29,7 +36,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 lg:p-12">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 lg:p-12">
       {/* Signup Card */}
       <motion.div
         initial="hidden"
@@ -38,44 +45,90 @@ export default function SignupPage() {
         className="w-full max-w-md lg:max-w-lg shadow-lg rounded-xl overflow-hidden border border-gray-200 bg-white p-6 sm:p-8 lg:p-10"
       >
         <div className="flex justify-center mb-6">
-          <img src="/logo.png" alt="Logo" className="h-16 w-auto" />
+          <Image src={img} alt="Logo" className="h-16 w-auto" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">
           Sign Up
         </h2>
         <form onSubmit={handleSignup} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Confirm password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-            required
-          />
+          {/* Username Field */}
+          <div className="relative">
+            <FiUser
+              size={20}
+              className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500"
+            />
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+              required
+            />
+          </div>
+
+          {/* Email Field */}
+          <div className="relative">
+            <FiMail
+              size={20}
+              className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500"
+            />
+            <input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+              required
+            />
+          </div>
+
+          {/* Password Field */}
+          <div className="relative">
+            <FiLock
+              size={20}
+              className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500"
+            />
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 pl-10 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 focus:outline-none"
+            >
+              {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+            </button>
+          </div>
+
+          {/* Confirm Password Field */}
+          <div className="relative">
+            <FiLock
+              size={20}
+              className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500"
+            />
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-3 pl-10 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 focus:outline-none"
+            >
+              {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+            </button>
+          </div>
+
           <motion.button
             type="submit"
             whileHover={{ scale: 1.05 }}
