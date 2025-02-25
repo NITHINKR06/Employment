@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { IoCloseSharp } from "react-icons/io5";
+import { usePathname } from 'next/navigation';
 
 export default function Notify() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -60,6 +61,13 @@ export default function Notify() {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: 10 },
+  }
+
+  const pathname = usePathname();
+  const authPages = ["/auth/login", "/auth/signup", "/auth/resetpassword"];
+
+  if (authPages.includes(pathname)) {
+    return null; // Hide footer on auth pages
   }
 
   return (
