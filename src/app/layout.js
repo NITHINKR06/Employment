@@ -26,11 +26,11 @@ export default function RootLayout({ children }) {
           {/* flex-1 flex justify-center items-center pt-[64px] pb-[64px] overflow-y-auto */}
           <main className="flex-1 flex justify-center pt-[40px] items-center overflow-y-auto">
             {children}
-          </main>
-            <ClientCookiesBanner />
-
-          <div>
             <Notify/>
+          </main>
+
+          <div >
+            <ClientCookiesBanner />
           </div>
 
           {/* Fixed Footer */}
