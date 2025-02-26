@@ -57,7 +57,7 @@ export default function AboutUs() {
             <motion.div className="relative w-32 h-32" variants={shouldReduceMotion ? {} : itemVariants}>
               {/* Overlapping Squares */}
               <motion.div
-                className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-2xl overflow-hidden"
+                className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-2xl "
                 variants={shouldReduceMotion ? {} : itemVariants}
                 whileHover={{ scale: 1.05, rotate: 10 }}
               >
@@ -69,7 +69,7 @@ export default function AboutUs() {
                 />
               </motion.div>
               <motion.div
-                className="absolute top-6 left-6 w-32 h-32 bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-2xl overflow-hidden -rotate-12"
+                className="absolute top-6 left-6 w-32 h-32 bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-2xl  -rotate-12"
                 variants={shouldReduceMotion ? {} : itemVariants}
                 whileHover={{ scale: 1.05, rotate: -10 }}
               >
@@ -105,7 +105,7 @@ export default function AboutUs() {
               whileHover={{ scale: 1.03 }}
             >
               <motion.div
-                className="relative w-20 h-20 bg--500 rounded-full flex items-center justify-center shadow-lg overflow-hidden"
+                className="relative w-20 h-20 bg--500 rounded-full flex items-center justify-center shadow-lg "
                 variants={shouldReduceMotion ? {} : itemVariants}
               >
                 <Image
@@ -130,7 +130,7 @@ export default function AboutUs() {
               whileHover={{ scale: 1.03 }}
             >
               <motion.div
-                className="relative w-20 h-20 bg--500 rounded-full flex items-center justify-center shadow-lg overflow-hidden"
+                className="relative w-20 h-20 bg--500 rounded-full flex items-center justify-center shadow-lg "
                 variants={shouldReduceMotion ? {} : itemVariants}
               >
                 <Image

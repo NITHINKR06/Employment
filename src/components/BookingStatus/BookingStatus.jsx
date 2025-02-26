@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 export default function BookingStatus() {
   // Dummy data with only the required fields.
@@ -12,6 +13,7 @@ export default function BookingStatus() {
       experience: 5,
       status: 'Confirmed',
       rating: 4,
+      route: '/user/bookingStatus/{id}',
     },
     {
       _id: '2',
@@ -19,6 +21,7 @@ export default function BookingStatus() {
       experience: 8,
       status: 'Pending',
       rating: 5,
+      route: '/',
     },
     {
       _id: '3',
@@ -26,6 +29,7 @@ export default function BookingStatus() {
       experience: 3,
       status: 'Cancelled',
       rating: 3,
+      route: '/',
     },
     {
       _id: '4',
@@ -33,6 +37,7 @@ export default function BookingStatus() {
       experience: 5,
       status: 'Confirmed',
       rating: 4,
+      route: '/',
     },
     {
       _id: '5',
@@ -40,6 +45,7 @@ export default function BookingStatus() {
       experience: 8,
       status: 'Pending',
       rating: 5,
+      route: '/',
     },
     {
       _id: '6',
@@ -47,13 +53,14 @@ export default function BookingStatus() {
       experience: 3,
       status: 'Cancelled',
       rating: 3,
+      route: '/',
     },
-    // Add more bookings as needed
   ];
 
   const [bookings] = useState(dummyBookings);
+  const [hoveredBookingId, setHoveredBookingId] = useState(null);
 
-  // Container variants for a staggered entrance effect.
+  // Container variants for staggered appearance.
   const containerVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: {
@@ -68,7 +75,7 @@ export default function BookingStatus() {
     },
   };
 
-  // Card variants with an initial rotated, scaled state and a playful hover effect.
+  // Card variants with a subtle entrance and hover effect.
   const cardVariants = {
     hidden: { opacity: 0, y: 30, scale: 0.9, rotate: -3 },
     visible: {
@@ -84,14 +91,19 @@ export default function BookingStatus() {
     },
   };
 
-  // Button variants to add a glowing pulse on hover.
+  // Button variants for a light scaling effect.
   const buttonVariants = {
     hover: {
-      scale: 1.1,
-      textShadow: '0px 0px 8px rgb(255,255,255)',
-      boxShadow: '0px 0px 8px rgb(255,255,255)',
-      transition: { yoyo: Infinity, duration: 0.5 },
+      scale: 1.05,
+      transition: { type: 'spring', stiffness: 300 },
     },
+  };
+
+  // Tooltip variants for a smooth fade/scale animation.
+  const tooltipVariants = {
+    hidden: { opacity: 0, y: 5, scale: 0.95 },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2 } },
+    exit: { opacity: 0, y: 5, scale: 0.95, transition: { duration: 0.2 } },
   };
 
   // Function to render star icons for rating.
@@ -102,7 +114,7 @@ export default function BookingStatus() {
         stars.push(
           <svg
             key={i}
-            className="w-5 h-5 text-yellow-500"
+            className="w-5 h-5 text-yellow-300"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -144,7 +156,7 @@ export default function BookingStatus() {
           bookings.map((booking) => (
             <motion.div
               key={booking._id}
-              className="w-72 bg-white border border-gray-200 rounded-xl shadow-md p-6"
+              className="w-72 bg-white border border-gray-200 rounded-xl shadow-md p-6 relative"
               variants={cardVariants}
               whileHover="hover"
             >
@@ -183,21 +195,51 @@ export default function BookingStatus() {
               >
                 {renderStars(booking.rating)}
               </motion.div>
-              <div className="flex space-x-4">
+              <div className="flex space-x-4 relative">
                 <motion.button
-                  className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-full shadow-lg focus:outline-none"
+                  className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-400 rounded-full shadow-lg focus:outline-none"
                   variants={buttonVariants}
-                  whileHover="hover"
+                  // whileHover="hover"
                 >
                   Cancel
                 </motion.button>
-                <motion.button
-                  className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-full shadow-lg focus:outline-none"
-                  variants={buttonVariants}
-                  whileHover="hover"
-                >
-                  Payment
-                </motion.button>
+                <div className="relative flex-1">
+                  <motion.button
+                    className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-gray-300 to-gray-400 rounded-full shadow-lg focus:outline-none"
+                    variants={buttonVariants}
+                    // whileHover="hover"
+                    onHoverStart={() => setHoveredBookingId(booking._id)}
+                    onHoverEnd={() => setHoveredBookingId(null)}
+                  >
+                    <Link href={`/user/bookingStatus/${booking._id}`}>
+                      Payment
+                    </Link>
+                  </motion.button>
+                  <AnimatePresence>
+                    {hoveredBookingId === booking._id && (
+                      <motion.div
+                        className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3"
+                        variants={tooltipVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                      >
+                        <div
+                          className={`relative px-4 py-2 rounded-lg shadow-lg text-xs font-medium ${
+                            booking.status === 'Pending'
+                              ? 'bg-red-500'
+                              : 'bg-green-500'
+                          } text-white`}
+                        >
+                          {booking.status === 'Pending'
+                            ? 'Payment is pending'
+                            : `Payment done with ID: ${booking._id}`}
+                          <div className="absolute bottom-[-6px] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-current rotate-45" />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </motion.div>
           ))

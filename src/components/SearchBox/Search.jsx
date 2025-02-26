@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { FaSearch, FaTimes } from 'react-icons/fa';
 
 export default function Search() {
+  const [query, setQuery] = useState('');
+  const [focused, setFocused] = useState(false);
+
   // Animation variants for the form
   const formVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
+    initial: { opacity: 0, scale: 0.9 },
+    animate: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
+  };
+
+  // Animation variants for the input on focus/blur
+  const inputVariants = {
+    focused: { scale: 1.02, transition: { duration: 0.2 } },
+    blurred: { scale: 1 },
   };
 
   // Animation variants for the submit button
@@ -16,64 +26,58 @@ export default function Search() {
     },
   };
 
+  const handleClear = () => setQuery('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Handle search submission logic here
+    console.log('Searching for:', query);
+  };
+
   return (
-    <div>
+    <div className="flex justify-center mt-10">
       <motion.form
-        className="flex items-center max-w-sm mx-auto"
-        initial="hidden"
-        animate="visible"
+        className="relative flex items-center w-full max-w-md"
+        initial="initial"
+        animate="animate"
         variants={formVariants}
+        onSubmit={handleSubmit}
       >
-        <label className="sr-only">Search</label>
-        <div className="relative w-full">
-          <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-            <svg
-              className="w-4 h-4 text-gray-700 dark:text-gray-700"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 18 20"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M3 5v10M3 5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm12 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm0 0V6a3 3 0 0 0-3-3H9m1.5-2-2 2 2 2"
-              />
-            </svg>
-          </div>
-          <motion.input
-            type="text"
-            id="simple-search"
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full ps-10 p-2.5 dark:bg-gray-100 dark:border-gray-600 dark:placeholder-gray-400 dark:text-black dark:focus:ring-gray-500 dark:focus:border-gray-500"
-            placeholder="Search branch name..."
-            required
-            whileFocus={{ scale: 1.02, transition: { duration: 0.2 } }}
-          />
+        <motion.input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search branch name..."
+          className="w-full py-2 pl-10 pr-10 border shadow-md rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300"
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          variants={inputVariants}
+          animate={focused ? 'focused' : 'blurred'}
+          aria-label="Search branch name"
+        />
+        {/* Search icon on the left */}
+        <div className="absolute left-3 pointer-events-none">
+          <FaSearch className="text-gray-500" />
         </div>
+        {/* Clear button appears when there is text */}
+        {query && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-10 text-gray-500 hover:text-gray-700 focus:outline-none"
+            aria-label="Clear search input"
+          >
+            <FaTimes />
+          </button>
+        )}
         <motion.button
           type="submit"
-          className="p-2.5 ms-2 text-sm font-medium text-black bg-gray-100 rounded-lg border border-gray-700 hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-100 dark:bg-gray-50 dark:hover:bg-gray-100 dark:focus:ring-gray-300"
+          className="absolute right-1 p-2 rounded-lg bg-gray-100 border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
           variants={buttonVariants}
           whileHover="hover"
+          aria-label="Submit search"
         >
-          <svg
-            className="w-4 h-4"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 20 20"
-          >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-            />
-          </svg>
-          <span className="sr-only">Search</span>
+          <FaSearch />
         </motion.button>
       </motion.form>
     </div>
