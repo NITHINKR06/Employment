@@ -83,3 +83,31 @@ export default function Search() {
     </div>
   );
 }
+
+export function SBox() {
+  const [focused, setFocused] = useState(false);
+  const [query, setQuery] = useState("");
+
+  return (
+    <motion.div
+      className="hidden md:flex flex-1 mx-6 max-w-lg relative"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0, transition: { duration: 0.5 } }}
+    >
+      <motion.input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search..."
+        className="w-full p-3 pl-10 pr-4 text-sm border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        animate={{ scale: focused ? 1.05 : 1 }}
+        transition={{ duration: 0.2 }}
+      />
+      <FaSearch
+        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 transition-all"
+      />
+    </motion.div>
+  );
+}

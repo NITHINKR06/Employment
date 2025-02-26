@@ -35,7 +35,7 @@ export default function ContactForm() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="min-h-screen flex items-center justify-center p-6"
+      className="min-h-screen flex items-center justify-center p-6 mt-7"
     >
       <div className="max-w-5xl w-full shadow-lg rounded-xl overflow-hidden flex flex-col md:flex-row border border-gray-200">
         {/* Contact Details Section */}
