@@ -36,7 +36,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 lg:p-12">
+    <div className="min-h w-full flex flex-col items-center justify-center p-6 lg:p-12">
       {/* Signup Card */}
       <motion.div
         initial="hidden"

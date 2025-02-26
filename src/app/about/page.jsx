@@ -9,24 +9,16 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      when: 'beforeChildren',
-      staggerChildren: 0.15,
-    },
+    transition: { staggerChildren: 0.2 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, scale: 0.8, y: 20 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
-    scale: 1,
     y: 0,
-    transition: {
-      type: 'spring',
-      stiffness: 100,
-      damping: 20,
-    },
+    transition: { duration: 0.6 },
   },
 };
 
@@ -35,121 +27,99 @@ export default function AboutUs() {
 
   return (
     <motion.div
-      className="relative h-screen w-screen"
+      className="relative mt-20 min-h-screen from-white to-gray-100"
       initial="hidden"
       animate="visible"
       variants={shouldReduceMotion ? {} : containerVariants}
     >
-      {/* Content Container */}
-      <motion.div
-        className="relative z-20 flex flex-col h-full w-full"
+      {/* Hero Section */}
+      <motion.section
+        className="max-w-6xl mx-auto px-4 py-12 flex flex-col md:flex-row items-center"
+        variants={shouldReduceMotion ? {} : itemVariants}
+      >
+        <motion.div className="md:w-1/2 mb-8 md:mb-0" variants={shouldReduceMotion ? {} : itemVariants}>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800">Our Journey</h1>
+          <p className="mt-4 text-lg text-gray-600">
+            From humble beginnings to a global impact, our story is built on passion, innovation, and a commitment to excellence.
+          </p>
+        </motion.div>
+        <motion.div className="md:w-1/2 flex justify-center" variants={shouldReduceMotion ? {} : itemVariants}>
+          <div className="relative w-64 h-64">
+            {/* Background layer */}
+            <motion.div
+              className="absolute inset-0 bg-blue-500 rounded-lg shadow-lg"
+              whileHover={{ scale: 1.05 }}
+            />
+            {/* Foreground layer with slight offset */}
+            <motion.div
+              className="absolute inset-4 bg-red-500 rounded-lg shadow-2xl"
+              whileHover={{ scale: 1.05, rotate: 3 }}
+            />
+            <Image
+              src={img}
+              alt="Our Journey"
+              layout="fill"
+              objectFit="cover"
+              className="rounded-lg"
+            />
+          </div>
+        </motion.div>
+      </motion.section>
+
+      {/* Mission and Vision Section */}
+      <motion.section
+        className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 gap-8"
         variants={shouldReduceMotion ? {} : containerVariants}
       >
         <motion.div
-          className="max-w-screen-lg mx-auto p-8 flex-grow flex flex-col justify-center space-y-12"
-          variants={shouldReduceMotion ? {} : containerVariants}
+          className="p-8 bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300"
+          variants={shouldReduceMotion ? {} : itemVariants}
+          whileHover={{ scale: 1.02 }}
         >
-          {/* Header Section */}
-          <motion.div
-            className="flex flex-col md:flex-row items-center gap-20"
-            variants={shouldReduceMotion ? {} : itemVariants}
-          >
-            <motion.div className="relative w-32 h-32" variants={shouldReduceMotion ? {} : itemVariants}>
-              {/* Overlapping Squares */}
-              <motion.div
-                className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-2xl "
-                variants={shouldReduceMotion ? {} : itemVariants}
-                whileHover={{ scale: 1.05, rotate: 10 }}
-              >
-                <Image
-                  src={img}
-                  alt="Image for II"
-                  layout="fill"
-                  objectFit="cover"
-                />
-              </motion.div>
-              <motion.div
-                className="absolute top-6 left-6 w-32 h-32 bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-2xl  -rotate-12"
-                variants={shouldReduceMotion ? {} : itemVariants}
-                whileHover={{ scale: 1.05, rotate: -10 }}
-              >
-                <Image
-                  src={img}
-                  alt="Image for IP"
-                  layout="fill"
-                  objectFit="cover"
-                />
-              </motion.div>
-            </motion.div>
-            <motion.div variants={shouldReduceMotion ? {} : itemVariants}>
-              <motion.h1 className="text-3xl font-extrabold text-black">
-                Our Story
-              </motion.h1>
-              <motion.p className="mt-4 text-lg text-gray-800">
-                We are dedicated to innovation and excellence. Our team is committed to delivering outstanding service and creating unforgettable experiences.
-              </motion.p>
-            </motion.div>
-          </motion.div>
-
-          <motion.hr className="border-t-2 border-gray-300" variants={shouldReduceMotion ? {} : itemVariants} />
-
-          {/* Mission & Vision Section */}
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 gap-8"
-            variants={shouldReduceMotion ? {} : containerVariants}
-          >
-            {/* Mission Card */}
-            <motion.div
-              className="flex flex-col items-center p-6 bg-gray-300 bg-opacity-70 rounded-xl shadow-md"
-              variants={shouldReduceMotion ? {} : itemVariants}
-              whileHover={{ scale: 1.03 }}
-            >
-              <motion.div
-                className="relative w-20 h-20 bg--500 rounded-full flex items-center justify-center shadow-lg "
-                variants={shouldReduceMotion ? {} : itemVariants}
-              >
-                <Image
-                  src={img}
-                  alt="Image for Mission"
-                  layout="fill"
-                  objectFit="contain"
-                />
-              </motion.div>
-              <motion.h2 className="mt-4 text-xl font-semibold text-black" variants={shouldReduceMotion ? {} : itemVariants}>
-                Our Mission
-              </motion.h2>
-              <motion.p className="mt-2 text-gray-500 text-center" variants={shouldReduceMotion ? {} : itemVariants}>
-                To inspire and innovate, making a positive impact in the world through creative solutions.
-              </motion.p>
-            </motion.div>
-
-            {/* Vision Card */}
-            <motion.div
-              className="flex flex-col items-center p-6 bg-gray-300 bg-opacity-70 rounded-xl shadow-md"
-              variants={shouldReduceMotion ? {} : itemVariants}
-              whileHover={{ scale: 1.03 }}
-            >
-              <motion.div
-                className="relative w-20 h-20 bg--500 rounded-full flex items-center justify-center shadow-lg "
-                variants={shouldReduceMotion ? {} : itemVariants}
-              >
-                <Image
-                  src={img}
-                  alt="Image for Vision"
-                  layout="fill"
-                  objectFit="contain"
-                />
-              </motion.div>
-              <motion.h2 className="mt-4 text-xl font-semibold text-black" variants={shouldReduceMotion ? {} : itemVariants}>
-                Our Vision
-              </motion.h2>
-              <motion.p className="mt-2 text-gray-500 text-center" variants={shouldReduceMotion ? {} : itemVariants}>
-                To be a leader in our industry, fostering creativity and setting standards of excellence worldwide.
-              </motion.p>
-            </motion.div>
-          </motion.div>
+          <div className="relative w-16 h-16 mb-4">
+            <Image
+              src={img}
+              alt="Mission"
+              layout="fill"
+              objectFit="contain"
+              className="rounded-full"
+            />
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-800">Our Mission</h2>
+          <p className="mt-2 text-gray-600">
+            To innovate and inspire, creating solutions that empower communities and drive meaningful change.
+          </p>
         </motion.div>
-      </motion.div>
+        <motion.div
+          className="p-8 bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300"
+          variants={shouldReduceMotion ? {} : itemVariants}
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="relative w-16 h-16 mb-4">
+            <Image
+              src={img}
+              alt="Vision"
+              layout="fill"
+              objectFit="contain"
+              className="rounded-full"
+            />
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-800">Our Vision</h2>
+          <p className="mt-2 text-gray-600">
+            To lead with creativity and integrity, setting new standards for excellence in our industry.
+          </p>
+        </motion.div>
+      </motion.section>
+
+      {/* Footer Section */}
+      <motion.section
+        className="max-w-6xl mx-auto px-4 py-8"
+        variants={shouldReduceMotion ? {} : itemVariants}
+      >
+        <p className="text-center text-gray-500">
+          Join us as we explore new horizons and redefine the future.
+        </p>
+      </motion.section>
     </motion.div>
   );
 }

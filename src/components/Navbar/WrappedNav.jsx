@@ -1,7 +1,12 @@
-import React from 'react'
+"use client"; // Mark this as a Client Component
 
-export default function WrappedNav() {
-  return (
-    <div>WrappedNav</div>
-  )
+import { usePathname } from "next/navigation";
+import Navbar from "./Navbar";
+import AuthNavbar from "./NavAuth";
+
+export default function NavbarWrapper() {
+  const pathname = usePathname();
+  const authPages = ["/auth/login", "/auth/signup", "/auth/resetpassword"];
+
+  return authPages.includes(pathname) ? <AuthNavbar /> : <Navbar />;
 }

@@ -27,7 +27,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 lg:p-12 bg-gray-50">
+    <div className="min-h w-full flex flex-col items-center justify-center p-6 lg:p-12 bg-gray-50">
       {/* Login Card */}
       <motion.div 
         initial="hidden" 

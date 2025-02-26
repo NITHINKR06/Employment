@@ -40,7 +40,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 lg:p-12 bg-gray-50">
+    <div className="min-h flex flex-col items-center justify-center p-6 lg:p-12">
       {/* Reset Password Card */}
       <motion.div
         initial="hidden"
