@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
         <div className="flex flex-col min-h-screen">
 
           {/* Fixed Navbar */}
-          <header className="">
+          <header className="left-0 ">
             <NavbarWrapper />
           </header>
 

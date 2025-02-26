@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { IoCloseSharp } from "react-icons/io5";
 import { usePathname } from 'next/navigation';
@@ -27,7 +26,6 @@ export default function Notify() {
     setSidebarOpen(false)
   }
   
-
   const handleBackdropClick = (event) => {
     if (event.target === event.currentTarget) {
       closeSidebar()
@@ -38,7 +36,7 @@ export default function Notify() {
     setNotifications([])
   }
 
-  // Sidebar and backdrop animation variants
+  // Animation variants
   const sidebarVariants = {
     hidden: { x: '100%', opacity: 0 },
     visible: { x: '0', opacity: 1 },
@@ -51,12 +49,6 @@ export default function Notify() {
     exit: { opacity: 0 },
   }
 
-  // Variants for staggered list items
-  const listVariants = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.1 } },
-  }
-
   const listItemVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0 },
@@ -67,12 +59,12 @@ export default function Notify() {
   const authPages = ["/auth/login", "/auth/signup", "/auth/resetpassword"];
 
   if (authPages.includes(pathname)) {
-    return null; // Hide footer on auth pages
+    return null; // Hide on auth pages
   }
 
   return (
     <div>
-      {/* Notification Button */}
+      {/* Notification (Chat) Button */}
       <div
         onClick={() => {
           setNotifying(false)
@@ -103,7 +95,7 @@ export default function Notify() {
         </svg>
       </div>
 
-      {/* Animated Sidebar */}
+      {/* Animated Chat Sidebar */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -111,7 +103,7 @@ export default function Notify() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 z-40 bg-black bg-opacity-40"
+            className="fixed bottom-20 right-4 bg-gray-200 rounded-3xl bg-opacity-40 flex justify-end"
             onClick={handleBackdropClick}
           >
             <motion.div
@@ -120,53 +112,57 @@ export default function Notify() {
               animate="visible"
               exit="exit"
               transition={{ duration: 0.3 }}
-              className="absolute right-0 top-0 h-full w-80 bg-white shadow border border-gray-200 p-6 flex flex-col"
+              className="relative h-[50%] w-full max-w-md bg-white rounded-3xl shadow border border-gray-200 p-4 flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h5 className="text-lg font-semibold text-gray-800">
-                  Notifications {notifications.length ? `(${notifications.length})` : ''}
-                </h5>
+              {/* Chat Header */}
+              <div className="flex justify-between items-center mb-4 border-b pb-2">
+                <h5 className="text-lg font-semibold text-gray-800">Chat</h5>
                 <button 
-                    onClick={closeSidebar} 
-                    className="text-gray-600 hover:text-gray-800 focus:outline-none w-9 h-9 cursor-pointer"
+                  onClick={closeSidebar} 
+                  className="text-gray-600 hover:text-gray-800 focus:outline-none"
                 >
-                    <IoCloseSharp className="text-gray-600 w-8 h-8 hover:text-gray-800 focus:outline-none cursor-pointer" />
+                  <IoCloseSharp className="w-6 h-6" />
                 </button>
-
               </div>
+              
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto space-y-2">
+                {notifications.map((notification) => (
+                  <motion.div
+                    key={notification.id}
+                    variants={listItemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="flex items-start space-x-2"
+                  >
+                    <div className="bg-blue-100 text-gray-800 p-3 rounded-lg max-w-xs">
+                      <p className="text-sm">{notification.text}</p>
+                      <p className="text-xs text-gray-500 mt-1">{notification.date}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              
+              {/* Clear All Button */}
               {notifications.length > 0 && (
                 <button
                   onClick={handleClearAll}
-                  className="mb-4 text-sm text-blue-600 hover:underline self-end"
+                  className="mt-2 text-sm text-blue-600 hover:underline self-end"
                 >
                   Clear All
                 </button>
               )}
-              <motion.ul
-                variants={listVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                className="space-y-4 overflow-y-auto flex-1"
-              >
-                {notifications.map((notification) => (
-                  <motion.li
-                    key={notification.id}
-                    variants={listItemVariants}
-                    className="border-t border-gray-200 pt-4"
-                  >
-                    <Link href="#">
-                      <div className="block hover:bg-gray-100 p-2 rounded transition-colors duration-150">
-                        <p className="text-sm text-gray-700">
-                          {notification.text}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">{notification.date}</p>
-                      </div>
-                    </Link>
-                  </motion.li>
-                ))}
-              </motion.ul>
+              
+              {/* Chat Input */}
+              <div className="mt-4">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  className="w-full border rounded-full p-3 focus:outline-none"
+                />
+              </div>
             </motion.div>
           </motion.div>
         )}
