@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "@/components/Footer/Footer";
 import Notify from "@/components/Notification/Notify";
 import NavbarWrapper from "@/components/Navbar/WrappedNav";
+import ClientCookiesBanner from "./ClientCookiesBanner";
 
 export const metadata = {
   title: "Employement",
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
           <main className="flex-1 flex justify-center pt-[40px] items-center overflow-y-auto">
             {children}
           </main>
+            <ClientCookiesBanner />
 
           <div>
             <Notify/>

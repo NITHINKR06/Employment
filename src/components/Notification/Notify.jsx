@@ -19,6 +19,16 @@ export default function Notify() {
       text: "Your profile update was successful.",
       date: "11 May, 2025",
     },
+    {
+      id: 4,
+      text: "Your profile update was successful.",
+      date: "11 May, 2025",
+    },
+    {
+      id: 3,
+      text: "Your profile update was successful.",
+      date: "11 May, 2025",
+    },
   ])
 
   const closeSidebar = () => {
@@ -103,7 +113,7 @@ export default function Notify() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed bottom-20 right-4 bg-gray-200 rounded-3xl bg-opacity-40 flex justify-end"
+            className="fixed bottom-20 h-[50%] w-[29%] right-4 bg-gray-200 rounded-3xl bg-opacity-40 flex justify-end"
             onClick={handleBackdropClick}
           >
             <motion.div
@@ -112,12 +122,12 @@ export default function Notify() {
               animate="visible"
               exit="exit"
               transition={{ duration: 0.3 }}
-              className="relative h-[50%] w-full max-w-md bg-white rounded-3xl shadow border border-gray-200 p-4 flex flex-col"
+              className="relative h-full w-full max-w-md bg-white rounded-3xl shadow border border-gray-200 p-4 flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Chat Header */}
               <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h5 className="text-lg font-semibold text-gray-800">Chat</h5>
+                <h5 className="text-lg font-semibold text-gray-800">Notification</h5>
                 <button 
                   onClick={closeSidebar} 
                   className="text-gray-600 hover:text-gray-800 focus:outline-none"
@@ -126,8 +136,8 @@ export default function Notify() {
                 </button>
               </div>
               
-              {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto space-y-2">
+              {/* Chat Messages with Styled Scrollbar */}
+              <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
                 {notifications.map((notification) => (
                   <motion.div
                     key={notification.id}
@@ -155,14 +165,6 @@ export default function Notify() {
                 </button>
               )}
               
-              {/* Chat Input */}
-              <div className="mt-4">
-                <input
-                  type="text"
-                  placeholder="Type a message..."
-                  className="w-full border rounded-full p-3 focus:outline-none"
-                />
-              </div>
             </motion.div>
           </motion.div>
         )}
