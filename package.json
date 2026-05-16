@@ -11,7 +11,7 @@
   "dependencies": {
     "flowbite-react": "^0.10.2",
     "motion": "^12.4.7",
-    "next": "15.1.7",
+    "next": "15.5.18",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
