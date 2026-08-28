@@ -1,103 +1,109 @@
-'use client'
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { FaFacebookF, FaInstagram, FaTwitter, FaGithub, FaDribbble } from "react-icons/fa";
+import { SITE_NAME } from "@/lib/constants";
 
-export default function Footer() {
-  const socialLinks = [
-    { name: "Facebook", link: "#", icon: <FaFacebookF className="h-6 w-6" /> },
-    { name: "Instagram", link: "#", icon: <FaInstagram className="h-6 w-6" /> },
-    { name: "Twitter", link: "#", icon: <FaTwitter className="h-6 w-6" /> },
-    { name: "GitHub", link: "#", icon: <FaGithub className="h-6 w-6" /> },
-    { name: "Dribbble", link: "#", icon: <FaDribbble className="h-6 w-6" /> },
-  ];
+const socialLinks = [
+  { name: "Facebook", link: "#", icon: <FaFacebookF className="h-5 w-5" /> },
+  { name: "Instagram", link: "#", icon: <FaInstagram className="h-5 w-5" /> },
+  { name: "Twitter", link: "#", icon: <FaTwitter className="h-5 w-5" /> },
+  { name: "GitHub", link: "#", icon: <FaGithub className="h-5 w-5" /> },
+  { name: "Dribbble", link: "#", icon: <FaDribbble className="h-5 w-5" /> },
+];
 
-  const pathname = usePathname();
-  const authPages = ["/auth/login", "/auth/signup", "/auth/resetpassword"];
+const footerSections = [
+  {
+    title: "Company",
+    links: [
+      { name: "About", route: "/about" },
+      { name: "Meet the Team", route: "/team" },
+      { name: "Accounts Review", route: "/reviews" },
+    ],
+  },
+  {
+    title: "Helpful Links",
+    links: [
+      { name: "Contact Us", route: "/contacts" },
+      { name: "About Us", route: "/about" },
+      { name: "FAQs", route: "/about" },
+      { name: "Live Chat", route: "/livechat" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { name: "Accessibility", route: "/accessibility" },
+      { name: "Refund Policy", route: "/refund-policy" },
+      { name: "Privacy Policy", route: "/privacy-policy" },
+    ],
+  },
+];
 
-  if (authPages.includes(pathname)) {
-    return null; // Hide footer on auth pages
+export default function Footer({ variant = "full" }) {
+  if (variant === "compact") {
+    return (
+      <footer className="w-full border-t border-outline-variant bg-surface-container">
+        <div className="container flex flex-col items-center gap-2 py-6 text-center">
+          <Link href="/" className="font-display text-headline-sm font-bold text-primary">
+            {SITE_NAME}
+          </Link>
+          <p className="text-label-sm text-on-surface-variant">
+            &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
+          </p>
+        </div>
+      </footer>
+    );
   }
 
-  // Define footer sections with individual routes for each link
-  const footerSections = [
-    {
-      title: "Company",
-      links: [
-        { name: "About", route: "/about" },
-        { name: "Meet the Team", route: "/team" },
-        { name: "Accounts Review", route: "/reviews" },
-      ],
-    },
-    {
-      title: "Helpful Links",
-      links: [
-        { name: "Contact Us", route: "/contacts" },
-        { name: "About Us", route: "/about" },
-        { name: "FAQs", route: "/faqs" },
-        { name: "Live Chat", route: "/livechat" },
-      ],
-    },
-    {
-      title: "Legal",
-      links: [
-        { name: "Accessibility", route: "/accessibility" },
-        { name: "Refund Policy", route: "/refund-policy" },
-        { name: "Privacy Policy", route: "/privacy-policy" },
-      ],
-    },
-  ];
-
   return (
-    <footer className="bg-gray-50 shadow-md w-full">
-      <div className="shadow-md w-full">
-        <div className="mx-auto max-w-screen-xl space-y-8 px-4 py-16 sm:px-6 lg:space-y-16 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Section */}
-            <div>
-              <h1 className="text-lg font-semibold">Emp</h1>
-              <p className="mt-4 max-w-xs text-gray-500">
-                Join us to unlock your potential with a wide variety of courses designed just for you.
-              </p>
-              <ul className="mt-8 flex flex-wrap gap-6">
-                {socialLinks.map((social, index) => (
-                  <li key={index}>
-                    <Link
-                      href={social.link}
-                      rel="noreferrer"
-                      target="_blank"
-                      className="text-gray-700 transition hover:opacity-75 flex items-center gap-2"
-                    >
-                      {social.icon}
-                      <span className="sr-only">{social.name}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Right Section */}
-            <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-3 items-end">
-              {footerSections.map((section, index) => (
-                <div key={index} className="w-auto h-40">
-                  <p className="font-medium text-gray-900">{section.title}</p>
-                  <ul className="mt-4 space-y-2 text-sm">
-                    {section.links.map((link, i) => (
-                      <li key={i}>
-                        <Link href={link.route} className="text-gray-700 transition hover:opacity-75">
-                          {link.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+    <footer className="w-full border-t border-outline-variant bg-surface-container">
+      <div className="container space-y-12 py-16">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div>
+            <h2 className="font-display text-headline-sm font-bold text-primary">{SITE_NAME}</h2>
+            <p className="mt-4 max-w-xs text-body-md text-on-surface-variant">
+              Connect with highly-rated, verified local professionals for any home project.
+            </p>
+            <ul className="mt-8 flex flex-wrap gap-6">
+              {socialLinks.map((social) => (
+                <li key={social.name}>
+                  <Link
+                    href={social.link}
+                    rel="noreferrer"
+                    target="_blank"
+                    className="flex items-center gap-2 text-on-surface-variant transition hover:text-primary"
+                  >
+                    {social.icon}
+                    <span className="sr-only">{social.name}</span>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
-          <p className="text-xs text-gray-500 text-center">&copy; 2025. MentorConnect. All rights reserved.</p>
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
+            {footerSections.map((section) => (
+              <div key={section.title}>
+                <p className="text-label-md font-semibold text-on-surface">{section.title}</p>
+                <ul className="mt-4 space-y-2">
+                  {section.links.map((link) => (
+                    <li key={link.name}>
+                      <Link
+                        href={link.route}
+                        className="text-body-md text-on-surface-variant transition hover:text-primary"
+                      >
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
+
+        <p className="text-center text-label-sm text-on-surface-variant">
+          &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
+        </p>
       </div>
     </footer>
   );
