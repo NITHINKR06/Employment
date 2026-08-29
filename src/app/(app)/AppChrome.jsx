@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import TopNavBar from "@/components/Navbar/TopNavBar";
 import BottomNavBar from "@/components/Navbar/BottomNavBar";
@@ -16,16 +17,17 @@ function activeTabFor(pathname) {
 export default function AppChrome({ children }) {
   const pathname = usePathname();
   const navVariant = pathname.startsWith("/search") ? "search" : "dashboard";
+  const [notifOpen, setNotifOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen flex-col">
-      <TopNavBar variant={navVariant} />
+      <TopNavBar variant={navVariant} onBellClick={() => setNotifOpen(true)} />
       <main className="flex-1 pb-20 md:pb-0">{children}</main>
       <div className="hidden md:block">
         <Footer variant="full" />
       </div>
       <BottomNavBar activeTab={activeTabFor(pathname)} />
-      <Notify />
+      <Notify open={notifOpen} onClose={() => setNotifOpen(false)} />
     </div>
   );
 }

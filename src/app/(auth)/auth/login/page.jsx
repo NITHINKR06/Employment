@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
+import { SITE_NAME } from "@/lib/constants";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,9 +22,12 @@ export default function LoginPage() {
   return (
     <div className="mx-auto w-full max-w-md">
       <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-8 shadow-elevation-2">
-        <div className="flex justify-center">
-          <Image src="/Google.png" alt="" width={48} height={48} className="h-12 w-auto" />
-        </div>
+        <Link
+          href="/"
+          className="block text-center font-display text-headline-md font-bold text-primary"
+        >
+          {SITE_NAME}
+        </Link>
         <h1 className="mt-6 text-center font-display text-headline-md text-on-surface">Login</h1>
 
         <form onSubmit={handleLogin} className="mt-6 space-y-4">

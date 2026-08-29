@@ -13,6 +13,9 @@ import {
 } from "react-icons/io5";
 import Button from "@/components/Button/Button";
 import { SITE_NAME } from "@/lib/constants";
+import { notifications } from "@/data/notifications";
+
+const hasUnreadNotifications = notifications.some((notification) => !notification.read);
 
 const NAV_LINKS = [
   { href: "/search", label: "Categories" },
@@ -20,7 +23,7 @@ const NAV_LINKS = [
   { href: "/about", label: "Trust & Safety" },
 ];
 
-export default function TopNavBar({ variant = "marketing" }) {
+export default function TopNavBar({ variant = "marketing", onBellClick }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   if (variant === "minimal") {
@@ -70,10 +73,14 @@ export default function TopNavBar({ variant = "marketing" }) {
 
         <div className="flex items-center gap-4">
           <button
+            onClick={onBellClick}
             aria-label="Notifications"
-            className="hidden p-2 text-on-surface-variant transition-colors hover:text-primary md:flex"
+            className="relative flex p-2 text-on-surface-variant transition-colors hover:text-primary"
           >
             <IoNotificationsOutline size={22} aria-hidden="true" />
+            {hasUnreadNotifications && (
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-error" aria-hidden="true" />
+            )}
           </button>
           {variant === "dashboard" ? (
             <Link

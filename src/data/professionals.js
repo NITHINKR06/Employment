@@ -1,3 +1,12 @@
+function avatarUrl(name) {
+  const encoded = encodeURIComponent(name);
+  return `https://ui-avatars.com/api/?name=${encoded}&background=006948&color=fff&size=256&bold=true`;
+}
+
+function portfolioUrls(seed, count = 3) {
+  return Array.from({ length: count }, (_, i) => `https://picsum.photos/seed/${seed}-${i}/640/480`);
+}
+
 export const professionals = [
   {
     id: "arjun-rao",
@@ -8,14 +17,14 @@ export const professionals = [
     rating: 4.9,
     reviewCount: 214,
     hourlyRate: 45,
-    avatar: "/profile.jpg",
+    avatar: avatarUrl("Arjun Rao"),
     verified: true,
     location: "Bangalore, IN",
     availability: "Available Today",
     skills: ["Pipe Repair", "Leak Detection"],
     bio: "Arjun has spent over a decade solving plumbing problems for homes and small businesses across the city, known for clean work and honest quotes.",
     trustBadges: ["Licensed & Insured", "Background Checked", "Emergency Service"],
-    portfolio: ["/profile.jpg", "/profile.jpg", "/profile.jpg"],
+    portfolio: portfolioUrls("arjun-rao"),
     servicesOffered: [
       { title: "Leak Repair", subtext: "Fixes for pipes, faucets, and fixtures" },
       { title: "Drain Cleaning", subtext: "Clog removal and maintenance" },
@@ -32,14 +41,14 @@ export const professionals = [
     rating: 4.8,
     reviewCount: 132,
     hourlyRate: 35,
-    avatar: "/profile.jpg",
+    avatar: avatarUrl("Priya Menon"),
     verified: true,
     location: "Bangalore, IN",
     availability: "Available Tomorrow",
     skills: ["Interior Painting", "Wall Prep"],
     bio: "Priya brings a designer's eye to every painting job, specializing in clean lines, color consulting, and durable finishes for homes.",
     trustBadges: ["Licensed & Insured", "Background Checked"],
-    portfolio: ["/profile.jpg", "/profile.jpg", "/profile.jpg"],
+    portfolio: portfolioUrls("priya-menon"),
     servicesOffered: [
       { title: "Interior Painting", subtext: "Living rooms, bedrooms, ceilings" },
       { title: "Wall Prep & Repair", subtext: "Filling, sanding, priming" },
@@ -55,14 +64,14 @@ export const professionals = [
     rating: 4.7,
     reviewCount: 98,
     hourlyRate: 50,
-    avatar: "/profile.jpg",
+    avatar: avatarUrl("Vikram Shah"),
     verified: true,
     location: "Bangalore, IN",
     availability: "Available Today",
     skills: ["Wiring", "Fixture Install"],
     bio: "Vikram handles everything from a single outlet swap to a full rewiring job, with a strong focus on safety and code compliance.",
     trustBadges: ["Licensed & Insured", "Background Checked", "Emergency Service"],
-    portfolio: ["/profile.jpg", "/profile.jpg", "/profile.jpg"],
+    portfolio: portfolioUrls("vikram-shah"),
     servicesOffered: [
       { title: "Outlet Installation", subtext: "New outlets and switches" },
       { title: "Light Fixture Install", subtext: "Ceiling fans, fixtures, dimmers" },
@@ -78,14 +87,14 @@ export const professionals = [
     rating: 4.9,
     reviewCount: 176,
     hourlyRate: 28,
-    avatar: "/profile.jpg",
+    avatar: avatarUrl("Meera Das"),
     verified: true,
     location: "Bangalore, IN",
     availability: "Available This Week",
     skills: ["Deep Cleaning", "Move-out Cleaning"],
     bio: "Meera leads a small, trusted cleaning team known for thorough, reliable service and flexible scheduling.",
     trustBadges: ["Background Checked"],
-    portfolio: ["/profile.jpg", "/profile.jpg", "/profile.jpg"],
+    portfolio: portfolioUrls("meera-das"),
     servicesOffered: [
       { title: "Standard Cleaning", subtext: "Weekly or bi-weekly upkeep" },
       { title: "Deep Cleaning", subtext: "Top-to-bottom one-time clean" },
