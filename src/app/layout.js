@@ -1,44 +1,32 @@
-// import type { Metadata } from "next";
-import NavUser from "@/components/Navbar/Navbar";
+import { Geist, Libre_Caslon_Text } from "next/font/google";
 import "./globals.css";
-import Footer from "@/components/Footer/Footer";
-import Notify from "@/components/Notification/Notify";
-import NavbarWrapper from "@/components/Navbar/WrappedNav";
 import ClientCookiesBanner from "./ClientCookiesBanner";
+import { SITE_NAME } from "@/lib/constants";
+
+const geist = Geist({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-geist",
+});
+
+const libreCaslonText = Libre_Caslon_Text({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-libre-caslon-text",
+});
 
 export const metadata = {
-  title: "Employement",
-  description: "Welcome!",
+  title: SITE_NAME,
+  description: "There's someone nearby who can get it done.",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`antialiased`}>
-        <div className="flex flex-col min-h-screen">
-
-          {/* Fixed Navbar */}
-          <header className="left-0 ">
-            <NavbarWrapper />
-          </header>
-
-          {/* Main Content */}
-          {/* flex-1 flex justify-center items-center pt-[64px] pb-[64px] overflow-y-auto */}
-          <main className="flex-1 flex justify-center pt-[40px] items-center overflow-y-auto">
-            {children}
-            <Notify/>
-          </main>
-
-          <div >
-            <ClientCookiesBanner />
-          </div>
-
-          {/* Fixed Footer */}
-          <footer className=" w-full bottom-0">
-            <Footer/>
-          </footer>
-          
-        </div>
+    <html lang="en" className={`${geist.variable} ${libreCaslonText.variable}`}>
+      <body className="antialiased min-h-screen flex flex-col">
+        {children}
+        <ClientCookiesBanner />
       </body>
     </html>
   );
