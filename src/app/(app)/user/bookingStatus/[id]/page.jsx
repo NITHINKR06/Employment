@@ -84,7 +84,9 @@ export default async function BookingDetailPage({ params }) {
       />
 
       <div className="mt-4 flex flex-wrap gap-3">
-        <Button href="/auth/payment">Go to Payment Portal</Button>
+        {!booking.amount && booking.status !== "Cancelled" && (
+          <Button href={`/auth/payment?bookingId=${booking._id}`}>Go to Payment Portal</Button>
+        )}
         <Button variant="secondary" icon={IoCallOutline}>
           Contact Pro
         </Button>

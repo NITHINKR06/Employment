@@ -5,12 +5,14 @@ import { FcGoogle } from "react-icons/fc";
 import { IoCardOutline, IoQrCodeOutline, IoCheckmarkCircleOutline } from "react-icons/io5";
 import QRCode from "qrcode";
 
-export default function PaymentForm({ initialAmount = "45.00", onPaymentSuccess }) {
+export default function PaymentForm({ initialAmount = "45.00", bookingId, onPaymentSuccess }) {
   const [amount, setAmount] = useState(initialAmount);
   const surcharge = 3.5;
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("upi"); // 'upi' | 'card'
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
   const upiId = "promarket@upi";
 
@@ -34,8 +36,30 @@ export default function PaymentForm({ initialAmount = "45.00", onPaymentSuccess 
     generateQrCode();
   }, [generateQrCode]);
 
-  const handlePaymentSubmit = (e) => {
+  const handlePaymentSubmit = async (e) => {
     e.preventDefault();
+    setPaymentError("");
+
+    if (bookingId) {
+      setIsProcessing(true);
+      try {
+        const response = await fetch("/api/payments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookingId, amount: getTotalAmount(), method: paymentMethod }),
+        });
+        const body = await response.json();
+        if (!response.ok || !body.success) {
+          throw new Error(body?.error?.message ?? "Payment failed");
+        }
+      } catch (err) {
+        setPaymentError(err.message);
+        setIsProcessing(false);
+        return;
+      }
+      setIsProcessing(false);
+    }
+
     setIsSuccess(true);
     if (onPaymentSuccess) {
       setTimeout(() => {
@@ -130,10 +154,17 @@ export default function PaymentForm({ initialAmount = "45.00", onPaymentSuccess 
               <p className="mt-3 text-label-sm text-on-surface-variant">Use GPay, PhonePe, Paytm or any UPI app</p>
             </div>
 
+            {paymentError && (
+              <div className="mb-3 w-full max-w-sm rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">
+                {paymentError}
+              </div>
+            )}
+
             <div className="mt-6 flex w-full max-w-sm gap-3">
               <button
                 type="button"
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-outline-variant bg-white py-3 text-label-md font-semibold text-on-surface shadow-elevation-1 transition hover:bg-surface-container-low focus:ring-2 focus:ring-primary"
+                disabled={isProcessing}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-outline-variant bg-white py-3 text-label-md font-semibold text-on-surface shadow-elevation-1 transition hover:bg-surface-container-low focus:ring-2 focus:ring-primary disabled:opacity-50"
                 onClick={handlePaymentSubmit}
               >
                 <FcGoogle className="h-5 w-5" />
@@ -141,10 +172,11 @@ export default function PaymentForm({ initialAmount = "45.00", onPaymentSuccess 
               </button>
               <button
                 type="button"
-                className="flex-1 rounded-lg bg-primary py-3 text-label-md font-bold text-on-primary shadow-elevation-1 transition hover:bg-primary-container hover:text-on-primary-container"
+                disabled={isProcessing}
+                className="flex-1 rounded-lg bg-primary py-3 text-label-md font-bold text-on-primary shadow-elevation-1 transition hover:bg-primary-container hover:text-on-primary-container disabled:opacity-50"
                 onClick={handlePaymentSubmit}
               >
-                Confirm Payment
+                {isProcessing ? "Processing..." : "Confirm Payment"}
               </button>
             </div>
           </div>
@@ -211,11 +243,18 @@ export default function PaymentForm({ initialAmount = "45.00", onPaymentSuccess 
               </div>
             </div>
 
+            {paymentError && (
+              <div className="rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">
+                {paymentError}
+              </div>
+            )}
+
             <button
               type="submit"
-              className="mt-6 w-full rounded-lg bg-primary py-3.5 text-label-md font-bold text-on-primary shadow-elevation-1 transition hover:bg-primary-container hover:text-on-primary-container"
+              disabled={isProcessing}
+              className="mt-6 w-full rounded-lg bg-primary py-3.5 text-label-md font-bold text-on-primary shadow-elevation-1 transition hover:bg-primary-container hover:text-on-primary-container disabled:opacity-50"
             >
-              Pay ${getTotalAmount()} Now
+              {isProcessing ? "Processing..." : `Pay $${getTotalAmount()} Now`}
             </button>
           </form>
         )}

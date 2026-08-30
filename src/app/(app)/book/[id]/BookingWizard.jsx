@@ -190,6 +190,7 @@ export default function BookingWizard({ worker }) {
             <div className="space-y-4">
               <PaymentForm
                 initialAmount={baseFee.toFixed(2)}
+                bookingId={bookingId}
                 onPaymentSuccess={() => {
                   router.push("/user/bookingStatus");
                 }}
