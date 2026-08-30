@@ -135,3 +135,12 @@ Each phase ships independently and is verified (build passes, manual smoke test)
   Verified via a temporary in-app test route (removed after use): profile creation, summary before/after a completed+paid booking, review rejected before completion, rating/reviewCount recompute after a review, double-review rejected, reviews listing count — all correct. `pnpm build` succeeds.
 
 Proceeding now with **Phase 0**, then **Phase 1**.
+
+## 8. Live Firebase verification (2026-08-30)
+
+Real Firebase project `manage-place` credentials (client config + Admin SDK service account) were added to `.env` (gitignored, not committed). Verified end-to-end against the live project and local Postgres via Firebase's Identity Toolkit REST API (simulating what the browser SDK does) plus a temporary in-app cleanup route (removed after use):
+- Real signup → `/api/auth/session` → session cookie → `/api/auth/me` all correct
+- Authenticated booking creation and listing via the real session cookie
+- Test Firebase accounts and their Postgres rows fully cleaned up afterward
+
+Remaining before this is production-ready: rotate/secure the downloaded service-account JSON in `~/Downloads` (delete it once the key is safely stored, e.g. a secrets manager), and set the same env vars in the Vercel project for deployment.
