@@ -5,15 +5,14 @@ import { useSearchParams } from "next/navigation";
 import { IoSearchOutline, IoLocationOutline, IoMapOutline, IoGridOutline, IoChevronBack, IoChevronForward } from "react-icons/io5";
 import FilterPanel from "@/components/Search/FilterPanel";
 import WorkerCard from "@/components/WorkerCard/WorkerCard";
-import { professionals } from "@/data/professionals";
-
-const CATEGORIES = [...new Set(professionals.map((p) => p.trade))];
 
 function SearchPageContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category");
   const initialWhat = searchParams.get("what");
 
+  const [professionals, setProfessionals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(initialWhat || "");
   const [selectedCategories, setSelectedCategories] = useState(
     initialCategory ? [initialCategory] : []
@@ -29,6 +28,29 @@ function SearchPageContent() {
       setSelectedCategories([initialCategory]);
     }
   }, [initialCategory]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    fetch("/api/professionals")
+      .then((res) => res.json())
+      .then((body) => {
+        if (!cancelled && body.success) {
+          setProfessionals(body.data.professionals);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const categories = useMemo(
+    () => [...new Set(professionals.map((p) => p.trade))],
+    [professionals]
+  );
 
   const results = useMemo(() => {
     let list = professionals.filter((worker) => {
@@ -55,7 +77,7 @@ function SearchPageContent() {
     if (sort === "experience") list = [...list].sort((a, b) => b.yearsExperience - a.yearsExperience);
 
     return list;
-  }, [searchQuery, selectedCategories, rateRange, minRating, sort]);
+  }, [professionals, searchQuery, selectedCategories, rateRange, minRating, sort]);
 
   const handleClearAll = () => {
     setSelectedCategories([]);
@@ -98,7 +120,7 @@ function SearchPageContent() {
       <div className="flex flex-col gap-8 md:flex-row">
         {/* Left Sidebar Filter Panel */}
         <FilterPanel
-          categories={CATEGORIES}
+          categories={categories}
           selectedCategories={selectedCategories}
           onCategoryChange={setSelectedCategories}
           rateMin={rateRange.min}
@@ -145,7 +167,11 @@ function SearchPageContent() {
           </div>
 
           {/* Render Map View Placeholder or Grid */}
-          {isMapView ? (
+          {isLoading ? (
+            <div className="rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-12 text-center shadow-elevation-1">
+              <p className="font-display text-headline-sm text-on-surface">Loading professionals...</p>
+            </div>
+          ) : isMapView ? (
             <div className="flex h-96 flex-col items-center justify-center rounded-2xl border border-outline-variant bg-surface-container-low p-8 text-center">
               <IoMapOutline className="h-12 w-12 text-primary" />
               <h3 className="mt-3 font-display text-headline-sm text-on-surface">Interactive Map Preview</h3>

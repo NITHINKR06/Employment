@@ -1,16 +1,23 @@
 import { notFound } from "next/navigation";
-import { getProfessionalById, professionals } from "@/data/professionals";
+import { getProfessionalById, listProfessionals } from "@/server/services/professional.service";
+import { NotFoundError } from "@/server/utils/errors";
 import BookingWizard from "./BookingWizard";
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const professionals = await listProfessionals();
   return professionals.map((p) => ({ id: p.id }));
 }
 
 export default async function BookPage({ params }) {
   const { id } = await params;
-  const worker = getProfessionalById(id);
 
-  if (!worker) notFound();
+  let worker;
+  try {
+    worker = await getProfessionalById(id);
+  } catch (error) {
+    if (error instanceof NotFoundError) notFound();
+    throw error;
+  }
 
   return <BookingWizard worker={worker} />;
 }

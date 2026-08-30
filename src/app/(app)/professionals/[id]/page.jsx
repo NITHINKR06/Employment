@@ -12,17 +12,24 @@ import VerifiedBadge from "@/components/Badge/VerifiedBadge";
 import Rating from "@/components/Rating/Rating";
 import Chip from "@/components/Chip/Chip";
 import Button from "@/components/Button/Button";
-import { getProfessionalById, professionals } from "@/data/professionals";
+import { getProfessionalById, listProfessionals } from "@/server/services/professional.service";
+import { NotFoundError } from "@/server/utils/errors";
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const professionals = await listProfessionals();
   return professionals.map((p) => ({ id: p.id }));
 }
 
 export default async function ProfessionalProfilePage({ params }) {
   const { id } = await params;
-  const worker = getProfessionalById(id);
 
-  if (!worker) notFound();
+  let worker;
+  try {
+    worker = await getProfessionalById(id);
+  } catch (error) {
+    if (error instanceof NotFoundError) notFound();
+    throw error;
+  }
 
   const MOCK_REVIEWS = [
     {
