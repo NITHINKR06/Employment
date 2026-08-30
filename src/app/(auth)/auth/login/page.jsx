@@ -8,6 +8,7 @@ import { FcGoogle } from "react-icons/fc";
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
 import { SITE_NAME } from "@/lib/constants";
+import { signInWithEmail } from "@/lib/authClient";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,8 +17,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     if (!email.includes("@")) {
@@ -28,7 +30,16 @@ export default function LoginPage() {
       setError("Password must be at least 4 characters.");
       return;
     }
-    router.push("/user/dashboard");
+
+    setIsSubmitting(true);
+    try {
+      const user = await signInWithEmail({ email, password });
+      router.push(user.role === "EMPLOYEE" ? "/employee/dashboard" : "/user/dashboard");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -92,8 +103,8 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <Button type="submit" className="w-full">
-            Log in
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Logging in..." : "Log in"}
           </Button>
 
           <div className="flex items-center gap-3">

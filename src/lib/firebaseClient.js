@@ -10,6 +10,15 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const firebaseApp = getApps()[0] ?? initializeApp(firebaseConfig);
+let cachedAuth = null;
 
-export const firebaseAuth = getAuth(firebaseApp);
+export function getFirebaseAuth() {
+  if (typeof window === "undefined") {
+    throw new Error("Firebase client auth is only available in the browser");
+  }
+  if (cachedAuth) return cachedAuth;
+
+  const app = getApps()[0] ?? initializeApp(firebaseConfig);
+  cachedAuth = getAuth(app);
+  return cachedAuth;
+}

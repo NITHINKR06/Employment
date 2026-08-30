@@ -8,6 +8,7 @@ import { IoPersonOutline, IoStorefrontOutline, IoChevronBackOutline } from "reac
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
 import SelectableCard from "@/components/Booking/SelectableCard";
+import { signUpWithEmail } from "@/lib/authClient";
 
 const ROLES = [
   {
@@ -70,17 +71,29 @@ function AccountFormStep({ role, onBack }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
     if (password !== confirmPassword) {
       setErrorMsg("Passwords do not match");
       return;
     }
-    if (role === "employee") {
-      router.push("/employee/dashboard");
-    } else {
-      router.push("/user/dashboard");
+
+    setIsSubmitting(true);
+    try {
+      const user = await signUpWithEmail({
+        name: username,
+        email,
+        password,
+        role: role === "employee" ? "EMPLOYEE" : "USER",
+      });
+      router.push(user.role === "EMPLOYEE" ? "/employee/dashboard" : "/user/dashboard");
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -159,8 +172,8 @@ function AccountFormStep({ role, onBack }) {
               </button>
             }
           />
-          <Button type="submit" className="w-full">
-            Sign Up
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Creating account..." : "Sign Up"}
           </Button>
         </form>
       </div>
