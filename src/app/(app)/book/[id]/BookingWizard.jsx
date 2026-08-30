@@ -19,9 +19,46 @@ export default function BookingWizard({ worker }) {
   const [details, setDetails] = useState({ category: worker.trade, description: "" });
   const [schedule, setSchedule] = useState({ date: "", time: "" });
   const [address, setAddress] = useState("");
+  const [bookingId, setBookingId] = useState(null);
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
+  const [bookingError, setBookingError] = useState("");
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
+
+  const scheduledAt =
+    schedule.date && schedule.time ? new Date(`${schedule.date}T${schedule.time}`) : null;
+
+  const handleContinueToPayment = async () => {
+    setBookingError("");
+    setIsCreatingBooking(true);
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          professionalId: worker.id,
+          scheduledAt: scheduledAt ? scheduledAt.toISOString() : undefined,
+          address,
+          notes: `Category: ${details.category}\n${details.description}`,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) {
+        throw new Error(
+          body?.error?.code === "UNAUTHORIZED"
+            ? "Please log in to book this professional."
+            : body?.error?.message ?? "Could not create booking"
+        );
+      }
+      setBookingId(body.data.booking._id);
+      next();
+    } catch (err) {
+      setBookingError(err.message);
+    } finally {
+      setIsCreatingBooking(false);
+    }
+  };
 
   const baseFee = worker.hourlyRate;
   const tax = Math.round(baseFee * 0.08 * 100) / 100;
@@ -129,12 +166,21 @@ export default function BookingWizard({ worker }) {
                   className="w-full rounded border border-outline-variant bg-white p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
+              {bookingError && (
+                <div className="rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">
+                  {bookingError}
+                </div>
+              )}
               <div className="flex gap-3">
                 <Button variant="secondary" onClick={back}>
                   Back
                 </Button>
-                <Button onClick={next} className="flex-1">
-                  Continue to Payment
+                <Button
+                  onClick={handleContinueToPayment}
+                  disabled={!address || isCreatingBooking}
+                  className="flex-1"
+                >
+                  {isCreatingBooking ? "Creating booking..." : "Continue to Payment"}
                 </Button>
               </div>
             </div>

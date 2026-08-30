@@ -1,15 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BookingSummaryRow from "@/components/Booking/BookingSummaryRow";
-import { data as initialBookings } from "@/data/bookings/data";
 
 const STATUS_TABS = ["All", "Confirmed", "Pending", "Cancelled"];
 
 export default function UserBookingStatusPage() {
   const [activeTab, setActiveTab] = useState("All");
+  const [bookings, setBookings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredBookings = initialBookings.filter((b) => {
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/bookings")
+      .then((res) => res.json())
+      .then((body) => {
+        if (cancelled) return;
+        if (!body.success) {
+          setError(
+            body.error?.code === "UNAUTHORIZED"
+              ? "Please log in to see your bookings."
+              : body.error?.message ?? "Could not load bookings"
+          );
+          return;
+        }
+        setBookings(body.data.bookings);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const filteredBookings = bookings.filter((b) => {
     if (activeTab === "All") return true;
     return b.status === activeTab;
   });
@@ -25,9 +51,7 @@ export default function UserBookingStatusPage() {
       <div className="mt-6 flex border-b border-outline-variant/60">
         {STATUS_TABS.map((tab) => {
           const count =
-            tab === "All"
-              ? initialBookings.length
-              : initialBookings.filter((b) => b.status === tab).length;
+            tab === "All" ? bookings.length : bookings.filter((b) => b.status === tab).length;
           return (
             <button
               key={tab}
@@ -50,7 +74,15 @@ export default function UserBookingStatusPage() {
       </div>
 
       <div className="mt-6 space-y-3">
-        {filteredBookings.length === 0 ? (
+        {isLoading ? (
+          <div className="rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-8 text-center">
+            <p className="font-display text-headline-sm text-on-surface">Loading bookings...</p>
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-8 text-center">
+            <p className="font-display text-headline-sm text-on-surface">{error}</p>
+          </div>
+        ) : filteredBookings.length === 0 ? (
           <div className="rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-8 text-center">
             <p className="font-display text-headline-sm text-on-surface">No {activeTab.toLowerCase()} bookings found</p>
             <p className="mt-1 text-body-md text-on-surface-variant">When you book a service, it will appear here.</p>

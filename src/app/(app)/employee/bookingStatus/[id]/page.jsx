@@ -1,15 +1,40 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import StatBadge from "@/components/Badge/StatBadge";
-import Rating from "@/components/Rating/Rating";
-import Button from "@/components/Button/Button";
-import { data as bookings } from "@/data/bookings/data";
+import BookingStatusActions from "@/components/Booking/BookingStatusActions";
+import { getBookingById } from "@/server/services/booking.service";
+import { requireAuth } from "@/server/auth/requireAuth";
+import { NotFoundError, ForbiddenError, UnauthorizedError } from "@/server/utils/errors";
+
+export const dynamic = "force-dynamic";
+
+const STATUS_ACTIONS = {
+  Pending: [
+    { status: "CONFIRMED", label: "Accept Job" },
+    { status: "CANCELLED", label: "Decline", variant: "secondary" },
+  ],
+  Confirmed: [
+    { status: "IN_PROGRESS", label: "Start Job" },
+    { status: "CANCELLED", label: "Cancel", variant: "secondary" },
+  ],
+  "In Progress": [{ status: "COMPLETED", label: "Mark Completed" }],
+  Completed: [],
+  Cancelled: [],
+};
 
 export default async function EmployeeBookingDetailPage({ params }) {
   const { id } = await params;
-  const booking = bookings.find((b) => b._id === id);
 
-  if (!booking) notFound();
+  let booking;
+  try {
+    const user = await requireAuth();
+    booking = await getBookingById(user, id);
+  } catch (error) {
+    if (error instanceof NotFoundError || error instanceof ForbiddenError || error instanceof UnauthorizedError) {
+      notFound();
+    }
+    throw error;
+  }
 
   return (
     <div className="container max-w-2xl py-10">
@@ -31,19 +56,16 @@ export default async function EmployeeBookingDetailPage({ params }) {
         <div className="flex items-center justify-between">
           <span className="text-label-md text-on-surface-variant">Date &amp; Time</span>
           <span className="text-body-md text-on-surface">
-            {booking.date} &middot; {booking.time}
+            {booking.date ?? "Not scheduled"} {booking.time ? `· ${booking.time}` : ""}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-label-md text-on-surface-variant">Client Rating</span>
-          <Rating value={booking.rating} />
+          <span className="text-label-md text-on-surface-variant">Address</span>
+          <span className="text-body-md text-on-surface">{booking.address}</span>
         </div>
       </div>
 
-      <div className="mt-6 flex gap-3">
-        {booking.status === "Pending" && <Button>Accept Job</Button>}
-        {booking.status !== "Cancelled" && <Button variant="secondary">Decline</Button>}
-      </div>
+      <BookingStatusActions bookingId={booking._id} actions={STATUS_ACTIONS[booking.status] ?? []} />
 
       <Link href="/employee/bookingStatus" className="mt-4 inline-block text-label-sm text-primary hover:underline">
         &larr; Back to jobs
