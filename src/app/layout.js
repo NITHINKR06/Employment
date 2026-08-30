@@ -1,44 +1,31 @@
-// import type { Metadata } from "next";
-import NavUser from "@/components/Navbar/Navbar";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import Footer from "@/components/Footer/Footer";
-import Notify from "@/components/Notification/Notify";
-import NavbarWrapper from "@/components/Navbar/WrappedNav";
 import ClientCookiesBanner from "./ClientCookiesBanner";
+import { SITE_NAME } from "@/lib/constants";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-inter",
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-plus-jakarta-sans",
+});
 
 export const metadata = {
-  title: "Employement",
-  description: "Welcome!",
+  title: SITE_NAME,
+  description: "Get the job done. By someone you can trust.",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`antialiased`}>
-        <div className="flex flex-col min-h-screen">
-
-          {/* Fixed Navbar */}
-          <header className="left-0 ">
-            <NavbarWrapper />
-          </header>
-
-          {/* Main Content */}
-          {/* flex-1 flex justify-center items-center pt-[64px] pb-[64px] overflow-y-auto */}
-          <main className="flex-1 flex justify-center pt-[40px] items-center overflow-y-auto">
-            {children}
-            <Notify/>
-          </main>
-
-          <div >
-            <ClientCookiesBanner />
-          </div>
-
-          {/* Fixed Footer */}
-          <footer className=" w-full bottom-0">
-            <Footer/>
-          </footer>
-          
-        </div>
+    <html lang="en" className={`${inter.variable} ${plusJakartaSans.variable}`}>
+      <body className="min-h-screen bg-background font-sans text-on-background antialiased">
+        {children}
+        <ClientCookiesBanner />
       </body>
     </html>
   );

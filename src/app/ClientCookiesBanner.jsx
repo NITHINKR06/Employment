@@ -11,10 +11,7 @@ export default function ClientCookiesBanner() {
     // Check if the user has already provided consent
     const consent = localStorage.getItem('cookieConsent');
     if (!consent) {
-      // Only show the banner 50% of the time if consent hasn't been set
-      if (Math.random() < 0.5) {
-        setShowCookies(true);
-      }
+      setShowCookies(true);
     }
   }, []);
 
