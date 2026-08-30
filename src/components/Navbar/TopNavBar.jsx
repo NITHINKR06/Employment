@@ -15,8 +15,6 @@ import Button from "@/components/Button/Button";
 import { SITE_NAME } from "@/lib/constants";
 import { notifications } from "@/data/notifications";
 
-const hasUnreadNotifications = notifications.some((notification) => !notification.read);
-
 const NAV_LINKS = [
   { href: "/search", label: "Categories" },
   { href: "/about", label: "How it Works" },
@@ -25,6 +23,7 @@ const NAV_LINKS = [
 
 export default function TopNavBar({ variant = "marketing", onBellClick }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const hasUnreadNotifications = notifications.some((notification) => !notification.read);
 
   if (variant === "minimal") {
     return (

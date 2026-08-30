@@ -99,6 +99,11 @@ function AccountFormStep({ role, onBack }) {
         </h1>
 
         <form onSubmit={handleSignup} className="mt-6 space-y-4">
+          {errorMsg && (
+            <div className="rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">
+              {errorMsg}
+            </div>
+          )}
           <TextField
             id="username"
             icon={FiUser}

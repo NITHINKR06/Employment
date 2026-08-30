@@ -2,24 +2,46 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FiMail, FiLock } from "react-icons/fi";
 import { TbPasswordMobilePhone } from "react-icons/tb";
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
 
 export default function ResetPassword() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const handleSendOtp = () => {
+    if (!email || !email.includes("@")) {
+      setError("Please enter a valid email address first.");
+      return;
+    }
+    setError("");
+    setOtpSent(true);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError("");
     if (newPassword !== confirmPassword) {
-      console.log("Passwords do not match");
+      setError("Passwords do not match.");
       return;
     }
-    console.log("Reset password for email:", email, "OTP:", otp, "New Password:", newPassword);
+    if (newPassword.length < 4) {
+      setError("Password must be at least 4 characters.");
+      return;
+    }
+    setSuccess(true);
+    setTimeout(() => {
+      router.push("/auth/login");
+    }, 1500);
   };
 
   return (
@@ -33,6 +55,16 @@ export default function ResetPassword() {
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          {error && (
+            <div className="rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="rounded-lg bg-primary-container/20 p-3 text-label-sm font-semibold text-primary">
+              Password reset successful! Redirecting to login...
+            </div>
+          )}
           <div>
             <TextField
               id="reset-email"
@@ -43,8 +75,13 @@ export default function ResetPassword() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <div className="mt-1.5 flex justify-end">
-              <button type="button" className="text-label-sm text-primary hover:underline">
+            <div className="mt-1.5 flex items-center justify-between">
+              {otpSent && <span className="text-label-sm font-semibold text-primary">OTP sent to email!</span>}
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                className="ml-auto text-label-sm text-primary hover:underline"
+              >
                 Send OTP
               </button>
             </div>

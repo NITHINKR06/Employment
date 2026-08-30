@@ -14,26 +14,25 @@ const footerSections = [
   {
     title: "Company",
     links: [
-      { name: "About", route: "/about" },
-      { name: "Meet the Team", route: "/team" },
-      { name: "Accounts Review", route: "/reviews" },
+      { name: "About Us", route: "/about" },
+      { name: "Find Professionals", route: "/search" },
+      { name: "Become a Pro", route: "/auth/signup" },
     ],
   },
   {
     title: "Helpful Links",
     links: [
       { name: "Contact Us", route: "/contacts" },
-      { name: "About Us", route: "/about" },
       { name: "FAQs", route: "/about" },
-      { name: "Live Chat", route: "/livechat" },
+      { name: "User Dashboard", route: "/user/dashboard" },
     ],
   },
   {
-    title: "Legal",
+    title: "Legal & Safety",
     links: [
-      { name: "Accessibility", route: "/accessibility" },
-      { name: "Refund Policy", route: "/refund-policy" },
-      { name: "Privacy Policy", route: "/privacy-policy" },
+      { name: "Trust & Safety", route: "/about" },
+      { name: "Terms of Service", route: "/about" },
+      { name: "Privacy Policy", route: "/about" },
     ],
   },
 ];

@@ -15,9 +15,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogin = (e) => {
     e.preventDefault();
+    setError("");
+    if (!email.includes("@")) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (password.length < 4) {
+      setError("Password must be at least 4 characters.");
+      return;
+    }
     router.push("/user/dashboard");
   };
 
@@ -33,6 +43,11 @@ export default function LoginPage() {
         <h1 className="mt-6 text-center font-display text-headline-md text-on-surface">Login</h1>
 
         <form onSubmit={handleLogin} className="mt-6 space-y-4">
+          {error && (
+            <div className="rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">
+              {error}
+            </div>
+          )}
           <TextField
             id="email"
             type="email"
