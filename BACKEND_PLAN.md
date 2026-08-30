@@ -106,8 +106,8 @@ Each phase ships independently and is verified (build passes, manual smoke test)
 - [x] **Phase 1 — Database layer**
   `prisma/schema.prisma` with all models (User, Professional, Skill, ProfessionalSkill, TrustBadge, PortfolioImage, Service, Booking, Payment, Review). Initial migration applied (`prisma/migrations/20260830073757_init`). `src/server/db/client.js` singleton. `prisma/seed.mjs` mirrors `src/data/professionals.js` (4 professionals, skills, trust badges, portfolio, services) — verified via a direct query, relations intact. Run with `pnpm db:seed`.
 
-- [ ] **Phase 2 — Auth foundation**
-  `src/lib/firebaseClient.js`, `src/server/auth/firebaseAdmin.js`, `session.js`, `requireAuth.js`. `POST /api/auth/session`, `POST /api/auth/logout`, `GET /api/auth/me`. No UI changes yet — verify with curl/Postman.
+- [x] **Phase 2 — Auth foundation**
+  `src/lib/firebaseClient.js` (Firebase JS SDK, lazy/tolerant of placeholder config), `src/server/auth/firebaseAdmin.js` (lazy-initialized Admin SDK so missing env vars don't crash the build), `session.js` (httpOnly cookie helpers), `requireAuth.js` (`getCurrentUser`/`requireAuth`/`requireRole`, resolves the Postgres `User` from the verified Firebase uid). Routes: `POST /api/auth/session` (verifies ID token, mints session cookie, upserts `User`), `POST /api/auth/logout`, `GET /api/auth/me`. Also added `src/server/utils/apiResponse.js` + `errors.js` for a consistent envelope. Verified via curl: `/me` returns `{user: null}` with no cookie; `/session` correctly errors until real Firebase Admin credentials are supplied (`FIREBASE_PROJECT_ID`/`FIREBASE_CLIENT_EMAIL`/`FIREBASE_PRIVATE_KEY` in `.env`). No UI changes yet.
 
 - [ ] **Phase 3 — Real signup/login UI**
   Wire `(auth)/auth/signup` and `(auth)/auth/login` pages to Firebase client SDK + `/api/auth/session`. Add `User` upsert-on-first-session with role persisted. Remove the old fake `handleLogin`/mock login route.
