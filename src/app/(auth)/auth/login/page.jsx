@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import TextField from "@/components/TextField/TextField";
@@ -9,6 +10,7 @@ import Button from "@/components/Button/Button";
 import { SITE_NAME } from "@/lib/constants";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -16,7 +18,7 @@ export default function LoginPage() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    console.log("Logging in with:", email, password, "remember:", rememberMe);
+    router.push("/user/dashboard");
   };
 
   return (

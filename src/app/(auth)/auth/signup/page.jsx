@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { IoPersonOutline, IoStorefrontOutline, IoChevronBackOutline } from "react-icons/io5";
 import TextField from "@/components/TextField/TextField";
@@ -61,20 +62,26 @@ function RolePickerStep({ role, onSelectRole, onContinue }) {
 }
 
 function AccountFormStep({ role, onBack }) {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSignup = (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      console.log("Passwords do not match");
+      setErrorMsg("Passwords do not match");
       return;
     }
-    console.log("Signing up with:", { role, username, email, password });
+    if (role === "employee") {
+      router.push("/employee/dashboard");
+    } else {
+      router.push("/user/dashboard");
+    }
   };
 
   return (

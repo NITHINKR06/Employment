@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { IoLockClosedOutline } from "react-icons/io5";
 import { MdOutlineAddAPhoto as MdAddAPhoto } from "react-icons/md";
 import Stepper from "@/components/Booking/Stepper";
 import Button from "@/components/Button/Button";
 import Rating from "@/components/Rating/Rating";
 import VerifiedBadge from "@/components/Badge/VerifiedBadge";
-import PaymentsModel from "../../auth/payment/page";
+import PaymentForm from "@/components/Booking/PaymentForm";
 
 const STEPS = ["Details", "Schedule", "Address", "Payment"];
 
 export default function BookingWizard({ worker }) {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [details, setDetails] = useState({ category: worker.trade, description: "" });
   const [schedule, setSchedule] = useState({ date: "", time: "" });
@@ -140,7 +142,12 @@ export default function BookingWizard({ worker }) {
 
           {step === 3 && (
             <div className="space-y-4">
-              <PaymentsModel />
+              <PaymentForm
+                initialAmount={baseFee.toFixed(2)}
+                onPaymentSuccess={() => {
+                  router.push("/user/bookingStatus");
+                }}
+              />
               <Button variant="secondary" onClick={back}>
                 Back
               </Button>

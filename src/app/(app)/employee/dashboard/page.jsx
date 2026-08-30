@@ -1,50 +1,34 @@
-'use client';
-import React, { useState, useRef } from 'react';
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'motion/react';
-import { MdOutlineWorkspacePremium, MdOutlineReviews } from 'react-icons/md';
-import { IoPersonSharp } from 'react-icons/io5';
-import Button from '@/components/Button/Button';
-import Rating from '@/components/Rating/Rating';
+"use client";
 
-export default function Profile() {
+import React, { useState, useRef } from "react";
+import Image from "next/image";
+import { motion, AnimatePresence } from "motion/react";
+import { MdOutlineWorkspacePremium, MdOutlineReviews } from "react-icons/md";
+import { IoPersonSharp, IoLocationOutline, IoBriefcaseOutline, IoStarOutline } from "react-icons/io5";
+import Button from "@/components/Button/Button";
+import Rating from "@/components/Rating/Rating";
+
+export default function EmployeeDashboardPage() {
   const [user, setUser] = useState({
-    name: 'ABC',
-    email: 'abc@example.com',
+    name: "Arjun Rao",
+    title: "Master Plumber",
+    email: "arjun.rao@example.com",
     about:
-      'A passionate professional with extensive experience in web development, dedicated to building responsive and user-friendly websites.',
+      "Licensed Master Plumber with over 12 years of experience in residential leak repairs, fixture installations, and emergency plumbing solutions across the city.",
     experience:
-      'Worked at Company A, Company B, and Company C. Skilled in various programming languages and modern web frameworks.',
-    yearsExperience: 5,
-    place: 'New York, USA',
-    ratings: 4,
+      "12 years working independently and with certified service firms. Specialized in pipe fitting, water heater installation, and drain cleaning.",
+    yearsExperience: 12,
+    place: "Bangalore, IN",
+    ratings: 4.9,
+    reviewCount: 214,
     review:
-      '"An excellent professional with a keen eye for detail and a deep understanding of modern web technologies."',
-    profilePhoto: '/profile.jpg',
+      '"Arjun provided fantastic service! Solved a persistent leak in our kitchen sink within an hour and left everything spotless. Highly recommended."',
+    profilePhoto: "https://ui-avatars.com/api/?name=Arjun+Rao&background=006948&color=fff&size=256&bold=true",
   });
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingUser, setEditingUser] = useState(user);
-
-  const [activeTab, setActiveTab] = useState('about');
-  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
-  const cardRef = useRef(null);
-
-  const handleMouseMove = (e) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateY = ((x - centerX) / centerX) * 10;
-    const rotateX = -((y - centerY) / centerY) * 10;
-    setTilt({ rotateX, rotateY });
-  };
-
-  const handleMouseLeave = () => {
-    setTilt({ rotateX: 0, rotateY: 0 });
-  };
+  const [activeTab, setActiveTab] = useState("about");
 
   const handleSaveProfile = () => {
     setUser(editingUser);
@@ -58,12 +42,12 @@ export default function Profile() {
   };
 
   const inputClass =
-    'w-full rounded border border-outline-variant bg-white p-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary';
+    "w-full rounded-lg border border-outline-variant bg-surface p-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary";
 
   const tabContent = {
     about: isEditing ? (
-      <div>
-        <h2 className="font-display text-headline-sm text-on-surface mb-2">About</h2>
+      <div className="space-y-4">
+        <h2 className="font-display text-headline-sm text-on-surface">About You</h2>
         <textarea
           className={inputClass}
           rows={4}
@@ -73,24 +57,32 @@ export default function Profile() {
       </div>
     ) : (
       <div>
-        <h2 className="font-display text-headline-sm text-on-surface mb-2">About</h2>
-        <p className="text-body-lg text-on-surface-variant">{user.about}</p>
+        <h2 className="font-display text-headline-sm text-on-surface">About</h2>
+        <p className="mt-3 text-body-lg text-on-surface-variant">{user.about}</p>
+        <div className="mt-6 flex flex-wrap gap-4 text-label-md text-on-surface-variant">
+          <span className="flex items-center gap-1.5 rounded-lg bg-surface-container-low px-3 py-1.5">
+            <IoLocationOutline className="text-primary" /> {user.place}
+          </span>
+          <span className="flex items-center gap-1.5 rounded-lg bg-surface-container-low px-3 py-1.5">
+            <IoBriefcaseOutline className="text-primary" /> {user.yearsExperience} Years Exp
+          </span>
+        </div>
       </div>
     ),
     experience: isEditing ? (
-      <div>
-        <h2 className="font-display text-headline-sm text-on-surface mb-2">Experience</h2>
+      <div className="space-y-4">
+        <h2 className="font-display text-headline-sm text-on-surface">Experience & Skills</h2>
         <textarea
           className={inputClass}
           rows={4}
           value={editingUser.experience}
           onChange={(e) => setEditingUser({ ...editingUser, experience: e.target.value })}
         />
-        <div className="mt-4">
-          <label className="block text-label-md text-on-surface mb-1">Years of Experience:</label>
+        <div>
+          <label className="mb-1 block text-label-md text-on-surface">Years of Experience:</label>
           <input
             type="number"
-            className="w-24 rounded border border-outline-variant bg-white p-2 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-32 rounded-lg border border-outline-variant bg-surface p-2 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
             min="0"
             value={editingUser.yearsExperience}
             onChange={(e) =>
@@ -104,102 +96,107 @@ export default function Profile() {
       </div>
     ) : (
       <div>
-        <h2 className="font-display text-headline-sm text-on-surface mb-2">Experience</h2>
-        <p className="text-body-lg text-on-surface-variant">{user.experience}</p>
-        <p className="text-body-lg text-on-surface-variant mt-2">
-          Years of Experience: {user.yearsExperience}
-        </p>
+        <h2 className="font-display text-headline-sm text-on-surface">Experience</h2>
+        <p className="mt-3 text-body-lg text-on-surface-variant">{user.experience}</p>
+        <div className="mt-4 rounded-xl bg-surface-container-low p-4">
+          <p className="font-display text-label-md font-bold text-on-surface">Total Industry Experience</p>
+          <p className="text-headline-sm font-bold text-primary">{user.yearsExperience} Years</p>
+        </div>
       </div>
     ),
     reviews: (
       <div>
-        <h2 className="font-display text-headline-sm text-on-surface mb-2">Ratings &amp; Reviews</h2>
-        <Rating value={user.ratings} />
-        <p className="text-body-lg text-on-surface-variant mt-3">{user.review}</p>
+        <h2 className="font-display text-headline-sm text-on-surface">Client Reviews</h2>
+        <div className="mt-3 flex items-center gap-2">
+          <Rating value={user.ratings} count={user.reviewCount} />
+        </div>
+        <p className="mt-4 rounded-xl bg-surface-container-low p-4 italic text-body-lg text-on-surface-variant">
+          {user.review}
+        </p>
       </div>
     ),
   };
 
   const tabButtonClass = (tab) =>
-    `w-full py-2 px-4 rounded text-label-md text-on-surface text-left flex items-center transition-colors ${
-      activeTab === tab ? 'bg-surface-container-high' : 'hover:bg-surface-container-low'
+    `w-full py-3 px-4 rounded-lg text-label-md font-semibold text-left flex items-center transition-colors ${
+      activeTab === tab
+        ? "bg-primary text-on-primary"
+        : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"
     }`;
 
   return (
-    <div className="container flex flex-col items-center py-10" style={{ perspective: '1000px' }}>
-      <motion.div
-        ref={cardRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className="flex w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-elevation-2 md:flex-row"
-        style={{ transform: `rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg)` }}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="flex flex-col items-center border-b border-outline-variant p-6 md:w-1/3 md:border-b-0 md:border-r">
-          <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-surface-container shadow-elevation-1">
+    <div className="container py-10">
+      <div className="mx-auto flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-surface-container-lowest shadow-elevation-2 md:flex-row">
+        {/* Left Sidebar Profile Section */}
+        <div className="flex flex-col items-center border-b border-outline-variant/60 p-6 md:w-1/3 md:border-b-0 md:border-r">
+          <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-primary/20 shadow-elevation-1">
             <Image src={user.profilePhoto} alt="Profile Photo" fill className="object-cover" />
           </div>
           {isEditing ? (
-            <>
+            <div className="mt-4 w-full space-y-2">
               <input
                 type="text"
-                className="mt-4 w-full rounded border border-outline-variant p-2 text-center font-display text-headline-sm text-on-surface"
+                className="w-full rounded-lg border border-outline-variant p-2 text-center font-display text-headline-sm text-on-surface"
                 value={editingUser.name}
                 onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
               />
               <input
+                type="text"
+                className="w-full rounded-lg border border-outline-variant p-2 text-center text-label-md text-on-surface"
+                value={editingUser.title}
+                onChange={(e) => setEditingUser({ ...editingUser, title: e.target.value })}
+              />
+              <input
                 type="email"
-                className="mt-1 w-full rounded border border-outline-variant p-2 text-center text-body-md text-on-surface"
+                className="w-full rounded-lg border border-outline-variant p-2 text-center text-body-md text-on-surface"
                 value={editingUser.email}
                 onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
               />
-              <input
-                type="text"
-                className="mt-1 w-full rounded border border-outline-variant p-2 text-center text-body-md text-on-surface"
-                value={editingUser.place}
-                onChange={(e) => setEditingUser({ ...editingUser, place: e.target.value })}
-              />
-            </>
+            </div>
           ) : (
-            <>
-              <h1 className="mt-4 font-display text-headline-md text-on-surface">{user.name}</h1>
-              <p className="mt-1 text-body-md text-on-surface-variant">{user.email}</p>
-              <p className="mt-1 text-body-md text-on-surface-variant">{user.place}</p>
-            </>
+            <div className="mt-4 text-center">
+              <h1 className="font-display text-headline-md text-on-surface">{user.name}</h1>
+              <p className="text-label-md font-semibold text-primary">{user.title}</p>
+              <p className="mt-1 text-label-sm text-on-surface-variant">{user.email}</p>
+            </div>
           )}
 
-          <div className="mt-8 w-full space-y-2">
-            <button onClick={() => setActiveTab('about')} className={tabButtonClass('about')}>
-              <IoPersonSharp className="mr-2" aria-hidden="true" /> About
+          {/* Navigation Tabs */}
+          <div className="mt-6 w-full space-y-2">
+            <button onClick={() => setActiveTab("about")} className={tabButtonClass("about")}>
+              <IoPersonSharp className="mr-2.5 h-5 w-5" aria-hidden="true" /> About
             </button>
-            <button onClick={() => setActiveTab('experience')} className={tabButtonClass('experience')}>
-              <MdOutlineWorkspacePremium className="mr-2" aria-hidden="true" /> Experience
+            <button onClick={() => setActiveTab("experience")} className={tabButtonClass("experience")}>
+              <MdOutlineWorkspacePremium className="mr-2.5 h-5 w-5" aria-hidden="true" /> Experience
             </button>
-            <button onClick={() => setActiveTab('reviews')} className={tabButtonClass('reviews')}>
-              <MdOutlineReviews className="mr-2" aria-hidden="true" /> Reviews
+            <button onClick={() => setActiveTab("reviews")} className={tabButtonClass("reviews")}>
+              <MdOutlineReviews className="mr-2.5 h-5 w-5" aria-hidden="true" /> Reviews
             </button>
           </div>
 
-          {!isEditing && (
+          {!isEditing ? (
             <Button
               variant="secondary"
-              className="mt-4 w-full"
+              className="mt-6 w-full"
               onClick={() => {
                 setIsEditing(true);
                 setEditingUser(user);
               }}
             >
-              Update
+              Edit Profile
+            </Button>
+          ) : (
+            <Button className="mt-6 w-full" onClick={handleSaveProfile}>
+              Save Profile
             </Button>
           )}
         </div>
 
-        <div className="p-6 md:w-2/3">
+        {/* Right Content Panel */}
+        <div className="p-8 md:w-2/3">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeTab + (isEditing ? '-editing' : '')}
+              key={activeTab + (isEditing ? "-editing" : "")}
               variants={tabVariants}
               initial="hidden"
               animate="visible"
@@ -209,13 +206,7 @@ export default function Profile() {
             </motion.div>
           </AnimatePresence>
         </div>
-      </motion.div>
-
-      {isEditing && (
-        <Button className="mt-6" onClick={handleSaveProfile}>
-          Save Profile
-        </Button>
-      )}
+      </div>
     </div>
   );
 }

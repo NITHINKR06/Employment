@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { IoShieldCheckmarkOutline, IoCheckmarkCircleOutline } from "react-icons/io5";
 import { MdOutlineVerifiedUser, MdOutlineSupportAgent as MdSupportAgent, MdOutlineGppGood } from "react-icons/md";
 import TextField from "@/components/TextField/TextField";
@@ -24,6 +25,8 @@ const FAQS = [
 ];
 
 export default function AboutPage() {
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
   return (
     <div>
       <section className="container py-16">
@@ -83,46 +86,53 @@ export default function AboutPage() {
 
           <div>
             <h2 className="font-display text-headline-md text-on-surface">Still have a question?</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                console.log("About page contact form submitted");
-              }}
-              className="mt-4 space-y-4"
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <TextField id="first-name" label="First name" placeholder="Jane" required />
-                <TextField id="last-name" label="Last name" placeholder="Doe" required />
+            {formSubmitted ? (
+              <div className="mt-4 rounded-xl bg-primary-container/10 p-6 text-center">
+                <p className="font-display text-headline-sm text-primary">Message Sent!</p>
+                <p className="mt-1 text-body-md text-on-surface-variant">Thank you for reaching out. Our support team will get back to you shortly.</p>
               </div>
-              <TextField id="about-email" type="email" label="Email" placeholder="you@example.com" required />
-              <div>
-                <label htmlFor="topic" className="mb-1.5 block text-label-md text-on-surface">
-                  Topic
-                </label>
-                <select
-                  id="topic"
-                  className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option>General question</option>
-                  <option>Trust & Safety</option>
-                  <option>Billing</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="about-message" className="mb-1.5 block text-label-md text-on-surface">
-                  Message
-                </label>
-                <textarea
-                  id="about-message"
-                  rows={4}
-                  required
-                  className="w-full rounded border border-outline-variant bg-white p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                Send Message
-              </Button>
-            </form>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setFormSubmitted(true);
+                }}
+                className="mt-4 space-y-4"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <TextField id="first-name" label="First name" placeholder="Jane" required />
+                  <TextField id="last-name" label="Last name" placeholder="Doe" required />
+                </div>
+                <TextField id="about-email" type="email" label="Email" placeholder="you@example.com" required />
+                <div>
+                  <label htmlFor="topic" className="mb-1.5 block text-label-md text-on-surface">
+                    Topic
+                  </label>
+                  <select
+                    id="topic"
+                    className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option>General question</option>
+                    <option>Trust & Safety</option>
+                    <option>Billing</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="about-message" className="mb-1.5 block text-label-md text-on-surface">
+                    Message
+                  </label>
+                  <textarea
+                    id="about-message"
+                    rows={4}
+                    required
+                    className="w-full rounded border border-outline-variant bg-white p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  Send Message
+                </Button>
+              </form>
+            )}
           </div>
         </div>
       </section>
