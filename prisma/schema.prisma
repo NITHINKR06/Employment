@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  EMPLOYEE
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id          String   @id @default(cuid())
+  firebaseUid String   @unique
+  email       String   @unique
+  name        String
+  phone       String?
+  role        Role     @default(USER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  professional Professional?
+  bookings     Booking[]
+
+  @@map("users")
+}
+
+model Professional {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  trade           String
+  yearsExperience Int      @default(0)
+  hourlyRate      Decimal  @db.Decimal(10, 2)
+  bio             String?
+  location        String?
+  avatar          String?
+  verified        Boolean  @default(false)
+  availability    String?
+  ratingAvg       Decimal  @default(0) @db.Decimal(3, 2)
+  reviewCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  skills          ProfessionalSkill[]
+  portfolioImages PortfolioImage[]
+  services        Service[]
+  bookings        Booking[]
+  trustBadges     TrustBadge[]
+
+  @@index([trade])
+  @@map("professionals")
+}
+
+model Skill {
+  id            String              @id @default(cuid())
+  name          String              @unique
+  professionals ProfessionalSkill[]
+
+  @@map("skills")
+}
+
+model ProfessionalSkill {
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  skillId        String
+  skill          Skill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, skillId])
+  @@map("professional_skills")
+}
+
+model TrustBadge {
+  id             String       @id @default(cuid())
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  label          String
+
+  @@map("trust_badges")
+}
+
+model PortfolioImage {
+  id             String       @id @default(cuid())
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  url            String
+
+  @@map("portfolio_images")
+}
+
+model Service {
+  id             String       @id @default(cuid())
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  title          String
+  subtext        String?
+  price          Decimal?     @db.Decimal(10, 2)
+  bookings       Booking[]
+
+  @@map("services")
+}
+
+model Booking {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  professionalId String
+  professional   Professional  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  serviceId      String?
+  service        Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  status         BookingStatus @default(PENDING)
+  scheduledAt    DateTime?
+  address        String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  payment Payment?
+  review  Review?
+
+  @@index([userId])
+  @@index([professionalId])
+  @@map("bookings")
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  bookingId   String        @unique
+  booking     Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount      Decimal       @db.Decimal(10, 2)
+  status      PaymentStatus @default(PENDING)
+  provider    String?
+  providerRef String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@map("reviews")
+}

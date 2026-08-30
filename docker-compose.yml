@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: promarket-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: promarket
+      POSTGRES_PASSWORD: promarket
+      POSTGRES_DB: promarket
+    ports:
+      - "5433:5432"
+    volumes:
+      - promarket_pgdata:/var/lib/postgresql/data
+
+volumes:
+  promarket_pgdata:
