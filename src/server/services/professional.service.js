@@ -17,6 +17,7 @@ function toPublicShape(professional) {
     availability: professional.availability,
     skills: professional.skills.map((ps) => ps.skill.name),
     bio: professional.bio,
+    experienceSummary: professional.experienceSummary,
     trustBadges: professional.trustBadges.map((b) => b.label),
     portfolio: professional.portfolioImages.map((p) => p.url),
     servicesOffered: professional.services.map((s) => ({
@@ -37,6 +38,12 @@ export async function getProfessionalById(id) {
   const professional = await professionalRepository.findById(id);
   if (!professional) throw new NotFoundError("Professional not found");
   return toPublicShape(professional);
+}
+
+export async function getMyProfessional(user) {
+  const professional = await professionalRepository.findByUserId(user.id);
+  if (!professional) return null;
+  return { ...toPublicShape(professional), email: professional.user.email };
 }
 
 export async function createProfessional(user, data) {

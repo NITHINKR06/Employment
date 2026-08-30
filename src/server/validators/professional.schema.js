@@ -17,6 +17,7 @@ export const createProfessionalSchema = z.object({
   yearsExperience: z.coerce.number().int().nonnegative().default(0),
   hourlyRate: z.coerce.number().positive(),
   bio: z.string().optional(),
+  experienceSummary: z.string().optional(),
   location: z.string().optional(),
   avatar: z.string().url().optional(),
   availability: z.string().optional(),

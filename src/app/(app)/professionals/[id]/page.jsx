@@ -13,6 +13,7 @@ import Rating from "@/components/Rating/Rating";
 import Chip from "@/components/Chip/Chip";
 import Button from "@/components/Button/Button";
 import { getProfessionalById, listProfessionals } from "@/server/services/professional.service";
+import { listProfessionalReviews } from "@/server/services/review.service";
 import { NotFoundError } from "@/server/utils/errors";
 
 export async function generateStaticParams() {
@@ -31,29 +32,7 @@ export default async function ProfessionalProfilePage({ params }) {
     throw error;
   }
 
-  const MOCK_REVIEWS = [
-    {
-      id: 1,
-      author: "Rajesh Kumar",
-      date: "2 weeks ago",
-      rating: 5,
-      comment: "Arjun arrived right on time and fixed our kitchen sink leak within 45 minutes. Super polite and left the place spotless!",
-    },
-    {
-      id: 2,
-      author: "Ananya Sharma",
-      date: "1 month ago",
-      rating: 5,
-      comment: "Extremely professional work. Provided an accurate quote before starting and explained every step clearly.",
-    },
-    {
-      id: 3,
-      author: "Siddharth V.",
-      date: "2 months ago",
-      rating: 4.8,
-      comment: "Very prompt communication and great technical skill. Will definitely book again for future maintenance.",
-    },
-  ];
+  const reviews = await listProfessionalReviews(id);
 
   return (
     <div className="container py-10">
@@ -161,18 +140,26 @@ export default async function ProfessionalProfilePage({ params }) {
             </div>
 
             <div className="mt-6 space-y-4">
-              {MOCK_REVIEWS.map((rev) => (
-                <div key={rev.id} className="border-b border-outline-variant/40 pb-4 last:border-none last:pb-0">
-                  <div className="flex items-center justify-between">
-                    <span className="font-display text-label-md font-bold text-on-surface">{rev.author}</span>
-                    <span className="text-label-sm text-on-surface-variant">{rev.date}</span>
+              {reviews.length === 0 ? (
+                <p className="text-body-md text-on-surface-variant">
+                  No reviews yet. Be the first to book and leave feedback.
+                </p>
+              ) : (
+                reviews.map((rev) => (
+                  <div key={rev.id} className="border-b border-outline-variant/40 pb-4 last:border-none last:pb-0">
+                    <div className="flex items-center justify-between">
+                      <span className="font-display text-label-md font-bold text-on-surface">{rev.author}</span>
+                      <span className="text-label-sm text-on-surface-variant">
+                        {new Date(rev.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="mt-1">
+                      <Rating value={rev.rating} size="sm" />
+                    </div>
+                    {rev.comment && <p className="mt-2 text-body-md text-on-surface-variant">{rev.comment}</p>}
                   </div>
-                  <div className="mt-1">
-                    <Rating value={rev.rating} size="sm" />
-                  </div>
-                  <p className="mt-2 text-body-md text-on-surface-variant">{rev.comment}</p>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

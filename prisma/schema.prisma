@@ -53,6 +53,7 @@ model Professional {
   yearsExperience Int      @default(0)
   hourlyRate      Decimal  @db.Decimal(10, 2)
   bio             String?
+  experienceSummary String?
   location        String?
   avatar          String?
   verified        Boolean  @default(false)

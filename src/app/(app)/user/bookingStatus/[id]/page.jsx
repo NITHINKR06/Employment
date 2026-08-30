@@ -5,6 +5,7 @@ import StatBadge from "@/components/Badge/StatBadge";
 import Rating from "@/components/Rating/Rating";
 import Button from "@/components/Button/Button";
 import BookingStatusActions from "@/components/Booking/BookingStatusActions";
+import BookingReviewForm from "@/components/Booking/BookingReviewForm";
 import { getBookingById } from "@/server/services/booking.service";
 import { requireAuth } from "@/server/auth/requireAuth";
 import { NotFoundError, ForbiddenError, UnauthorizedError } from "@/server/utils/errors";
@@ -91,6 +92,10 @@ export default async function BookingDetailPage({ params }) {
           Contact Pro
         </Button>
       </div>
+
+      {booking.status === "Completed" && !booking.reviewed && (
+        <BookingReviewForm bookingId={booking._id} />
+      )}
     </div>
   );
 }

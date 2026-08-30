@@ -44,6 +44,7 @@ function toSummaryShape(booking, viewerRole) {
     notes: booking.notes,
     amount: booking.payment ? Number(booking.payment.amount) : null,
     paymentStatus: booking.payment?.status ?? null,
+    reviewed: Boolean(booking.review),
   };
 }
 
@@ -74,6 +75,25 @@ export async function createBooking(user, data) {
   });
 
   return toSummaryShape(booking, user.role);
+}
+
+export async function getEmployeeSummary(user) {
+  const professional = await professionalRepository.findByUserId(user.id);
+  if (!professional) {
+    return { totalJobs: 0, upcomingJobs: 0, completedJobs: 0, cancelledJobs: 0, totalEarnings: 0 };
+  }
+
+  const bookings = await bookingRepository.findManyByProfessionalId(professional.id);
+
+  return {
+    totalJobs: bookings.length,
+    upcomingJobs: bookings.filter((b) => ["PENDING", "CONFIRMED", "IN_PROGRESS"].includes(b.status)).length,
+    completedJobs: bookings.filter((b) => b.status === "COMPLETED").length,
+    cancelledJobs: bookings.filter((b) => b.status === "CANCELLED").length,
+    totalEarnings: bookings
+      .filter((b) => b.payment?.status === "PAID")
+      .reduce((sum, b) => sum + Number(b.payment.amount), 0),
+  };
 }
 
 export async function listMyBookings(user) {

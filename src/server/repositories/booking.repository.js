@@ -7,6 +7,7 @@ const BOOKING_INCLUDE = {
   },
   service: true,
   payment: true,
+  review: true,
 };
 
 export function create(data) {
