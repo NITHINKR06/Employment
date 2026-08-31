@@ -8,7 +8,7 @@ import { FcGoogle } from "react-icons/fc";
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
 import { SITE_NAME } from "@/lib/constants";
-import { signInWithEmail } from "@/lib/authClient";
+import { signInWithEmail, signInWithGoogle } from "@/lib/authClient";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -39,6 +40,19 @@ export default function LoginPage() {
       setError(err.message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError("");
+    setIsGoogleSubmitting(true);
+    try {
+      const user = await signInWithGoogle();
+      router.push(user.role === "EMPLOYEE" ? "/employee/dashboard" : "/user/dashboard");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -118,9 +132,10 @@ export default function LoginPage() {
             variant="secondary"
             icon={FcGoogle}
             className="w-full"
-            onClick={() => console.log("Continue with Google")}
+            disabled={isGoogleSubmitting}
+            onClick={handleGoogleLogin}
           >
-            Continue with Google
+            {isGoogleSubmitting ? "Connecting..." : "Continue with Google"}
           </Button>
         </form>
       </div>

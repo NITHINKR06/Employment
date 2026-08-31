@@ -1,6 +1,8 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   updateProfile,
 } from "firebase/auth";
@@ -14,6 +16,11 @@ const FRIENDLY_ERRORS = {
   "auth/user-not-found": "Incorrect email or password.",
   "auth/weak-password": "Password should be at least 6 characters.",
   "auth/too-many-requests": "Too many attempts. Please try again later.",
+  "auth/popup-closed-by-user": "Sign-in was cancelled.",
+  "auth/cancelled-popup-request": "Sign-in was cancelled.",
+  "auth/popup-blocked": "Your browser blocked the sign-in popup. Please allow popups and try again.",
+  "auth/account-exists-with-different-credential":
+    "An account already exists with this email using a different sign-in method.",
 };
 
 function friendlyMessage(error) {
@@ -50,6 +57,16 @@ export async function signInWithEmail({ email, password }) {
   try {
     const credential = await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
     return await exchangeForSession(credential.user);
+  } catch (error) {
+    throw new Error(friendlyMessage(error));
+  }
+}
+
+export async function signInWithGoogle({ role } = {}) {
+  try {
+    const provider = new GoogleAuthProvider();
+    const credential = await signInWithPopup(getFirebaseAuth(), provider);
+    return await exchangeForSession(credential.user, role);
   } catch (error) {
     throw new Error(friendlyMessage(error));
   }

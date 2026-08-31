@@ -4,11 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import { FcGoogle } from "react-icons/fc";
 import { IoPersonOutline, IoStorefrontOutline, IoChevronBackOutline } from "react-icons/io5";
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
 import SelectableCard from "@/components/Booking/SelectableCard";
-import { signUpWithEmail } from "@/lib/authClient";
+import { signUpWithEmail, signInWithGoogle } from "@/lib/authClient";
 
 const ROLES = [
   {
@@ -72,6 +73,7 @@ function AccountFormStep({ role, onBack }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -94,6 +96,19 @@ function AccountFormStep({ role, onBack }) {
       setErrorMsg(err.message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setErrorMsg("");
+    setIsGoogleSubmitting(true);
+    try {
+      const user = await signInWithGoogle({ role: role === "employee" ? "EMPLOYEE" : "USER" });
+      router.push(user.role === "EMPLOYEE" ? "/employee/dashboard" : "/user/dashboard");
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -174,6 +189,23 @@ function AccountFormStep({ role, onBack }) {
           />
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "Creating account..." : "Sign Up"}
+          </Button>
+
+          <div className="flex items-center gap-3">
+            <span className="h-px flex-1 bg-outline-variant" />
+            <span className="text-label-sm text-on-surface-variant">Or continue with</span>
+            <span className="h-px flex-1 bg-outline-variant" />
+          </div>
+
+          <Button
+            type="button"
+            variant="secondary"
+            icon={FcGoogle}
+            className="w-full"
+            disabled={isGoogleSubmitting}
+            onClick={handleGoogleSignup}
+          >
+            {isGoogleSubmitting ? "Connecting..." : "Continue with Google"}
           </Button>
         </form>
       </div>
