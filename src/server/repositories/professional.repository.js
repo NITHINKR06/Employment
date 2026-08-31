@@ -77,10 +77,44 @@ export async function create(userId, data) {
   });
 }
 
-export function update(id, data) {
+export async function update(id, data) {
+  const { skills, trustBadges, servicesOffered, ...scalarFields } = data;
+
+  const relationUpdates = {};
+
+  if (skills !== undefined) {
+    relationUpdates.skills = {
+      deleteMany: {},
+      create: await Promise.all(
+        skills.map(async (name) => ({
+          skill: {
+            connectOrCreate: {
+              where: { name },
+              create: { name },
+            },
+          },
+        }))
+      ),
+    };
+  }
+
+  if (trustBadges !== undefined) {
+    relationUpdates.trustBadges = {
+      deleteMany: {},
+      create: trustBadges.map((label) => ({ label })),
+    };
+  }
+
+  if (servicesOffered !== undefined) {
+    relationUpdates.services = {
+      deleteMany: {},
+      create: servicesOffered,
+    };
+  }
+
   return prisma.professional.update({
     where: { id },
-    data,
+    data: { ...scalarFields, ...relationUpdates },
     include: PROFESSIONAL_INCLUDE,
   });
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import {
   IoMenuOutline,
@@ -10,20 +11,54 @@ import {
   IoLocationOutline,
   IoNotificationsOutline,
   IoPersonOutline,
+  IoLogOutOutline,
 } from "react-icons/io5";
 import Button from "@/components/Button/Button";
 import { SITE_NAME } from "@/lib/constants";
 import { notifications } from "@/data/notifications";
+import { useAuth } from "@/lib/AuthProvider";
 
-const NAV_LINKS = [
+/* ── Nav links by auth state ─────────────────────────────────── */
+const GUEST_LINKS = [
   { href: "/search", label: "Categories" },
   { href: "/about", label: "How it Works" },
-  { href: "/about", label: "Trust & Safety" },
 ];
+
+const USER_LINKS = [
+  { href: "/user/dashboard", label: "Dashboard" },
+  { href: "/user/bookingStatus", label: "Bookings" },
+  { href: "/search", label: "Categories" },
+  { href: "/user/settings", label: "Settings" },
+];
+
+const EMPLOYEE_LINKS = [
+  { href: "/employee/dashboard", label: "Dashboard" },
+  { href: "/employee/bookingStatus", label: "Bookings" },
+  { href: "/search", label: "Categories" },
+  { href: "/employee/settings", label: "Settings" },
+];
+
+function getNavLinks(user) {
+  if (!user) return GUEST_LINKS;
+  if (user.role === "EMPLOYEE") return EMPLOYEE_LINKS;
+  return USER_LINKS;
+}
 
 export default function TopNavBar({ variant = "marketing", onBellClick }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const hasUnreadNotifications = notifications.some((notification) => !notification.read);
+  const { user, isLoading, logout } = useAuth();
+  const router = useRouter();
+  const isLoggedIn = !isLoading && !!user;
+
+  const navLinks = getNavLinks(isLoggedIn ? user : null);
+  const settingsHref = user?.role === "EMPLOYEE" ? "/employee/settings" : "/user/settings";
+
+  const handleLogout = async () => {
+    await logout();
+    setMenuOpen(false);
+    router.push("/");
+  };
 
   if (variant === "minimal") {
     return (
@@ -46,7 +81,7 @@ export default function TopNavBar({ variant = "marketing", onBellClick }) {
           </Link>
           {variant !== "search" && (
             <nav className="hidden items-center gap-8 md:flex">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
@@ -81,25 +116,39 @@ export default function TopNavBar({ variant = "marketing", onBellClick }) {
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-error" aria-hidden="true" />
             )}
           </button>
-          {variant === "dashboard" ? (
-            <Link
-              href="/user/settings"
-              className="hidden h-10 w-10 items-center justify-center rounded-full bg-surface-container text-on-surface-variant md:flex"
-              aria-label="Account"
-            >
-              <IoPersonOutline aria-hidden="true" />
-            </Link>
+
+          {isLoggedIn ? (
+            <>
+              <Link
+                href={settingsHref}
+                className="hidden h-10 w-10 items-center justify-center rounded-full bg-surface-container text-on-surface-variant md:flex"
+                aria-label="Account"
+              >
+                <IoPersonOutline aria-hidden="true" />
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="hidden items-center gap-1.5 text-label-md text-on-surface-variant transition-colors hover:text-error md:inline-flex"
+                aria-label="Logout"
+              >
+                <IoLogOutOutline size={18} aria-hidden="true" />
+                Logout
+              </button>
+            </>
           ) : (
-            <Link
-              href="/auth/login"
-              className="hidden text-label-md text-on-surface-variant transition-colors hover:text-primary md:inline-block"
-            >
-              Login
-            </Link>
+            <>
+              <Link
+                href="/auth/login"
+                className="hidden text-label-md text-on-surface-variant transition-colors hover:text-primary md:inline-block"
+              >
+                Login
+              </Link>
+              <Button href="/auth/signup" size="md" className="hidden md:inline-flex">
+                Become a Pro
+              </Button>
+            </>
           )}
-          <Button href="/auth/signup" size="md" className="hidden md:inline-flex">
-            Become a Pro
-          </Button>
+
           <button
             className="p-2 text-on-surface-variant md:hidden"
             onClick={() => setMenuOpen((open) => !open)}
@@ -120,7 +169,7 @@ export default function TopNavBar({ variant = "marketing", onBellClick }) {
             className="overflow-hidden border-t border-outline-variant bg-surface md:hidden"
           >
             <div className="container flex flex-col gap-4 py-4">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
@@ -130,12 +179,25 @@ export default function TopNavBar({ variant = "marketing", onBellClick }) {
                   {link.label}
                 </Link>
               ))}
-              <Link href="/auth/login" onClick={() => setMenuOpen(false)} className="text-label-md text-on-surface">
-                Login
-              </Link>
-              <Button href="/auth/signup" size="md">
-                Become a Pro
-              </Button>
+
+              {isLoggedIn ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-label-md text-error"
+                >
+                  <IoLogOutOutline size={18} aria-hidden="true" />
+                  Logout
+                </button>
+              ) : (
+                <>
+                  <Link href="/auth/login" onClick={() => setMenuOpen(false)} className="text-label-md text-on-surface">
+                    Login
+                  </Link>
+                  <Button href="/auth/signup" size="md">
+                    Become a Pro
+                  </Button>
+                </>
+              )}
             </div>
           </motion.nav>
         )}

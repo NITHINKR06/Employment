@@ -1,6 +1,7 @@
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import ClientCookiesBanner from "./ClientCookiesBanner";
+import Providers from "./Providers";
 import { SITE_NAME } from "@/lib/constants";
 
 const inter = Inter({
@@ -24,7 +25,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${plusJakartaSans.variable}`}>
       <body className="min-h-screen bg-background font-sans text-on-background antialiased">
-        {children}
+        <Providers>
+          {children}
+        </Providers>
         <ClientCookiesBanner />
       </body>
     </html>
