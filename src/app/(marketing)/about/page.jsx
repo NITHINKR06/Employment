@@ -110,7 +110,7 @@ export default function AboutPage() {
                   </label>
                   <select
                     id="topic"
-                    className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option>General question</option>
                     <option>Trust & Safety</option>
@@ -125,7 +125,7 @@ export default function AboutPage() {
                     id="about-message"
                     rows={4}
                     required
-                    className="w-full rounded border border-outline-variant bg-white p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded border border-outline-variant bg-surface-container-lowest p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
                 <Button type="submit" className="w-full">

@@ -68,7 +68,7 @@ export default function BookingReviewForm({ bookingId }) {
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="How was the service?"
-        className="w-full rounded border border-outline-variant bg-white p-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+        className="w-full rounded border border-outline-variant bg-surface-container-lowest p-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
       />
       {error && (
         <div className="rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">{error}</div>

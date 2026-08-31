@@ -14,6 +14,7 @@ import {
   IoLogOutOutline,
 } from "react-icons/io5";
 import Button from "@/components/Button/Button";
+import ThemeToggle from "@/components/Navbar/ThemeToggle";
 import { SITE_NAME } from "@/lib/constants";
 import { notifications } from "@/data/notifications";
 import { useAuth } from "@/lib/AuthProvider";
@@ -67,6 +68,7 @@ export default function TopNavBar({ variant = "marketing", onBellClick }) {
           <Link href="/" className="font-display text-headline-md font-bold text-primary">
             {SITE_NAME}
           </Link>
+          <ThemeToggle />
         </div>
       </header>
     );
@@ -106,6 +108,7 @@ export default function TopNavBar({ variant = "marketing", onBellClick }) {
         </div>
 
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           <button
             onClick={onBellClick}
             aria-label="Notifications"
@@ -169,6 +172,10 @@ export default function TopNavBar({ variant = "marketing", onBellClick }) {
             className="overflow-hidden border-t border-outline-variant bg-surface md:hidden"
           >
             <div className="container flex flex-col gap-4 py-4">
+              <div className="flex items-center justify-between text-label-md text-on-surface">
+                Theme
+                <ThemeToggle />
+              </div>
               {navLinks.map((link) => (
                 <Link
                   key={link.label}

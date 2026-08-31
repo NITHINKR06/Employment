@@ -125,7 +125,7 @@ export default function PaymentForm({ initialAmount = "45.00", bookingId, onPaym
                 type="number"
                 step="0.01"
                 min="0"
-                className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
               />
@@ -164,7 +164,7 @@ export default function PaymentForm({ initialAmount = "45.00", bookingId, onPaym
               <button
                 type="button"
                 disabled={isProcessing}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-outline-variant bg-white py-3 text-label-md font-semibold text-on-surface shadow-elevation-1 transition hover:bg-surface-container-low focus:ring-2 focus:ring-primary disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest py-3 text-label-md font-semibold text-on-surface shadow-elevation-1 transition hover:bg-surface-container-low focus:ring-2 focus:ring-primary disabled:opacity-50"
                 onClick={handlePaymentSubmit}
               >
                 <FcGoogle className="h-5 w-5" />
@@ -194,7 +194,7 @@ export default function PaymentForm({ initialAmount = "45.00", bookingId, onPaym
               <input
                 id="card-name"
                 type="text"
-                className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="John Doe"
                 required
               />
@@ -207,7 +207,7 @@ export default function PaymentForm({ initialAmount = "45.00", bookingId, onPaym
               <input
                 id="card-number"
                 type="text"
-                className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="4111 2222 3333 4444"
                 maxLength={19}
                 required
@@ -222,7 +222,7 @@ export default function PaymentForm({ initialAmount = "45.00", bookingId, onPaym
                 <input
                   id="expiry"
                   type="text"
-                  className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="MM/YY"
                   maxLength={5}
                   required
@@ -235,7 +235,7 @@ export default function PaymentForm({ initialAmount = "45.00", bookingId, onPaym
                 <input
                   id="cvv"
                   type="password"
-                  className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="123"
                   maxLength={4}
                   required

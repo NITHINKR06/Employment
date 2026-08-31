@@ -98,7 +98,7 @@ function CreateProfileForm({ onCreated }) {
             placeholder="Tell clients about yourself"
             value={form.bio}
             onChange={(e) => setForm({ ...form, bio: e.target.value })}
-            className="w-full rounded-lg border border-outline-variant bg-white p-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <Button type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting ? "Creating..." : "Create Profile"}

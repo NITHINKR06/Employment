@@ -32,7 +32,7 @@ export default function TextField({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`h-12 w-full rounded border bg-white text-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 ${
+          className={`h-12 w-full rounded border bg-surface-container-lowest text-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 ${
             Icon ? "pl-10" : "pl-4"
           } ${rightSlot ? "pr-10" : "pr-4"} ${
             error ? "border-error" : "border-outline-variant"

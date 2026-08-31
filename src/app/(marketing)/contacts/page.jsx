@@ -57,7 +57,7 @@ export default function ContactForm() {
                   id="contact-message"
                   rows={4}
                   required
-                  className="w-full rounded-lg border border-outline-variant bg-white p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <Button type="submit" className="w-full">

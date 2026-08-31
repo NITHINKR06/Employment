@@ -86,7 +86,7 @@ export default function BookingWizard({ worker }) {
                   id="category"
                   value={details.category}
                   onChange={(e) => setDetails({ ...details, category: e.target.value })}
-                  className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div>
@@ -98,7 +98,7 @@ export default function BookingWizard({ worker }) {
                   rows={4}
                   value={details.description}
                   onChange={(e) => setDetails({ ...details, description: e.target.value })}
-                  className="w-full rounded border border-outline-variant bg-white p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded border border-outline-variant bg-surface-container-lowest p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-outline-variant p-8 text-on-surface-variant">
@@ -124,7 +124,7 @@ export default function BookingWizard({ worker }) {
                     type="date"
                     value={schedule.date}
                     onChange={(e) => setSchedule({ ...schedule, date: e.target.value })}
-                    className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
                 <div>
@@ -136,7 +136,7 @@ export default function BookingWizard({ worker }) {
                     type="time"
                     value={schedule.time}
                     onChange={(e) => setSchedule({ ...schedule, time: e.target.value })}
-                    className="h-12 w-full rounded border border-outline-variant bg-white px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -163,7 +163,7 @@ export default function BookingWizard({ worker }) {
                   rows={3}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full rounded border border-outline-variant bg-white p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded border border-outline-variant bg-surface-container-lowest p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               {bookingError && (

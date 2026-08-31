@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const VARIANT_CLASSES = {
   primary: "bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container",
-  secondary: "bg-white text-on-surface border border-on-surface hover:bg-surface-container-low",
+  secondary: "bg-surface-container-lowest text-on-surface border border-on-surface hover:bg-surface-container-low",
   text: "bg-transparent text-primary hover:underline",
 };
 
