@@ -45,7 +45,8 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-md">
+    <div className="relative mx-auto w-full max-w-md">
+      <div className="pointer-events-none select-none blur-sm" aria-hidden="true">
       <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-8 shadow-elevation-2">
         <h1 className="text-center font-display text-headline-md text-on-surface">
           Trouble logging in?
@@ -132,6 +133,19 @@ export default function ResetPassword() {
           Back to Login
         </Link>
       </p>
+      </div>
+
+      <div className="absolute inset-0 z-10 flex items-center justify-center p-4">
+        <div className="w-full max-w-xs rounded-xl border border-outline-variant bg-surface-container-lowest p-6 text-center shadow-elevation-2">
+          <h2 className="font-display text-headline-sm text-on-surface">Coming Soon</h2>
+          <p className="mt-2 text-body-md text-on-surface-variant">
+            Password reset isn&apos;t available yet. We&apos;re working on it.
+          </p>
+          <Link href="/auth/login">
+            <Button className="mt-5 w-full">Back to Login</Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
