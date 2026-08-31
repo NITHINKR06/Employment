@@ -14,6 +14,8 @@ function toPublicShape(professional) {
     avatar: professional.avatar,
     verified: professional.verified,
     location: professional.location,
+    latitude: professional.latitude != null ? Number(professional.latitude) : null,
+    longitude: professional.longitude != null ? Number(professional.longitude) : null,
     availability: professional.availability,
     skills: professional.skills.map((ps) => ps.skill.name),
     bio: professional.bio,

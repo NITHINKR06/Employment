@@ -1,10 +1,20 @@
 "use client";
 
 import { useMemo, useState, useEffect, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { IoSearchOutline, IoLocationOutline, IoMapOutline, IoGridOutline, IoChevronBack, IoChevronForward } from "react-icons/io5";
 import FilterPanel from "@/components/Search/FilterPanel";
 import WorkerCard from "@/components/WorkerCard/WorkerCard";
+
+const ProfessionalsMap = dynamic(() => import("@/components/Search/ProfessionalsMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-96 items-center justify-center rounded-2xl border border-outline-variant bg-surface-container-low">
+      <p className="text-body-md text-on-surface-variant">Loading map...</p>
+    </div>
+  ),
+});
 
 function SearchPageContent() {
   const searchParams = useSearchParams();
@@ -188,19 +198,13 @@ function SearchPageContent() {
               <p className="font-display text-headline-sm text-on-surface">Loading professionals...</p>
             </div>
           ) : isMapView ? (
-            <div className="flex h-96 flex-col items-center justify-center rounded-2xl border border-outline-variant bg-surface-container-low p-8 text-center">
-              <IoMapOutline className="h-12 w-12 text-primary" />
-              <h3 className="mt-3 font-display text-headline-sm text-on-surface">Interactive Map Preview</h3>
-              <p className="mt-1 text-body-md text-on-surface-variant max-w-md">
-                Showing {results.length} verified professionals nearby. Select any marker to view availability.
-              </p>
-              <div className="mt-6 flex flex-wrap justify-center gap-2">
-                {results.map((w) => (
-                  <span key={w.id} className="rounded-full border border-primary/30 bg-surface-container-lowest px-3 py-1 text-label-sm font-semibold text-primary">
-                    📍 {w.name} (${w.hourlyRate}/hr)
-                  </span>
-                ))}
-              </div>
+            <div>
+              <ProfessionalsMap professionals={results} />
+              {results.some((w) => w.latitude == null || w.longitude == null) && (
+                <p className="mt-3 text-label-sm text-on-surface-variant">
+                  Some professionals don&apos;t have a pinned location yet and aren&apos;t shown on the map.
+                </p>
+              )}
             </div>
           ) : results.length === 0 ? (
             <div className="rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-12 text-center shadow-elevation-1">

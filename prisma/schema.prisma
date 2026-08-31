@@ -56,6 +56,8 @@ model Professional {
   bio             String?
   experienceSummary String?
   location        String?
+  latitude        Decimal? @db.Decimal(9, 6)
+  longitude       Decimal? @db.Decimal(9, 6)
   avatar          String?
   verified        Boolean  @default(false)
   availability    String?
