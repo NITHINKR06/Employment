@@ -23,7 +23,7 @@ import Button from "@/components/Button/Button";
 import Chip from "@/components/Chip/Chip";
 import VerifiedBadge from "@/components/Badge/VerifiedBadge";
 import Rating from "@/components/Rating/Rating";
-import { professionals } from "@/data/professionals";
+import { listProfessionals } from "@/server/services/professional.service";
 
 const POPULAR_TAGS = [
   "Fix a leaking pipe",
@@ -102,7 +102,8 @@ const TRUST_STATS = [
   { value: "< 2 hrs", label: "Avg Response Time", subtext: "Same-day booking available" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const professionals = await listProfessionals({});
   const topPros = professionals.slice(0, 3);
 
   return (

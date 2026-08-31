@@ -1,27 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IoSearchOutline, IoArrowForward, IoCalendarOutline, IoCheckmarkCircleOutline } from "react-icons/io5";
 import Link from "next/link";
 import Button from "@/components/Button/Button";
 import BookingSummaryRow from "@/components/Booking/BookingSummaryRow";
 import WorkerCard from "@/components/WorkerCard/WorkerCard";
 import NotificationsPanel from "@/components/Notification/NotificationsPanel";
-import { data as bookings } from "@/data/bookings/data";
-import { professionals } from "@/data/professionals";
 import { notifications as initialNotifications } from "@/data/notifications";
 
 export default function UserDashboardPage() {
   const [notificationsList, setNotificationsList] = useState(initialNotifications);
+  const [user, setUser] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [professionals, setProfessionals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch("/api/auth/me").then((res) => res.json()),
+      fetch("/api/bookings").then((res) => res.json()),
+      fetch("/api/professionals").then((res) => res.json()),
+    ]).then(([meBody, bookingsBody, professionalsBody]) => {
+      if (cancelled) return;
+      if (meBody.success) setUser(meBody.data.user);
+      if (bookingsBody.success) setBookings(bookingsBody.data.bookings);
+      if (professionalsBody.success) setProfessionals(professionalsBody.data.professionals);
+    }).finally(() => {
+      if (!cancelled) setIsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const activeBookings = bookings.filter((b) => b.status !== "Cancelled").slice(0, 3);
   const recommended = professionals.slice(0, 4);
+  const firstName = user?.name?.split(" ")[0] ?? "there";
 
   return (
     <div className="container py-10">
       {/* Header Banner */}
       <div className="mb-8 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-6 shadow-elevation-1 md:p-8">
         <h1 className="font-display text-display-lg text-on-surface">
-          Good morning, Arjun
+          Good morning, {firstName}
         </h1>
         <p className="mt-1 text-body-md text-on-surface-variant">
           Here is an overview of your active bookings and local recommendations.
@@ -61,7 +84,9 @@ export default function UserDashboardPage() {
               </Link>
             </div>
             <div className="space-y-3">
-              {activeBookings.length === 0 ? (
+              {isLoading ? (
+                <p className="py-6 text-center text-body-md text-on-surface-variant">Loading bookings...</p>
+              ) : activeBookings.length === 0 ? (
                 <p className="py-6 text-center text-body-md text-on-surface-variant">No active bookings found.</p>
               ) : (
                 activeBookings.map((booking) => (
@@ -83,9 +108,13 @@ export default function UserDashboardPage() {
               </Link>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {recommended.map((worker) => (
-                <WorkerCard key={worker.id} worker={worker} variant="compact" />
-              ))}
+              {isLoading ? (
+                <p className="col-span-2 py-6 text-center text-body-md text-on-surface-variant">Loading professionals...</p>
+              ) : (
+                recommended.map((worker) => (
+                  <WorkerCard key={worker.id} worker={worker} variant="compact" />
+                ))
+              )}
             </div>
           </section>
         </div>
