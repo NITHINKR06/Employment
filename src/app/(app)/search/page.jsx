@@ -22,6 +22,7 @@ function SearchPageContent() {
   const [sort, setSort] = useState("rating");
   const [isMapView, setIsMapView] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 6;
 
   useEffect(() => {
     if (initialCategory) {
@@ -78,6 +79,21 @@ function SearchPageContent() {
 
     return list;
   }, [professionals, searchQuery, selectedCategories, rateRange, minRating, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategories, rateRange, minRating, sort]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const paginatedResults = useMemo(
+    () => results.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [results, currentPage]
+  );
 
   const handleClearAll = () => {
     setSelectedCategories([]);
@@ -201,14 +217,14 @@ function SearchPageContent() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {results.map((worker) => (
+              {paginatedResults.map((worker) => (
                 <WorkerCard key={worker.id} worker={worker} variant="full" />
               ))}
             </div>
           )}
 
           {/* Pagination Component */}
-          {results.length > 0 && !isMapView && (
+          {results.length > 0 && !isMapView && totalPages > 1 && (
             <div className="mt-10 flex items-center justify-center gap-2">
               <button
                 disabled={currentPage === 1}
@@ -217,16 +233,24 @@ function SearchPageContent() {
               >
                 <IoChevronBack />
               </button>
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary font-display text-label-md font-bold text-on-primary">
-                1
-              </span>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  aria-current={page === currentPage ? "page" : undefined}
+                  className={
+                    page === currentPage
+                      ? "flex h-10 w-10 items-center justify-center rounded-lg bg-primary font-display text-label-md font-bold text-on-primary"
+                      : "flex h-10 w-10 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low"
+                  }
+                >
+                  {page}
+                </button>
+              ))}
               <button
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low"
-              >
-                2
-              </button>
-              <button
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low disabled:opacity-40"
               >
                 <IoChevronForward />
               </button>
