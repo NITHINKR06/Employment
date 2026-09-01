@@ -1,146 +1,436 @@
-# Backend Architecture Plan
+# Backend Plan — Python (FastAPI)
 
-Stack: Firebase Authentication (auth only) + PostgreSQL via Prisma (all app data) + Next.js Route Handlers as the API layer.
+Supersedes `BACKEND_PLAN_JS_LEGACY.md` (kept in the repo as a record of the JS/Next.js-route-handler approach that was scoped and partly built first — phases 0–7 there are real, working history, not a draft). The backend is now built in Python going forward. The Next.js app (`src/app`, `src/components`, etc.) stays exactly as-is as the **frontend only** — it stops having any `app/api/*` route handlers and instead calls this new service over HTTP.
 
-## 1. Folder structure (clean separation, no dumping into one file)
+**Why this split, given the goals (job-hunting portfolio + possible startup pitch):** a real Next.js frontend + a real FastAPI backend, talking over a versioned REST API, is a stronger portfolio story ("I built and integrated two services") than one Next.js app doing both, and it's the shape a startup would actually scale into (frontend and backend teams, independent deploys, independent scaling).
+
+---
+
+## Stack
+
+- **Framework:** FastAPI
+- **ORM:** SQLAlchemy 2.0 (async) + Alembic for migrations — the industry-standard combo (interview-recognizable), as opposed to SQLModel which is lighter but less commonly asked about
+- **Validation:** Pydantic v2 (FastAPI's native schema layer — same role zod played in the JS plan)
+- **Auth:** Firebase Authentication stays (client-side signup/login/Google sign-in unchanged) — the Python backend verifies the Firebase ID token per-request via the official `firebase-admin` Python SDK, using a stateless Bearer token instead of the old httpOnly session cookie (cookies don't cross the frontend/backend origin split cleanly; a Bearer token in `Authorization` header is the standard pattern for a separate API)
+- **DB:** same Postgres instance/schema conceptually, recreated as SQLAlchemy models + Alembic migrations (not reusing `prisma/schema.prisma` — Prisma is JS-only)
+- **Package/env management:** `uv` (fast, modern) or `poetry` — pick `uv`
+- **Server:** Uvicorn (dev) / Gunicorn+Uvicorn workers (prod)
+
+---
+
+## Hard rules for every module (same discipline as the JS plan, just Python-shaped)
+
+1. `router.py` = parse request (Pydantic model from the body) → call service → return response model. No business logic, no SQLAlchemy queries here.
+2. `service.py` = business logic + authorization checks only. No raw SQLAlchemy session queries here.
+3. `repository.py` = the only place that touches the SQLAlchemy session/queries for that domain.
+4. `schemas.py` = Pydantic request/response models for that domain only.
+5. `models.py` = SQLAlchemy ORM models for that domain only (one domain's tables, not a shared dumping file).
+6. A module never imports another module's `repository.py`. Cross-domain reads go through the other module's `service.py`.
+7. One Alembic migration per feature, never bundled with an unrelated domain's schema change.
+
+---
+
+## Folder structure
 
 ```
-src/
-  server/
-    db/
-      client.js              # Prisma client singleton
-    auth/
-      firebaseAdmin.js        # Firebase Admin SDK init (server-side token verification)
-      session.js              # session cookie helpers (set/get/clear)
-      requireAuth.js           # middleware-style guard for route handlers
-    services/                 # business logic, one file per domain
-      user.service.js
-      professional.service.js
-      booking.service.js
-      payment.service.js
-    repositories/             # Prisma queries, one file per model
-      user.repository.js
-      professional.repository.js
-      booking.repository.js
-      payment.repository.js
-    validators/                # zod schemas per domain
-      auth.schema.js
-      booking.schema.js
-      professional.schema.js
-    utils/
-      apiResponse.js           # consistent { success, data, error } envelope
-      errors.js                # typed AppError classes
+backend/
+  pyproject.toml
+  alembic.ini
+  alembic/
+    versions/
+  app/
+    main.py                      # FastAPI app, router registration, CORS, startup
+    core/
+      config.py                  # env/settings (pydantic-settings)
+      db.py                       # async SQLAlchemy engine/session factory
+      security.py                 # Firebase Admin init + verify_id_token + get_current_user dependency
+      errors.py                   # typed AppError classes + global exception handler
+      response.py                  # consistent response envelope helper
 
-  app/api/
-    auth/
-      session/route.js         # POST: exchange Firebase ID token -> server session cookie
-      logout/route.js
-      me/route.js
-    professionals/
-      route.js                 # GET list/search+filters, POST create (employee)
-      [id]/route.js            # GET, PATCH, DELETE
-    bookings/
-      route.js                 # GET (mine), POST create
-      [id]/route.js            # GET, PATCH (status updates)
-    payments/
-      route.js                 # POST create/confirm
-      [id]/route.js
+    modules/
+      users/
+        models.py    service.py    repository.py    schemas.py    router.py
+      professionals/
+        models.py    service.py    repository.py    schemas.py    router.py
+      bookings/
+        models.py    service.py    repository.py    schemas.py    router.py
+      payments/                      # mock provider only — explicitly excluded from real integration
+        models.py    service.py    repository.py    schemas.py    router.py
+      reviews/
+        models.py    service.py    repository.py    schemas.py    router.py
 
-  lib/
-    firebaseClient.js           # client-side Firebase SDK init (for login/signup forms)
+      notifications/
+        models.py    service.py    repository.py    schemas.py    router.py
+      contact/
+        models.py    service.py    repository.py    schemas.py    router.py
+      settings/
+        service.py    schemas.py    router.py          # no own table — composes users/professionals repos
+      categories/
+        models.py    service.py    repository.py    schemas.py    router.py
+      favorites/
+        models.py    service.py    repository.py    schemas.py    router.py
+      geocoding/
+        client.py     service.py    router.py           # Nominatim HTTP client, no DB
+      availability/
+        models.py    service.py    repository.py    schemas.py    router.py
+      booking_lifecycle/
+        reschedule_service.py   recurring_models.py   recurring_repository.py
+        recurring_service.py    cancellation_service.py   schemas.py    router.py
+      sms/
+        client.py     service.py                          # open-source/self-hosted gateway wrapper, no router (internal only)
+      push/
+        models.py    service.py    repository.py    schemas.py    router.py
+      review_response/
+        service.py    schemas.py    router.py            # extends reviews.models, no own table
+      disputes/
+        models.py    service.py    repository.py    schemas.py    router.py
+      verification/
+        models.py    service.py    repository.py    schemas.py    router.py
+      earnings/
+        service.py    schemas.py    router.py            # read-only aggregation, no own table
+      service_area/
+        service.py    schemas.py    router.py            # extends professionals.models
+      portfolio/
+        models.py    service.py    repository.py    schemas.py    router.py
+      admin/
+        user_service.py   analytics_service.py   dispute_service.py
+        schemas.py    router.py
+      uploads/
+        client.py     service.py    schemas.py    router.py
 
-prisma/
-  schema.prisma
-  migrations/
+  tests/
+    unit/                          # pytest, one test module per domain module
+    e2e/
 ```
 
-Rule: route handlers stay thin (parse → validate → call service → respond). All logic lives in `services/`, all DB access in `repositories/`. This is what makes migrating later (e.g. swapping Postgres for something else, or Firebase Auth for another provider) contained to one layer.
+Route registration in `main.py` mounts each module's `router.py` under a versioned prefix (`/api/v1/...`) — same endpoint shapes as the original JS plan, just served from this app instead of Next.js.
 
-## 2. Auth flow (Firebase Auth, strong + standard)
+---
 
-- Client: Firebase JS SDK handles signup/login/password reset/Google sign-in directly (email verification too) — this replaces the currently-fake login/signup forms.
-- Client gets a Firebase ID token, sends it once to `POST /api/auth/session`.
-- Server (Firebase Admin SDK) verifies the ID token, then mints an httpOnly, secure session cookie (Firebase's `createSessionCookie`, ~2 week expiry) — no raw ID tokens floating around in localStorage.
-- Every protected API route calls `requireAuth()`, which reads the session cookie, verifies it via Admin SDK, and attaches `{ uid, email }` to the request.
-- On first authenticated session-cookie exchange, we upsert a row in Postgres `User` table keyed by Firebase `uid`, carrying `role` (user/employee), profile fields, etc. — Firebase owns identity, Postgres owns app data, joined by `firebaseUid`.
-- Role-based access: `role` lives in Postgres (not Firebase custom claims) so it's easy to query/join with bookings — service layer checks role before mutating.
+## Auth flow (adjusted for the split)
 
-## 3. Data model (Prisma / Postgres)
+- Client (Next.js, unchanged): Firebase JS SDK handles signup/login/Google sign-in, gets an ID token.
+- Client sends the ID token as `Authorization: Bearer <token>` on every request to the FastAPI backend — no session-cookie exchange step needed anymore (that pattern existed to bridge Firebase → Next.js server components in the same origin; not needed when the frontend just calls a separate API like any other client).
+- `core/security.py` — `get_current_user` FastAPI dependency: verifies the ID token via `firebase_admin.auth.verify_id_token`, looks up/upserts the `User` row by `firebase_uid`, returns it. Any route needing auth just declares `user: User = Depends(get_current_user)`.
+- Role checks: a `require_role("ADMIN")` dependency factory, same idea as the old `requireRole`.
+- CORS: FastAPI `CORSMiddleware` allowing the Next.js frontend origin, credentials not needed since it's Bearer-token based (no cookies to allow cross-origin).
 
-- `User` (id, firebaseUid unique, email, name, role: USER|EMPLOYEE|ADMIN, phone, createdAt)
-- `Professional` (id, userId FK→User, title, trade, yearsExperience, hourlyRate, bio, location, verified, ratingAvg, reviewCount)
-- `Skill`, `ProfessionalSkill` (many-to-many) — replaces the flat `skills: []` array so search/filter can query relationally
-- `PortfolioImage` (professionalId FK, url)
-- `Service` (professionalId FK, title, subtext, price)
-- `Booking` (id, userId FK, professionalId FK, serviceId FK, status enum: PENDING|CONFIRMED|IN_PROGRESS|COMPLETED|CANCELLED, scheduledAt, address, notes, createdAt)
-- `Payment` (id, bookingId FK unique, amount, status enum: PENDING|PAID|FAILED|REFUNDED, provider, providerRef, createdAt)
-- `Review` (id, bookingId FK, rating, comment) — feeds `Professional.ratingAvg`
+---
 
-## 4. Migration/replacement of current mock data
+## How each module is tracked
 
-- `src/data/professionals.js` → seed script (`prisma/seed.js`) that inserts the same 4 professionals into Postgres, so nothing visually breaks.
-- Pages currently importing `professionals.js` / hardcoded booking status get switched to `fetch('/api/...')` calls (client) or server components calling the service layer directly.
+Every module below has two checklists: **Build** (migration/repository/service/schema/router) and **Tests** (`tests/unit/test_<module>.py`, pytest). A module isn't done until both are checked — same bar as the JS plan's "verified via smoke test," just formalized as real test files instead of one-off manual checks. Tests use `pytest-asyncio` + a test-only Postgres schema (or SQLite for pure-logic service tests where no Postgres-specific SQL is used) and mock cross-module service calls (e.g. `bookings` tests mock `notifications.service.notify_user`, not the real thing).
 
-## 5. Order of implementation
+---
 
-1. Prisma + Postgres setup, schema, migration, seed (mirrors existing mock data)
-2. Firebase Admin/client setup + session-cookie auth route + `requireAuth`
-3. Wire real signup/login/logout pages to Firebase, replacing the fake `handleLogin`
-4. `User` upsert-on-login + role selection persisted
-5. Professionals API (list/search/filter, detail) — swap `search/page.jsx`, `professionals/[id]/page.jsx` off mock data
-6. Bookings API (create, list mine, status update) — wire `BookingWizard.jsx`, booking status pages
-7. Payments API (create/confirm) — wire `PaymentForm.jsx`
-8. Employee dashboard endpoints (professional's own bookings/earnings)
+## Phase 0 — Port existing JS backend to Python
 
-## 6. Env vars needed
+*(This already exists and works in JS per `BACKEND_PLAN_JS_LEGACY.md` phases 0–7 — it needs porting, not designing from scratch.)*
 
-`DATABASE_URL`, `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (admin), `NEXT_PUBLIC_FIREBASE_*` (client config).
+**Status (2026-09-01): built and verified.** All 5 modules + core exist, `alembic upgrade head` runs clean against a fresh DB, all 27 planned unit tests pass, and the app boots under Uvicorn serving every `/api/v1/*` route (verified via `/openapi.json`). Three real bugs were found and fixed while verifying:
+1. `app/core/config.py` — `.env`'s `DATABASE_URL` (shared with the old Prisma setup) had no driver spec, so the async engine fell back to `psycopg2` (not a dependency). Added a validator forcing the `asyncpg` driver and stripping Prisma's `?schema=` param, which `asyncpg` doesn't accept as a keyword arg.
+2. `alembic/env.py:50` — online migrations passed the *sync* URL into `create_async_engine` (backwards); fixed to use the async URL.
+3. `alembic/versions/0001_initial_schema.py` — the `role`/`status` enum columns used generic `sa.Enum(..., create_type=False)`, which Postgres doesn't reliably honor; `op.create_table` re-issued `CREATE TYPE` and collided with the type created two lines earlier. Fixed by using `sqlalchemy.dialects.postgresql.ENUM(..., create_type=False)` instead, the standard reliable pattern.
 
-## 7. Phase-wise execution
+Also: the local Postgres container already held the old Prisma-created schema in the `promarket` database. Created a separate `promarket_py` database in the same container for the Python backend (`backend/.env` updated; root `.env`, used by the JS side, untouched) rather than risk the existing seed data.
 
-Each phase ships independently and is verified (build passes, manual smoke test) before moving to the next. No phase touches work belonging to a later phase.
+Remaining before Phase 0 is fully closed: the Cutover items below (frontend not yet pointed at this backend).
 
-- [x] **Phase 0 — Scaffolding**
-  Installed `prisma`/`@prisma/client` (pinned 6.19.3), `firebase`, `firebase-admin`, `zod`. Added `.env.example` / `.env`. Local Postgres via `docker-compose.yml` (port 5433, container `promarket-postgres`, since 5432 was taken by another project).
+### `core` (db, config, security)
+- Build
+  - [x] `core/db.py`, `core/config.py`, `alembic` init — recreate the schema from `prisma/schema.prisma` as SQLAlchemy models (User, Professional, Skill, ProfessionalSkill, TrustBadge, PortfolioImage, Service, Booking, Payment, Review)
+  - [x] `core/security.py` — Firebase Admin Python SDK setup, `get_current_user`/`require_role`
+  - [x] `core/errors.py`, `core/response.py` — typed exceptions + global handler + response envelope
+- Tests (`tests/unit/test_security.py`)
+  - [x] `get_current_user` raises 401 on missing/invalid/expired token
+  - [x] `get_current_user` upserts a new `User` row on first-ever verified token for a `firebase_uid`
+  - [x] `get_current_user` returns the existing `User` row on a repeat call (no duplicate insert)
+  - [x] `require_role("ADMIN")` raises 403 for a non-admin user, passes for an admin
 
-- [x] **Phase 1 — Database layer**
-  `prisma/schema.prisma` with all models (User, Professional, Skill, ProfessionalSkill, TrustBadge, PortfolioImage, Service, Booking, Payment, Review). Initial migration applied (`prisma/migrations/20260830073757_init`). `src/server/db/client.js` singleton. `prisma/seed.mjs` mirrors `src/data/professionals.js` (4 professionals, skills, trust badges, portfolio, services) — verified via a direct query, relations intact. Run with `pnpm db:seed`.
+### `modules/users`
+- Build
+  - [x] `models.py`, `repository.py`, `service.py` — upsert-on-login logic (ported from old `/api/auth/session` route)
+- Tests (`tests/unit/test_users.py`)
+  - [x] creates a user on first login with correct default `role=USER`
+  - [x] does not overwrite `role` on a subsequent login for an existing user
+  - [x] `get_user_by_id` raises `NotFoundError` for an unknown id
 
-- [x] **Phase 2 — Auth foundation**
-  `src/lib/firebaseClient.js` (Firebase JS SDK, lazy/tolerant of placeholder config), `src/server/auth/firebaseAdmin.js` (lazy-initialized Admin SDK so missing env vars don't crash the build), `session.js` (httpOnly cookie helpers), `requireAuth.js` (`getCurrentUser`/`requireAuth`/`requireRole`, resolves the Postgres `User` from the verified Firebase uid). Routes: `POST /api/auth/session` (verifies ID token, mints session cookie, upserts `User`), `POST /api/auth/logout`, `GET /api/auth/me`. Also added `src/server/utils/apiResponse.js` + `errors.js` for a consistent envelope. Verified via curl: `/me` returns `{user: null}` with no cookie; `/session` correctly errors until real Firebase Admin credentials are supplied (`FIREBASE_PROJECT_ID`/`FIREBASE_CLIENT_EMAIL`/`FIREBASE_PRIVATE_KEY` in `.env`). No UI changes yet.
+### `modules/professionals`
+- Build
+  - [x] port `professional.service.js`/`professional.repository.js` logic 1:1 (list/search/filter, detail, create, update, delete)
+- Tests (`tests/unit/test_professionals.py`)
+  - [x] list endpoint applies trade/rate/rating filters correctly (each filter tested independently)
+  - [x] search returns the flat UI shape (skills as `list[str]`, portfolio as `list[str]`, etc.)
+  - [x] update/delete raises 403 when the caller doesn't own the professional profile
+  - [x] detail raises `NotFoundError` for an unknown id
 
-- [x] **Phase 3 — Real signup/login UI**
-  `src/lib/authClient.js`: `signUpWithEmail`/`signInWithEmail`/`signOutUser`, wrapping the Firebase client SDK and exchanging the ID token for a session cookie via `/api/auth/session` (role persisted on signup). Firebase client auth (`src/lib/firebaseClient.js`) made lazy/browser-only — calling `getAuth()` at import time broke static prerendering of `/auth/signup` with placeholder keys. `(auth)/auth/login` and `(auth)/auth/signup` pages now call these instead of faking `router.push`, redirect based on the returned `user.role`, and show real Firebase error messages. Removed the old fake `/api/auth/login` mock route (unused, superseded by `/api/auth/session`). Verified: `pnpm build` succeeds, both pages render (200) in dev. Actual sign-in/sign-up will only work once real Firebase credentials are added to `.env`. `resetpassword` page is untouched (still a fake OTP flow) — out of scope for this phase, flagged for later.
+### `modules/bookings`
+- Build
+  - [x] port booking status-transition table + ownership rules
+- Tests (`tests/unit/test_bookings.py`)
+  - [x] every allowed transition in the table succeeds (`PENDING→CONFIRMED→IN_PROGRESS→COMPLETED`, either side `→CANCELLED` from a non-terminal state)
+  - [x] every disallowed transition raises a validation error (e.g. `COMPLETED→CONFIRMED`)
+  - [x] a user who isn't the booking's customer or professional gets 403 on any mutation
+  - [x] list-mine returns the counterpart shape correctly for both customer and professional viewpoints
 
-- [x] **Phase 4 — Professionals API**
-  `repositories/professional.repository.js` (Prisma queries with skills/trustBadges/portfolio/services includes, search/trade/rate/rating filters), `services/professional.service.js` (maps DB shape to the flat UI shape: `rating`, `skills: string[]`, `trustBadges: string[]`, `portfolio: string[]`, `servicesOffered: [{title, subtext, price}]`, plus ownership checks on update/delete), `validators/professional.schema.js` (zod). Routes: `GET/POST /api/professionals`, `GET/PATCH/DELETE /api/professionals/[id]` (write routes require auth/ownership, not yet wired to any UI — that's Phase 7/8).
-  `search/page.jsx` now fetches `/api/professionals` on mount instead of importing the mock array (categories derived from the fetched list; added a loading state). `professionals/[id]/page.jsx` and `book/[id]/page.jsx` (both server components) now call the service layer directly and use `generateStaticParams` against the DB; 404s via `notFound()` on `NotFoundError`. `src/data/professionals.js` is left in place — still used by the marketing homepage and `user/dashboard`, out of scope here.
-  Verified: `pnpm build` succeeds (SSG pages now build with real DB-generated cuids), `/api/professionals` returns the expected shape, professional detail/search/booking pages all 200, unknown id 404s correctly.
+### `modules/payments` (mock provider only — real gateway explicitly excluded)
+- Build
+  - [x] port mock payment provider (`pay_for_booking` marks `PAID` immediately, `provider="mock-<method>"`)
+- Tests (`tests/unit/test_payments.py`)
+  - [x] paying a `PENDING` booking marks it `CONFIRMED` in the same transaction
+  - [x] a second payment attempt on an already-paid booking is rejected
+  - [x] a user who doesn't own the booking cannot pay or read its payment record
 
-- [x] **Phase 5 — Bookings API**
-  `repositories/booking.repository.js`, `services/booking.service.js` (maps `Booking` to the `BookingSummaryRow`/detail shape per viewer role — customer sees the professional as counterpart, professional sees the client; status enum mapped to display labels `Pending/Confirmed/In Progress/Completed/Cancelled`; ownership checks; a small allowed-status-transition table: professional drives `CONFIRMED→IN_PROGRESS→COMPLETED`, either side can `CANCELLED` from a non-terminal state), `validators/booking.schema.js`. Routes: `GET/POST /api/bookings` (mine / create), `GET/PATCH /api/bookings/[id]` (detail / status update).
-  `BookingWizard.jsx` now creates a real booking (`POST /api/bookings`) when leaving the Address step, before the Payment step — shows a login prompt if unauthenticated. `user/bookingStatus/page.jsx` fetches `/api/bookings` client-side (same pattern as search). `user/bookingStatus/[id]`, `employee/bookingStatus`, and `employee/bookingStatus/[id]` are server components calling the service layer directly with `requireAuth`/`requireRole`, replacing `src/data/bookings/data.js`. Added `components/Booking/BookingStatusActions.jsx` (client) wiring Cancel/Accept/Decline/Start/Complete buttons to `PATCH /api/bookings/[id]`.
-  Verified via a temporary in-app test route (removed after use) exercising the full lifecycle against the real DB: booking creation, listing from both the customer's and professional's side, ownership enforcement (customer blocked from confirming), and the professional-confirm → customer-cancel transition — all passed. `pnpm build` succeeds.
+### `modules/reviews`
+- Build
+  - [x] port review creation (booking-completed + one-per-booking + rating recompute)
+- Tests (`tests/unit/test_reviews.py`)
+  - [x] review creation rejected if the booking isn't `COMPLETED`
+  - [x] review creation rejected on a second attempt for the same booking
+  - [x] `Professional.rating_avg`/`review_count` recompute correctly after each new review (test with 1, then 2, then 3 reviews)
+  - [x] `list_professional_reviews` is callable without auth (public)
 
-- [x] **Phase 6 — Payments API (mock provider)**
-  `repositories/payment.repository.js`, `services/payment.service.js`, `validators/payment.schema.js`. Routes: `POST /api/payments` (pay a booking), `GET /api/payments/[id]`. **Deliberately a mock/dummy payment provider** — `payForBooking` marks the payment `PAID` immediately with `provider: "mock-<method>"` and a random `providerRef`, no real gateway call. This is called out in a comment at the top of `payment.service.js` so swapping in a real gateway (Stripe/Razorpay) later only touches that one function — nothing else in the service/route/UI layer needs to change. Paying a `PENDING` booking auto-confirms it (transaction in the repository).
-  `PaymentForm.jsx` takes an optional `bookingId` prop — when present it calls the real endpoint before showing the success screen; when absent (no booking context) it falls back to the original local-only simulated success, unchanged. `BookingWizard.jsx` passes the booking id created in Phase 5. `auth/payment/page.jsx` (the standalone payment portal) reads `bookingId`/`amount` from the query string; the "Go to Payment Portal" link on the user booking detail page now includes both.
-  Verified via a temporary in-app test route (removed after use): booking auto-confirms on payment, a second payment attempt on the same booking is rejected, and a payment is inaccessible to a user who doesn't own the booking. `pnpm build` succeeds.
+### Cutover
+- [ ] Point the Next.js frontend's `fetch('/api/...')` calls at the new FastAPI base URL instead of its own route handlers; remove `src/app/api/*` once parity is verified
+- [ ] Data migration: export existing Postgres data (if any real users exist beyond seed data) or just re-run an equivalent seed script in Python
+- [ ] Verify: FastAPI's auto-generated OpenAPI docs (`/docs`) match the old endpoint shapes; full `pytest` suite green before removing the JS routes
 
-- [x] **Phase 7 — Employee dashboard + reviews**
-  Schema: added `Professional.experienceSummary` (nullable text) to properly back the dashboard's existing "Experience" narrative field — small migration (`20260830091043_add_professional_experience_summary`).
-  Reviews: `repositories/review.repository.js`, `services/review.service.js` (`createReview` enforces booking ownership + `COMPLETED` status + one review per booking, then recomputes `Professional.ratingAvg`/`reviewCount` from all reviews in the same flow; `listProfessionalReviews` is public), `validators/review.schema.js`. Routes: `POST /api/bookings/[id]/reviews`, `GET /api/professionals/[id]/reviews`. Added `components/Booking/BookingReviewForm.jsx`, shown on a user's booking detail page once its status is `Completed` and unreviewed (booking shape now carries `reviewed`, via `booking.review` in the repository include).
-  Employee self-service: `getMyProfessional` (service) + `GET /api/professionals/me`; `getEmployeeSummary` (in `booking.service.js`, reusing `findManyByProfessionalId`) + `GET /api/bookings/summary` — both `EMPLOYEE`/`ADMIN`-gated. `employee/dashboard/page.jsx` rewritten as a client component: shows a "Create Your Professional Profile" form (`POST /api/professionals`) for an employee with no profile yet (real signups don't get one automatically — only seed data does), otherwise loads the real profile + a jobs/earnings stat row + real reviews, and Edit/Save now `PATCH`es `/api/professionals/[id]` (name/email dropped from the edit form since they aren't Professional fields and weren't actually persisted before either).
-  Also replaced the hardcoded `MOCK_REVIEWS` on the public `professionals/[id]` page with `listProfessionalReviews`, called directly since it's a server component.
-  Verified via a temporary in-app test route (removed after use): profile creation, summary before/after a completed+paid booking, review rejected before completion, rating/reviewCount recompute after a review, double-review rejected, reviews listing count — all correct. `pnpm build` succeeds.
+---
 
-Proceeding now with **Phase 0**, then **Phase 1**.
+## Phase 1 — Stubbed features
 
-## 8. Live Firebase verification (2026-08-30)
+### `modules/notifications`
+- Build
+  - [ ] `Notification` model + migration, list/mark-read/clear endpoints, `notify_user()` used by other modules
+- Tests (`tests/unit/test_notifications.py`)
+  - [ ] `notify_user` creates a row with `read_at=None`
+  - [ ] mark-read sets `read_at`, is a no-op (not an error) if called twice
+  - [ ] clear-all only deletes the calling user's notifications, not others'
+  - [ ] list only returns the calling user's notifications, newest first
 
-Real Firebase project `manage-place` credentials (client config + Admin SDK service account) were added to `.env` (gitignored, not committed). Verified end-to-end against the live project and local Postgres via Firebase's Identity Toolkit REST API (simulating what the browser SDK does) plus a temporary in-app cleanup route (removed after use):
-- Real signup → `/api/auth/session` → session cookie → `/api/auth/me` all correct
-- Authenticated booking creation and listing via the real session cookie
-- Test Firebase accounts and their Postgres rows fully cleaned up afterward
+### `modules/settings`
+- Build
+  - [ ] get/update settings composing `users`+`professionals` repos (no own table)
+- Tests (`tests/unit/test_settings.py`)
+  - [ ] GET returns the current user's data pre-filled (not empty defaults)
+  - [ ] PATCH persists and a subsequent GET reflects the change
+  - [ ] EMPLOYEE-only fields rejected (422) when sent by a USER role
 
-Remaining before this is production-ready: rotate/secure the downloaded service-account JSON in `~/Downloads` (delete it once the key is safely stored, e.g. a secrets manager), and set the same env vars in the Vercel project for deployment.
+### `modules/contact`
+- Build
+  - [ ] `ContactMessage` model + migration, create endpoint (alerts admin via `sms` module once Phase 4 lands — stubbed no-op until then)
+- Tests (`tests/unit/test_contact.py`)
+  - [ ] anonymous (unauthenticated) submission succeeds and is stored
+  - [ ] authenticated submission stores the `user_id`
+  - [ ] invalid email format rejected by schema validation
+
+---
+
+## Phase 2 — Discovery & search
+
+### `modules/categories`
+- Build
+  - [ ] `Category` model + migration, backfill `Professional.category_id` from existing `trade` strings, list-with-counts endpoint
+- Tests (`tests/unit/test_categories.py`)
+  - [ ] list returns accurate per-category professional counts
+  - [ ] a category with zero professionals still appears with `count=0`
+
+### `modules/favorites`
+- Build
+  - [ ] `Favorite` model + migration, toggle/list endpoints
+- Tests (`tests/unit/test_favorites.py`)
+  - [ ] toggling twice returns to the un-favorited state (idempotent toggle)
+  - [ ] list-mine only returns the calling user's favorites
+  - [ ] favoriting the same professional twice doesn't create a duplicate row (unique constraint honored)
+
+### Recently-viewed
+- [ ] Client-only (localStorage) — no backend module, no tests here
+
+### `modules/professionals` (extended)
+- Build
+  - [ ] `get_similar(id)` service method + endpoint
+- Tests (`tests/unit/test_professionals.py`, extended)
+  - [ ] similar results exclude the professional itself
+  - [ ] similar results prioritize same-category matches over others
+
+### `modules/geocoding`
+- Build
+  - [ ] Nominatim client, throttled to respect 1 req/sec usage policy, endpoint + bounding-box search extension on `professionals`
+- Tests (`tests/unit/test_geocoding.py`)
+  - [ ] client throttles a burst of calls to ≤1/sec (mocked clock, no real network in unit tests)
+  - [ ] a malformed/unresolvable address returns a clean "not found" result, not an unhandled exception
+  - [ ] bounding-box filter on `professionals` excludes out-of-range lat/lng
+
+### Sort options
+- Build
+  - [ ] query params on existing `professionals` list endpoint (distance/availability/most-booked) — no new module
+- Tests
+  - [ ] each sort mode returns results in the expected order against a fixed fixture set
+
+---
+
+## Phase 3 — Booking & scheduling
+
+### `modules/availability`
+- Build
+  - [ ] `TimeSlot` model + migration, generate/list/reserve slots, endpoints; `bookings` module calls into this via its service on create/cancel
+- Tests (`tests/unit/test_availability.py`)
+  - [ ] listing open slots excludes already-`is_booked` slots
+  - [ ] reserving a slot on booking creation is atomic — two concurrent reservation attempts on the same slot: one wins, one gets a clean conflict error (not a corrupted double-booking)
+  - [ ] releasing a slot on booking cancellation makes it reservable again
+
+### `modules/booking_lifecycle`
+- Build
+  - [ ] reschedule (validates against `availability`), `RecurringBooking` model + migration + a scheduled job (APScheduler or a cron-triggered endpoint) to spin up concrete bookings, cancellation policy + refund against the still-mocked `payments` module
+- Tests (`tests/unit/test_booking_lifecycle.py`)
+  - [ ] reschedule to an already-booked slot is rejected
+  - [ ] reschedule to an open slot releases the old slot and reserves the new one
+  - [ ] recurring booking job creates exactly one new `Booking` per due cycle, none for cycles not yet due
+  - [ ] cancellation inside the cutoff window is rejected (or partially refunded, per policy); outside the window is allowed with full refund
+  - [ ] refund only ever calls the mock `payments` service, never a real gateway (asserted via mock call inspection)
+
+### Job completion → review prompt
+- Build
+  - [ ] extend `bookings` service's `COMPLETED` transition to call `notifications`
+- Tests
+  - [ ] transitioning a booking to `COMPLETED` triggers exactly one `notify_user` call to the customer
+
+---
+
+## Phase 4 — Communication (SMS + push only)
+
+### `modules/sms`
+- Build
+  - [ ] open-source/self-hosted gateway client, templated messages, called internally by `bookings`/`contact` (no router — not client-facing)
+- Tests (`tests/unit/test_sms.py`)
+  - [ ] each template (booking confirmed/reminder/status changed) renders with the expected placeholders filled
+  - [ ] gateway client failure (network error) is caught and logged, never raised up to break the calling booking/contact flow
+
+### `modules/push`
+- Build
+  - [ ] `PushSubscription` model + migration, Web Push (VAPID keys, no paid service), subscribe/unsubscribe endpoints, `notifications` fans out to it
+- Tests (`tests/unit/test_push.py`)
+  - [ ] subscribe stores one row per unique endpoint per user (no duplicates)
+  - [ ] unsubscribe removes only the matching endpoint
+  - [ ] a `notify_user` call fans out to all of that user's active subscriptions
+  - [ ] an expired/invalid subscription (410 from push service) is pruned automatically, not retried forever
+
+---
+
+## Phase 5 — Trust & reviews (no photo uploads)
+
+### `modules/review_response`
+- Build
+  - [ ] nullable `professional_response`/`responded_at` columns on `reviews`, one-response-per-review endpoint
+- Tests (`tests/unit/test_review_response.py`)
+  - [ ] only the reviewed professional can respond (403 for anyone else)
+  - [ ] a second response attempt on the same review is rejected
+
+### `modules/disputes`
+- Build
+  - [ ] `Dispute` model + migration, create/list/detail endpoints, admin-only status update (delegated from `admin`)
+- Tests (`tests/unit/test_disputes.py`)
+  - [ ] create requires an authenticated user
+  - [ ] list-mine only returns the calling user's own disputes (not other users')
+  - [ ] non-admin cannot change `status`
+  - [ ] admin status update from `OPEN→RESOLVED` persists `resolution` text
+
+### `modules/verification`
+- Build
+  - [ ] `VerificationRequest` model + migration, submit endpoint, admin approve/reject flips `professionals.verified`
+- Tests (`tests/unit/test_verification.py`)
+  - [ ] submit requires the caller to own a `Professional` profile
+  - [ ] admin approve sets `professionals.verified=True` and request `status=APPROVED`
+  - [ ] admin reject leaves `verified=False` and records `reviewed_by`/`reviewed_at`
+  - [ ] a non-admin cannot approve/reject
+
+---
+
+## Phase 6 — Professional-side tools
+
+### `modules/earnings`
+- Build
+  - [ ] read-only aggregation over `bookings`+`payments` services, endpoint
+- Tests (`tests/unit/test_earnings.py`)
+  - [ ] totals match a hand-computed sum over a fixture set of paid bookings
+  - [ ] unpaid/pending bookings are excluded from the "earned" total but shown separately as "pending"
+  - [ ] a professional only ever sees their own earnings, never another's
+
+### `modules/service_area`
+- Build
+  - [ ] `service_radius_km` column on `professionals`, update endpoint, radius filter reusing `geocoding`
+- Tests (`tests/unit/test_service_area.py`)
+  - [ ] radius update rejects negative/zero values
+  - [ ] search filter correctly includes/excludes professionals at the radius boundary (inclusive boundary test)
+
+### `modules/portfolio`
+- Build
+  - [ ] add/remove/reorder images, ownership checks; depends on Phase 8's `uploads` (interim: raw URLs)
+- Tests (`tests/unit/test_portfolio.py`)
+  - [ ] only the owning professional can add/remove/reorder their portfolio
+  - [ ] reorder persists the new order and a subsequent list reflects it
+
+### Availability calendar management
+- [ ] professional-facing endpoints reusing `availability` module — covered by `test_availability.py`, no new test file
+
+---
+
+## Phase 7 — Admin panel
+
+### `modules/admin`
+- Build
+  - [ ] `require_role("ADMIN")`-gated router; `user_service` (list/search/suspend, reuses `users`/`professionals`), `analytics_service` (aggregates over existing tables), `dispute_service` (thin delegation to `disputes`/`verification`)
+- Tests (`tests/unit/test_admin.py`)
+  - [ ] every admin route returns 403 for a non-admin caller (parametrized over all admin routes)
+  - [ ] suspend sets a user inactive and a suspended user's subsequent `get_current_user` calls are rejected
+  - [ ] analytics totals match hand-computed fixture sums
+  - [ ] `dispute_service`/verification delegation calls the underlying module's service, not its repository directly (enforces the layering rule via a mock/spy)
+
+---
+
+## Phase 8 — Platform / infra (last)
+
+### `modules/uploads`
+- Build
+  - [ ] local disk or self-hosted MinIO (S3-compatible, open-source) adapter, `upload_file()`, mime/size validation; wires into `portfolio` + avatars
+- Tests (`tests/unit/test_uploads.py`)
+  - [ ] oversized file rejected before hitting storage
+  - [ ] disallowed mime type rejected
+  - [ ] successful upload returns a retrievable URL
+
+### Geocoding hardening
+- Build
+  - [ ] caching layer over `modules/geocoding` to avoid re-hitting Nominatim
+- Tests (extend `test_geocoding.py`)
+  - [ ] identical address lookup within the cache TTL doesn't call the client twice (mock call-count assertion)
+  - [ ] cache expiry re-triggers a real lookup
+
+### Testing infra itself
+- [ ] `tests/e2e/` — Playwright against the running frontend+backend pair for: signup→login, booking creation→payment→completion→review, admin verification approval
+- [ ] CI wiring: `pytest` + `alembic upgrade head` against a throwaway test DB on every push
+
+### SEO / PWA
+- [ ] Stay entirely in Next.js (`generateMetadata`, `app/sitemap.js`, service worker/manifest) — no backend involvement, no backend tests
+
+---
+
+## Cross-module dependency map
+
+| Module | Depends on (via service layer only) |
+|---|---|
+| `contact` | `sms` (stubbed until Phase 4) |
+| `booking_lifecycle` | `availability`, `payments`, `notifications` |
+| `sms` | consumed by `contact`, `bookings`, `booking_lifecycle` |
+| `push` | consumed by `notifications` |
+| `admin` | `disputes`, `verification`, `users`, `professionals` |
+| `earnings` | `bookings`, `payments` |
+| `service_area` | `geocoding` |
+| `portfolio` | `uploads` (interim: raw URLs) |
+
+## Tracking rule
+
+A module isn't done until **both** its checklists are checked:
+- **Build**: migration applied (`alembic upgrade head` succeeds), module's router is mounted and reachable (`/docs` shows it, manual/`curl` smoke test passes).
+- **Tests**: its `tests/unit/test_<module>.py` file exists and every listed case passes under `pytest`.
+
+Log a one-line completion note under the relevant phase heading once both are done, same convention `BACKEND_PLAN_JS_LEGACY.md` used.
