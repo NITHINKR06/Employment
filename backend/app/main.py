@@ -18,6 +18,9 @@ from app.modules.professionals.router import router as professionals_router
 from app.modules.bookings.router import router as bookings_router
 from app.modules.payments.router import router as payments_router
 from app.modules.reviews.router import router as reviews_router
+from app.modules.notifications.router import router as notifications_router
+from app.modules.contact.router import router as contact_router
+from app.modules.settings.router import router as settings_router
 
 app = FastAPI(
     title="ProMarket API",
@@ -46,6 +49,9 @@ app.include_router(professionals_router, prefix=API_V1)
 app.include_router(bookings_router, prefix=API_V1)
 app.include_router(payments_router, prefix=API_V1)
 app.include_router(reviews_router, prefix=API_V1)
+app.include_router(notifications_router, prefix=API_V1)
+app.include_router(contact_router, prefix=API_V1)
+app.include_router(settings_router, prefix=API_V1)
 
 
 # ── Health check ──

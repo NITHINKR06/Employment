@@ -23,6 +23,8 @@ from app.modules.professionals.models import Professional, Service, Skill, Profe
 from app.modules.bookings.models import Booking, BookingStatus
 from app.modules.payments.models import Payment, PaymentStatus
 from app.modules.reviews.models import Review
+from app.modules.notifications.models import Notification
+from app.modules.contact.models import ContactMessage
 
 
 # ── Engine & Session ──

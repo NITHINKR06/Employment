@@ -35,3 +35,12 @@ async def upsert_on_login(
     await db.commit()
     await db.refresh(user)
     return user
+
+
+async def update(db: AsyncSession, user: User, data: dict) -> User:
+    """Persist the supplied account fields for an already authenticated user."""
+    for key, value in data.items():
+        setattr(user, key, value)
+    await db.commit()
+    await db.refresh(user)
+    return user

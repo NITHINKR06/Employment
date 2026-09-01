@@ -25,3 +25,7 @@ async def get_user_by_id(db: AsyncSession, user_id: str) -> User:
     if user is None:
         raise NotFoundError("User not found")
     return user
+
+
+async def update_user(db: AsyncSession, user: User, data: dict) -> User:
+    return await repository.update(db, user, data)

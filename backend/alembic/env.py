@@ -15,6 +15,8 @@ from app.modules.professionals.models import *  # noqa: F401,F403
 from app.modules.bookings.models import *  # noqa: F401,F403
 from app.modules.payments.models import *  # noqa: F401,F403
 from app.modules.reviews.models import *  # noqa: F401,F403
+from app.modules.notifications.models import *  # noqa: F401,F403
+from app.modules.contact.models import *  # noqa: F401,F403
 
 from app.core.db import Base
 

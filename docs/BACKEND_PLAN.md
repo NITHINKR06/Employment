@@ -201,28 +201,28 @@ Remaining before Phase 0 is fully closed: the Cutover items below (frontend not 
 
 ### `modules/notifications`
 - Build
-  - [ ] `Notification` model + migration, list/mark-read/clear endpoints, `notify_user()` used by other modules
+  - [x] `Notification` model + migration, list/mark-read/clear endpoints, `notify_user()` used by other modules
 - Tests (`tests/unit/test_notifications.py`)
-  - [ ] `notify_user` creates a row with `read_at=None`
-  - [ ] mark-read sets `read_at`, is a no-op (not an error) if called twice
-  - [ ] clear-all only deletes the calling user's notifications, not others'
-  - [ ] list only returns the calling user's notifications, newest first
+  - [x] `notify_user` creates a row with `read_at=None`
+  - [x] mark-read sets `read_at`, is a no-op (not an error) if called twice
+  - [x] clear-all only deletes the calling user's notifications, not others'
+  - [x] list only returns the calling user's notifications, newest first
 
 ### `modules/settings`
 - Build
-  - [ ] get/update settings composing `users`+`professionals` repos (no own table)
+  - [x] get/update settings composing `users`+`professionals` repos (no own table)
 - Tests (`tests/unit/test_settings.py`)
-  - [ ] GET returns the current user's data pre-filled (not empty defaults)
-  - [ ] PATCH persists and a subsequent GET reflects the change
-  - [ ] EMPLOYEE-only fields rejected (422) when sent by a USER role
+  - [x] GET returns the current user's data pre-filled (not empty defaults)
+  - [x] PATCH persists and a subsequent GET reflects the change
+  - [x] EMPLOYEE-only fields rejected (422) when sent by a USER role
 
 ### `modules/contact`
 - Build
-  - [ ] `ContactMessage` model + migration, create endpoint (alerts admin via `sms` module once Phase 4 lands — stubbed no-op until then)
+  - [x] `ContactMessage` model + migration, create endpoint (alerts admin via `sms` module once Phase 4 lands — stubbed no-op until then)
 - Tests (`tests/unit/test_contact.py`)
-  - [ ] anonymous (unauthenticated) submission succeeds and is stored
-  - [ ] authenticated submission stores the `user_id`
-  - [ ] invalid email format rejected by schema validation
+  - [x] anonymous (unauthenticated) submission succeeds and is stored
+  - [x] authenticated submission stores the `user_id`
+  - [x] invalid email format rejected by schema validation
 
 ---
 
