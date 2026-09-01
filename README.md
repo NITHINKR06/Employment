@@ -30,7 +30,7 @@ Professional signs up
 | Backend | Python, FastAPI, SQLAlchemy, Alembic |
 | Database | PostgreSQL 16 (Prisma ORM for frontend, SQLAlchemy for backend) |
 | Auth | Firebase Authentication |
-| Infra | Docker Compose, pnpm workspaces |
+| Infra | Docker Compose |
 
 ## Quick Start
 
@@ -38,7 +38,7 @@ Professional signs up
 
 ```bash
 # Copy env files and fill in your values
-cp .env.example .env
+cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
 
 # Start everything (Postgres + backend + frontend)
@@ -50,7 +50,8 @@ Open [http://localhost:3000](http://localhost:3000) for the frontend and [http:/
 ### Without Docker
 
 ```bash
-# Frontend
+# Frontend (in one terminal)
+cd frontend
 pnpm install
 pnpm dev
 
@@ -63,15 +64,14 @@ uv run uvicorn app.main:app --reload
 ## Project Structure
 
 ```
-├── src/              # Next.js frontend (app router, components, lib)
+.
+├── frontend/         # Next.js frontend (src/, public/, prisma/, configs)
 ├── backend/          # FastAPI backend (app/, alembic/, tests/)
-├── prisma/           # Prisma schema & migrations (frontend DB layer)
 ├── docker/           # Docker init scripts (init-db.sql)
-├── public/           # Static assets
 ├── docs/             # Planning & architecture docs
-├── Dockerfile        # Frontend dev image
 ├── docker-compose.yml
-└── justfile          # Task runner shortcuts (just up, just down, etc.)
+├── justfile          # Task runner shortcuts (just up, just down, etc.)
+└── README.md
 ```
 
 ## Useful Commands
