@@ -14,5 +14,5 @@ async def get_me(user: User = Depends(get_current_user)):
     """Return the currently authenticated user."""
     return {
         "success": True,
-        "data": UserResponse.model_validate(user).model_dump(by_alias=True),
+        "data": {"user": UserResponse.model_validate(user).model_dump(by_alias=True)},
     }

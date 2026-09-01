@@ -20,7 +20,7 @@ async def create_booking(
 ):
     data = body.model_dump(by_alias=False)
     result = await service.create_booking(db, user, data)
-    return {"success": True, "data": result}
+    return {"success": True, "data": {"booking": result}}
 
 
 @router.get("")
@@ -29,7 +29,7 @@ async def list_my_bookings(
     db: AsyncSession = Depends(get_db),
 ):
     data = await service.list_my_bookings(db, user)
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"bookings": data}}
 
 
 @router.get("/summary")
@@ -38,7 +38,7 @@ async def get_employee_summary(
     db: AsyncSession = Depends(get_db),
 ):
     data = await service.get_employee_summary(db, user)
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"summary": data}}
 
 
 @router.get("/{booking_id}")
@@ -48,7 +48,7 @@ async def get_booking(
     db: AsyncSession = Depends(get_db),
 ):
     data = await service.get_booking_by_id(db, user, booking_id)
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"booking": data}}
 
 
 @router.patch("/{booking_id}")
@@ -59,4 +59,4 @@ async def update_booking_status(
     db: AsyncSession = Depends(get_db),
 ):
     data = await service.update_booking_status(db, user, booking_id, body.status)
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"booking": data}}

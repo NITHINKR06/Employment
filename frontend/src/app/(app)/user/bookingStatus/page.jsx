@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import BookingSummaryRow from "@/components/Booking/BookingSummaryRow";
+import { apiFetch } from "@/lib/apiClient";
 
 const STATUS_TABS = ["All", "Confirmed", "Pending", "Cancelled"];
 
@@ -13,19 +14,20 @@ export default function UserBookingStatusPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/bookings")
-      .then((res) => res.json())
+    apiFetch("/bookings")
       .then((body) => {
         if (cancelled) return;
-        if (!body.success) {
-          setError(
-            body.error?.code === "UNAUTHORIZED"
-              ? "Please log in to see your bookings."
-              : body.error?.message ?? "Could not load bookings"
-          );
-          return;
+        if (body.success && body.data?.bookings) {
+          setBookings(body.data.bookings);
         }
-        setBookings(body.data.bookings);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(
+          err.status === 401
+            ? "Please log in to see your bookings."
+            : err.message || "Could not load bookings"
+        );
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);

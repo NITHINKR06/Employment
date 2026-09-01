@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { IoStar, IoStarOutline } from "react-icons/io5";
 import Button from "@/components/Button/Button";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function BookingReviewForm({ bookingId }) {
   const router = useRouter();
@@ -18,13 +19,11 @@ export default function BookingReviewForm({ bookingId }) {
     setError("");
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/bookings/${bookingId}/reviews`, {
+      const body = await apiFetch(`/bookings/${bookingId}/reviews`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating, comment }),
       });
-      const body = await response.json();
-      if (!response.ok || !body.success) {
+      if (!body.success) {
         throw new Error(body?.error?.message ?? "Could not submit review");
       }
       setSubmitted(true);

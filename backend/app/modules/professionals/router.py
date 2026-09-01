@@ -34,7 +34,7 @@ async def list_professionals(
         max_rate=max_rate,
         min_rating=min_rating,
     )
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"professionals": data}}
 
 
 @router.get("/me")
@@ -44,7 +44,7 @@ async def get_my_professional(
 ):
     """Get the current user's own professional profile."""
     data = await service.get_my_professional(db, user)
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"professional": data}}
 
 
 @router.get("/{professional_id}")
@@ -54,7 +54,7 @@ async def get_professional(
 ):
     """Get a single professional by ID (public)."""
     data = await service.get_professional_by_id(db, professional_id)
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"professional": data}}
 
 
 @router.post("", status_code=201)
@@ -71,7 +71,7 @@ async def create_professional(
             s if isinstance(s, dict) else s.model_dump() for s in payload["services_offered"]
         ]
     data = await service.create_professional(db, user, payload)
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"professional": data}}
 
 
 @router.put("/{professional_id}")
@@ -88,7 +88,7 @@ async def update_professional(
             s if isinstance(s, dict) else s.model_dump() for s in payload["services_offered"]
         ]
     data = await service.update_professional(db, user, professional_id, payload)
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"professional": data}}
 
 
 @router.delete("/{professional_id}", status_code=204)

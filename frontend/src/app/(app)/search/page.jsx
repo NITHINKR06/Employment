@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { IoSearchOutline, IoLocationOutline, IoMapOutline, IoGridOutline, IoChevronBack, IoChevronForward } from "react-icons/io5";
 import FilterPanel from "@/components/Search/FilterPanel";
 import WorkerCard from "@/components/WorkerCard/WorkerCard";
+import { apiFetch } from "@/lib/apiClient";
 
 const ProfessionalsMap = dynamic(() => import("@/components/Search/ProfessionalsMap"), {
   ssr: false,
@@ -18,19 +19,19 @@ const ProfessionalsMap = dynamic(() => import("@/components/Search/Professionals
 
 function SearchPageContent() {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get("category");
-  const initialWhat = searchParams.get("what");
+  const initialCategory = searchParams.get("category") || "";
 
   const [professionals, setProfessionals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(initialWhat || "");
-  const [selectedCategories, setSelectedCategories] = useState(
-    initialCategory ? [initialCategory] : []
-  );
-  const [rateRange, setRateRange] = useState({ min: 0, max: 200 });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("Bangalore");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 100]);
   const [minRating, setMinRating] = useState(0);
-  const [sort, setSort] = useState("rating");
-  const [isMapView, setIsMapView] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [emergencyOnly, setEmergencyOnly] = useState(false);
+  const [sortBy, setSortBy] = useState("recommended");
+  const [viewMode, setViewMode] = useState("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 6;
 
@@ -43,13 +44,13 @@ function SearchPageContent() {
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    fetch("/api/professionals")
-      .then((res) => res.json())
+    apiFetch("/professionals")
       .then((body) => {
-        if (!cancelled && body.success) {
+        if (!cancelled && body.success && body.data?.professionals) {
           setProfessionals(body.data.professionals);
         }
       })
+      .catch(() => {})
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });

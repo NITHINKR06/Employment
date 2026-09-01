@@ -25,7 +25,7 @@ async def create_payment(
         amount=body.amount,
         method=body.method,
     )
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"payment": data}}
 
 
 @router.get("/{payment_id}")
@@ -35,4 +35,4 @@ async def get_payment(
     db: AsyncSession = Depends(get_db),
 ):
     data = await service.get_payment_by_id(db, user, payment_id)
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"payment": data}}

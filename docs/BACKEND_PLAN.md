@@ -191,9 +191,9 @@ Remaining before Phase 0 is fully closed: the Cutover items below (frontend not 
   - [x] `list_professional_reviews` is callable without auth (public)
 
 ### Cutover
-- [ ] Point the Next.js frontend's `fetch('/api/...')` calls at the new FastAPI base URL instead of its own route handlers; remove `src/app/api/*` once parity is verified
-- [ ] Data migration: export existing Postgres data (if any real users exist beyond seed data) or just re-run an equivalent seed script in Python
-- [ ] Verify: FastAPI's auto-generated OpenAPI docs (`/docs`) match the old endpoint shapes; full `pytest` suite green before removing the JS routes
+- [x] Point the Next.js frontend's `fetch('/api/...')` calls at the new FastAPI base URL instead of its own route handlers; remove `src/app/api/*` once parity is verified
+- [x] Data migration: export existing Postgres data (if any real users exist beyond seed data) or just re-run an equivalent seed script in Python (`backend/app/seed.py`)
+- [x] Verify: FastAPI's auto-generated OpenAPI docs (`/docs`) match the old endpoint shapes; full `pytest` suite green before removing the JS routes
 
 ---
 

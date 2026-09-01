@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button/Button";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function BookingStatusActions({ bookingId, actions }) {
   const router = useRouter();
@@ -13,13 +14,11 @@ export default function BookingStatusActions({ bookingId, actions }) {
     setError("");
     setPendingStatus(status);
     try {
-      const response = await fetch(`/api/bookings/${bookingId}`, {
+      const body = await apiFetch(`/bookings/${bookingId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      const body = await response.json();
-      if (!response.ok || !body.success) {
+      if (!body.success || !body.data?.booking) {
         throw new Error(body?.error?.message ?? "Could not update booking");
       }
       router.refresh();

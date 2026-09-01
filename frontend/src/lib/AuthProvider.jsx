@@ -1,7 +1,10 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { getFirebaseAuth } from "./firebaseClient";
 import { signOutUser } from "./authClient";
+import { apiFetch } from "./apiClient";
 
 const AuthContext = createContext({
   user: null,
@@ -18,21 +21,28 @@ export default function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
-    fetch("/api/auth/me")
-      .then((res) => res.json())
-      .then((body) => {
-        if (!cancelled && body.success && body.data?.user) {
-          setUser(body.data.user);
+    let unsubscribe = () => {};
+    try {
+      const auth = getFirebaseAuth();
+      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          try {
+            const body = await apiFetch("/auth/me");
+            if (body.success && body.data?.user) {
+              setUser(body.data.user);
+            }
+          } catch (err) {
+            setUser(null);
+          }
+        } else {
+          setUser(null);
         }
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
+        setIsLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
+    } catch (err) {
+      setIsLoading(false);
+    }
+    return () => unsubscribe();
   }, []);
 
   const logout = useCallback(async () => {

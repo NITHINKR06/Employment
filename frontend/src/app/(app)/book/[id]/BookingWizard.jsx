@@ -10,6 +10,7 @@ import Button from "@/components/Button/Button";
 import Rating from "@/components/Rating/Rating";
 import VerifiedBadge from "@/components/Badge/VerifiedBadge";
 import PaymentForm from "@/components/Booking/PaymentForm";
+import { apiFetch } from "@/lib/apiClient";
 
 const STEPS = ["Details", "Schedule", "Address", "Payment"];
 
@@ -19,9 +20,9 @@ export default function BookingWizard({ worker }) {
   const [details, setDetails] = useState({ category: worker.trade, description: "" });
   const [schedule, setSchedule] = useState({ date: "", time: "" });
   const [address, setAddress] = useState("");
-  const [bookingId, setBookingId] = useState(null);
   const [isCreatingBooking, setIsCreatingBooking] = useState(false);
   const [bookingError, setBookingError] = useState("");
+  const [createdBooking, setCreatedBooking] = useState(null);
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
@@ -33,9 +34,8 @@ export default function BookingWizard({ worker }) {
     setBookingError("");
     setIsCreatingBooking(true);
     try {
-      const response = await fetch("/api/bookings", {
+      const body = await apiFetch("/bookings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           professionalId: worker.id,
           scheduledAt: scheduledAt ? scheduledAt.toISOString() : undefined,
@@ -43,18 +43,15 @@ export default function BookingWizard({ worker }) {
           notes: `Category: ${details.category}\n${details.description}`,
         }),
       });
-      const body = await response.json();
-      if (!response.ok || !body.success) {
-        throw new Error(
-          body?.error?.code === "UNAUTHORIZED"
-            ? "Please log in to book this professional."
-            : body?.error?.message ?? "Could not create booking"
-        );
+
+      if (!body.success || !body.data?.booking) {
+        throw new Error(body?.error?.message ?? "Could not create booking");
       }
-      setBookingId(body.data.booking._id);
+
+      setCreatedBooking(body.data.booking);
       next();
-    } catch (err) {
-      setBookingError(err.message);
+    } catch (error) {
+      setBookingError(error.message ?? "Could not create booking");
     } finally {
       setIsCreatingBooking(false);
     }

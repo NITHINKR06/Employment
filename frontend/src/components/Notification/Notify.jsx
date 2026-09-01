@@ -1,13 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { IoCloseSharp } from "react-icons/io5";
 import { notifications as initialNotifications } from "@/data/notifications";
 import NotificationsPanel from "./NotificationsPanel";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function Notify({ open, onClose }) {
   const [notifications, setNotifications] = useState(initialNotifications);
+
+  useEffect(() => {
+    if (open) {
+      apiFetch("/notifications")
+        .then((body) => {
+          if (body.success && body.data) {
+            const liveNotifs = body.data.map((n) => ({
+              id: n.id,
+              icon: "calendar",
+              text: `${n.title}: ${n.message}`,
+              timestamp: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "",
+              read: Boolean(n.readAt),
+            }));
+            if (liveNotifs.length > 0) setNotifications(liveNotifs);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [open]);
+
+  const handleClearAll = async () => {
+    setNotifications([]);
+    try {
+      await apiFetch("/notifications", { method: "DELETE" });
+    } catch (err) {
+      // ignore
+    }
+  };
 
   const handleBackdropClick = (event) => {
     if (event.target === event.currentTarget) onClose();
@@ -55,7 +84,7 @@ export default function Notify({ open, onClose }) {
               <NotificationsPanel
                 notifications={notifications}
                 variant="compact"
-                onClearAll={() => setNotifications([])}
+                onClearAll={handleClearAll}
               />
             </div>
           </motion.div>

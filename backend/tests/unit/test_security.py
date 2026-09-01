@@ -45,8 +45,8 @@ async def test_get_current_user_upserts_new_user(client, db):
     assert resp.status_code == 200
     body = resp.json()
     assert body["success"] is True
-    assert body["data"]["email"] == "new@test.com"
-    assert body["data"]["role"] == "USER"  # default role
+    assert body["data"]["user"]["email"] == "new@test.com"
+    assert body["data"]["user"]["role"] == "USER"  # default role
 
 
 @pytest.mark.asyncio
@@ -61,7 +61,7 @@ async def test_get_current_user_returns_existing_user(client, db, make_user):
                 headers={"Authorization": "Bearer valid-token"},
             )
     assert resp.status_code == 200
-    assert resp.json()["data"]["id"] == user.id  # same user, not a new one
+    assert resp.json()["data"]["user"]["id"] == user.id  # same user, not a new one
 
 
 @pytest.mark.asyncio

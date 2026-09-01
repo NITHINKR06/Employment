@@ -8,6 +8,7 @@ import { IoPersonSharp, IoLocationOutline, IoBriefcaseOutline, IoCashOutline, Io
 import Button from "@/components/Button/Button";
 import Rating from "@/components/Rating/Rating";
 import TextField from "@/components/TextField/TextField";
+import { apiFetch } from "@/lib/apiClient";
 
 const EMPTY_FORM = {
   title: "",
@@ -28,17 +29,15 @@ function CreateProfileForm({ onCreated }) {
     setError("");
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/professionals", {
+      const body = await apiFetch("/professionals", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
           yearsExperience: Number(form.yearsExperience) || 0,
           hourlyRate: Number(form.hourlyRate) || 0,
         }),
       });
-      const body = await response.json();
-      if (!response.ok || !body.success) {
+      if (!body.success || !body.data?.professional) {
         throw new Error(body?.error?.message ?? "Could not create profile");
       }
       onCreated(body.data.professional);
@@ -125,26 +124,25 @@ export default function EmployeeDashboardPage() {
   const loadDashboard = () => {
     setIsLoading(true);
     setLoadError("");
-    fetch("/api/professionals/me")
-      .then((res) => res.json())
+    apiFetch("/professionals/me")
       .then(async (body) => {
         if (!body.success) {
-          setLoadError(
-            body.error?.code === "UNAUTHORIZED"
-              ? "Please log in as an employee to see your dashboard."
-              : body.error?.message ?? "Could not load dashboard"
-          );
+          setLoadError(body.error?.message ?? "Could not load dashboard");
           return;
         }
-        setProfessional(body.data.professional);
-        if (body.data.professional) {
+        const prof = body.data?.professional;
+        setProfessional(prof);
+        if (prof) {
           const [summaryRes, reviewsRes] = await Promise.all([
-            fetch("/api/bookings/summary").then((r) => r.json()),
-            fetch(`/api/professionals/${body.data.professional.id}/reviews`).then((r) => r.json()),
+            apiFetch("/bookings/summary").catch(() => null),
+            apiFetch(`/professionals/${prof.id}/reviews`).catch(() => null),
           ]);
-          if (summaryRes.success) setSummary(summaryRes.data.summary);
-          if (reviewsRes.success) setReviews(reviewsRes.data.reviews);
+          if (summaryRes?.success && summaryRes.data?.summary) setSummary(summaryRes.data.summary);
+          if (reviewsRes?.success && reviewsRes.data?.reviews) setReviews(reviewsRes.data.reviews);
         }
+      })
+      .catch((err) => {
+        setLoadError(err.status === 401 ? "Please log in as an employee." : err.message);
       })
       .finally(() => setIsLoading(false));
   };
@@ -157,9 +155,8 @@ export default function EmployeeDashboardPage() {
     setSaveError("");
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/professionals/${professional.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+      const body = await apiFetch(`/professionals/${professional.id}`, {
+        method: "PUT",
         body: JSON.stringify({
           title: editingProfessional.title,
           bio: editingProfessional.bio,
@@ -168,9 +165,8 @@ export default function EmployeeDashboardPage() {
           location: editingProfessional.location,
         }),
       });
-      const body = await response.json();
-      if (!response.ok || !body.success) {
-        throw new Error(body?.error?.message ?? "Could not save profile");
+      if (!body.success || !body.data?.professional) {
+        throw new Error(body?.error?.message ?? "Could not update profile");
       }
       setProfessional(body.data.professional);
       setIsEditing(false);

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { IoCardOutline, IoQrCodeOutline, IoCheckmarkCircleOutline } from "react-icons/io5";
 import QRCode from "qrcode";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function PaymentForm({ initialAmount = "45.00", bookingId, onPaymentSuccess }) {
   const [amount, setAmount] = useState(initialAmount);
@@ -43,13 +44,11 @@ export default function PaymentForm({ initialAmount = "45.00", bookingId, onPaym
     if (bookingId) {
       setIsProcessing(true);
       try {
-        const response = await fetch("/api/payments", {
+        const body = await apiFetch("/payments", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ bookingId, amount: getTotalAmount(), method: paymentMethod }),
         });
-        const body = await response.json();
-        if (!response.ok || !body.success) {
+        if (!body.success) {
           throw new Error(body?.error?.message ?? "Payment failed");
         }
       } catch (err) {

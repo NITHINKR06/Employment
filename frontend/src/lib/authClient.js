@@ -7,6 +7,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { getFirebaseAuth } from "./firebaseClient";
+import { apiFetch } from "./apiClient";
 
 const FRIENDLY_ERRORS = {
   "auth/email-already-in-use": "An account with this email already exists.",
@@ -27,15 +28,9 @@ function friendlyMessage(error) {
   return FRIENDLY_ERRORS[error?.code] ?? "Something went wrong. Please try again.";
 }
 
-async function exchangeForSession(firebaseUser, role) {
-  const idToken = await firebaseUser.getIdToken();
-  const response = await fetch("/api/auth/session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idToken, role }),
-  });
-  const body = await response.json();
-  if (!response.ok || !body.success) {
+async function exchangeForSession(_firebaseUser, _role) {
+  const body = await apiFetch("/auth/me");
+  if (!body.success || !body.data?.user) {
     throw new Error(body?.error?.message ?? "Could not start session");
   }
   return body.data.user;
@@ -74,5 +69,4 @@ export async function signInWithGoogle({ role } = {}) {
 
 export async function signOutUser() {
   await signOut(getFirebaseAuth()).catch(() => {});
-  await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
 }

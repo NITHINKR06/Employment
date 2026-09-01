@@ -22,7 +22,7 @@ async def create_review(
     data = await service.create_review(
         db, user, booking_id, rating=body.rating, comment=body.comment
     )
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"review": data}}
 
 
 @router.get("/professionals/{professional_id}/reviews")
@@ -32,4 +32,4 @@ async def list_professional_reviews(
 ):
     """List reviews for a professional (public)."""
     data = await service.list_professional_reviews(db, professional_id)
-    return {"success": True, "data": data}
+    return {"success": True, "data": {"reviews": data}}

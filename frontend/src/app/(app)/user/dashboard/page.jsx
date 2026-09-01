@@ -8,6 +8,7 @@ import BookingSummaryRow from "@/components/Booking/BookingSummaryRow";
 import WorkerCard from "@/components/WorkerCard/WorkerCard";
 import NotificationsPanel from "@/components/Notification/NotificationsPanel";
 import { notifications as initialNotifications } from "@/data/notifications";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function UserDashboardPage() {
   const [notificationsList, setNotificationsList] = useState(initialNotifications);
@@ -19,14 +20,26 @@ export default function UserDashboardPage() {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      fetch("/api/auth/me").then((res) => res.json()),
-      fetch("/api/bookings").then((res) => res.json()),
-      fetch("/api/professionals").then((res) => res.json()),
-    ]).then(([meBody, bookingsBody, professionalsBody]) => {
+      apiFetch("/auth/me").catch(() => null),
+      apiFetch("/bookings").catch(() => null),
+      apiFetch("/professionals").catch(() => null),
+      apiFetch("/notifications").catch(() => null),
+    ]).then(([meBody, bookingsBody, professionalsBody, notifBody]) => {
       if (cancelled) return;
-      if (meBody.success) setUser(meBody.data.user);
-      if (bookingsBody.success) setBookings(bookingsBody.data.bookings);
-      if (professionalsBody.success) setProfessionals(professionalsBody.data.professionals);
+      if (meBody?.success && meBody.data?.user) setUser(meBody.data.user);
+      if (bookingsBody?.success && bookingsBody.data?.bookings) setBookings(bookingsBody.data.bookings);
+      if (professionalsBody?.success && professionalsBody.data?.professionals) setProfessionals(professionalsBody.data.professionals);
+      if (notifBody?.success && notifBody.data) {
+        // Map backend notification to frontend UI shape if present
+        const liveNotifs = notifBody.data.map((n) => ({
+          id: n.id,
+          icon: "calendar",
+          text: `${n.title}: ${n.message}`,
+          timestamp: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "",
+          read: Boolean(n.readAt),
+        }));
+        if (liveNotifs.length > 0) setNotificationsList(liveNotifs);
+      }
     }).finally(() => {
       if (!cancelled) setIsLoading(false);
     });
