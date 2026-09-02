@@ -18,6 +18,10 @@ async def resolve_dispute(db: AsyncSession, admin_user: User, dispute_id: str, *
     )
 
 
+async def list_pending_verification_requests(db: AsyncSession, admin_user: User) -> list[dict]:
+    return await verification_service.list_pending_requests(db, admin_user)
+
+
 async def approve_verification(db: AsyncSession, admin_user: User, request_id: str) -> dict:
     return await verification_service.approve_request(db, admin_user, request_id)
 

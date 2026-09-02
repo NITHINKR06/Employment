@@ -188,26 +188,23 @@ of what's real vs. planned.
 
 ## Phase 7 — Admin panel UI
 
-Entirely new section, `app/(app)/admin/`, none of it exists yet.
+**Status (2026-09-02): built and verified live.** Closed the verification-queue backend gap noted below (was a real blocker, not just a nice-to-have) as part of this phase, same judgment call as the Phase 3 backend fixes — added a `GET /verification/requests` endpoint (admin-only, pending only, includes `professionalName` via an eager-loaded join) plus a `GET /admin/verification` delegation and two new tests. All 104 backend tests still green.
 
-- Backend: `GET /admin/users`, `POST /admin/users/{id}/suspend`, `POST /admin/users/{id}/unsuspend`, `GET /admin/analytics`, `GET /admin/disputes`, `POST /admin/disputes/{id}/resolve`, `POST /admin/verification/{id}/approve`, `POST /admin/verification/{id}/reject`
+- Backend: `GET /admin/users`, `POST /admin/users/{id}/suspend`, `POST /admin/users/{id}/unsuspend`, `GET /admin/analytics`, `GET /admin/disputes`, `POST /admin/disputes/{id}/resolve`, `GET /admin/verification` (new), `POST /admin/verification/{id}/approve`, `POST /admin/verification/{id}/reject`
 - Work:
-  - [ ] `admin/layout.jsx`: client-side gate — on mount, `apiFetch("/auth/me")`, redirect away if `role !== "ADMIN"` (the backend still enforces this for real; this is just so a non-admin doesn't see a flash of admin UI or a wall of 403 errors).
-  - [ ] `admin/users/page.jsx`: search box + table, suspend/unsuspend buttons per row.
-  - [ ] `admin/analytics/page.jsx`: stat tiles for `totalUsers`/`totalProfessionals`/`totalBookings`/`totalRevenue`.
-  - [ ] `admin/disputes/page.jsx`: list + a resolve modal (resolution text → `POST .../resolve`).
-  - [ ] `admin/verification/page.jsx`: pending-requests queue with approve/reject buttons (note: the backend has no "list pending" endpoint yet — either add one, or have this page filter `GET /verification/requests`... **check**: only `submit`/`approve`/`reject` exist today, no list endpoint at all. This is a backend gap: add `GET /verification/requests?status=PENDING` before building this specific page.).
-- Test: log in as a seeded admin account (promote a user's `role` to `ADMIN` directly in the DB for testing — there's no UI to do this, intentionally), suspend a test user and confirm their next login is rejected with "account suspended"; resolve a dispute and confirm the reporting user sees the resolution; approve a verification request and confirm the professional's `verified` flag flips on their public page.
+  - [x] `admin/layout.jsx`: gates on `useAuth()`'s `user.role === "ADMIN"` (reusing the existing auth context rather than a fresh `apiFetch` call), with a tab nav to the four sub-pages; `admin/page.jsx` redirects to `/admin/analytics`.
+  - [x] `admin/users/page.jsx`: search box + table, suspend/unsuspend buttons per row.
+  - [x] `admin/analytics/page.jsx`: stat tiles for all four totals.
+  - [x] `admin/disputes/page.jsx`: list with an inline resolve form per open dispute.
+  - [x] `admin/verification/page.jsx`: pending-requests queue with approve/reject buttons, using the new list endpoint.
+- Test (live, promoted a dev user to `ADMIN` directly in Postgres): resolved a dispute and confirmed the reporting customer's `GET /disputes/{id}` immediately showed the resolution; approved a verification request and confirmed the professional's public `verified` flag flipped `true`; suspended a user and confirmed their very next `/auth/me` call returned 401 — all three end-to-end, not just unit-tested in isolation.
 
 ---
 
 ## Known backend gaps surfaced while planning this
 
-Two small things the frontend plan above depends on that don't exist yet:
-1. **No endpoint to list a user's recurring bookings** (Phase 3) — only create + admin-run exist.
-2. **No endpoint to list verification requests** (Phase 7 admin queue) — only submit/approve/reject exist, admin has nothing to page through.
-
-Either add these two small endpoints when their corresponding frontend page is built, or note them as deliberately deferred.
+1. **No endpoint to list a user's recurring bookings** (Phase 3) — only create + admin-run exist. Still open; noted as a deliberate gap in the Phase 3 section above.
+2. ~~No endpoint to list verification requests (Phase 7 admin queue)~~ — **closed**: added `GET /verification/requests` (admin-only) while building the Phase 7 admin UI, since that page was impossible to build meaningfully without it.
 
 ---
 

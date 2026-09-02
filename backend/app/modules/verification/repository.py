@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from app.modules.professionals.models import Professional
 from app.modules.verification.models import VerificationRequest, VerificationStatus
 
 
@@ -30,7 +31,7 @@ async def find_by_id(db: AsyncSession, request_id: str) -> VerificationRequest |
 async def find_pending(db: AsyncSession) -> list[VerificationRequest]:
     stmt = (
         select(VerificationRequest)
-        .options(joinedload(VerificationRequest.professional))
+        .options(joinedload(VerificationRequest.professional).joinedload(Professional.user))
         .where(VerificationRequest.status == VerificationStatus.PENDING)
         .order_by(VerificationRequest.submitted_at)
     )

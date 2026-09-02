@@ -71,6 +71,15 @@ async def resolve_dispute(
     return {"success": True, "data": {"dispute": data}}
 
 
+@router.get("/verification")
+async def list_pending_verification_requests(
+    user: User = Depends(require_role("ADMIN")),
+    db: AsyncSession = Depends(get_db),
+):
+    data = await dispute_service.list_pending_verification_requests(db, user)
+    return {"success": True, "data": {"verificationRequests": data}}
+
+
 @router.post("/verification/{request_id}/approve")
 async def approve_verification(
     request_id: str,

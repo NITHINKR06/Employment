@@ -30,6 +30,16 @@ async def submit_verification_request(db: AsyncSession, user: User, *, notes: st
     return _to_shape(request)
 
 
+async def list_pending_requests(db: AsyncSession, admin_user: User) -> list[dict]:
+    if admin_user.role.value != "ADMIN":
+        raise ForbiddenError()
+
+    requests = await repository.find_pending(db)
+    return [
+        {**_to_shape(r), "professionalName": r.professional.user.name} for r in requests
+    ]
+
+
 async def approve_request(db: AsyncSession, admin_user: User, request_id: str) -> dict:
     if admin_user.role.value != "ADMIN":
         raise ForbiddenError()

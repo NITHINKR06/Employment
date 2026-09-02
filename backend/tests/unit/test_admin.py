@@ -125,3 +125,14 @@ async def test_approve_verification_delegates_to_verification_service_not_reposi
 
     spy.assert_awaited_once()
     repo_spy.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_list_pending_verification_delegates_to_verification_service(db, make_user, monkeypatch):
+    admin = await make_user(role=Role.ADMIN)
+    spy = AsyncMock(return_value=[])
+    monkeypatch.setattr(dispute_service.verification_service, "list_pending_requests", spy)
+
+    await dispute_service.list_pending_verification_requests(db, admin)
+
+    spy.assert_awaited_once()
