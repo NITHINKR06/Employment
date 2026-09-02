@@ -17,6 +17,10 @@ export default function EmployeeSettingsPage() {
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [isRequestingVerification, setIsRequestingVerification] = useState(false);
   const [verificationError, setVerificationError] = useState("");
+  const [serviceRadiusKm, setServiceRadiusKm] = useState(25);
+  const [isSavingRadius, setIsSavingRadius] = useState(false);
+  const [radiusError, setRadiusError] = useState("");
+  const [radiusSaved, setRadiusSaved] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +40,7 @@ export default function EmployeeSettingsPage() {
           location: pro.location ?? "",
           bio: pro.bio ?? "",
         });
+        setServiceRadiusKm(pro.serviceRadiusKm ?? 25);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -76,6 +81,28 @@ export default function EmployeeSettingsPage() {
       setSaveError(err.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveRadius = async (e) => {
+    e.preventDefault();
+    if (!professional) return;
+    setRadiusError("");
+    setRadiusSaved(false);
+    setIsSavingRadius(true);
+    try {
+      const body = await apiFetch(`/service-area/professionals/${professional.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ serviceRadiusKm: Number(serviceRadiusKm) }),
+      });
+      if (!body.success) {
+        throw new Error(body?.error?.message ?? "Could not save service radius");
+      }
+      setRadiusSaved(true);
+    } catch (err) {
+      setRadiusError(err.message);
+    } finally {
+      setIsSavingRadius(false);
     }
   };
 
@@ -152,6 +179,28 @@ export default function EmployeeSettingsPage() {
         <Button type="submit" disabled={isSaving}>
           {isSaving ? "Saving..." : "Save Changes"}
         </Button>
+      </form>
+
+      <form onSubmit={handleSaveRadius} className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
+        <h2 className="font-display text-headline-sm text-on-surface">Service Area</h2>
+        <p className="mt-1 text-body-md text-on-surface-variant">
+          How far you're willing to travel for a job.
+        </p>
+        <div className="mt-3 flex items-end gap-3">
+          <TextField
+            id="serviceRadiusKm"
+            type="number"
+            label="Radius (km)"
+            value={serviceRadiusKm}
+            onChange={(e) => setServiceRadiusKm(e.target.value)}
+            className="max-w-xs"
+          />
+          <Button type="submit" disabled={isSavingRadius}>
+            {isSavingRadius ? "Saving..." : "Save"}
+          </Button>
+        </div>
+        {radiusError && <p className="mt-2 text-label-sm font-semibold text-error">{radiusError}</p>}
+        {radiusSaved && <p className="mt-2 text-label-sm font-semibold text-primary">Saved!</p>}
       </form>
 
       <div className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">

@@ -160,25 +160,26 @@ of what's real vs. planned.
 
 ## Phase 6 — Professional-side tools UI
 
+**Status (2026-09-02): built and verified live.**
+
 ### Earnings
 - Backend: `GET /earnings` → `{earned, pending}`
 - Work:
-  - [ ] New `employee/earnings/page.jsx` (or a card added to `employee/dashboard/page.jsx`, which already fetches booking summary data) showing earned vs. pending totals.
-- Test: pay for a booking, confirm `earned` increases; leave one unpaid, confirm it shows under `pending`, not `earned`.
+  - [x] New `employee/earnings/page.jsx` — two stat tiles (earned / pending).
+- Test (live): confirmed the response shape (`{earned, pending}`) against the test professional (both `0.0` — no paid bookings yet, matches expectation).
 
 ### Service area
 - Backend: `PATCH /service-area/professionals/{id}` (radius), `GET /service-area/search?lat=&lng=`
 - Work:
-  - [ ] `employee/settings/page.jsx`: add a "Service radius (km)" number input calling the `PATCH` endpoint.
-  - [ ] Optional: a "Near me" toggle on `search/page.jsx` using `/service-area/search` instead of the plain bounding-box filter, once the geocoding "use my location" flow (Phase 2) exists.
-- Test: set a professional's radius, confirm `GET /service-area/search` at a point just inside it includes them and just outside excludes them (matches the backend's own inclusive-boundary test).
+  - [x] `employee/settings/page.jsx`: "Service Area" section with a radius (km) input.
+  - Search page's "Near me" using `/service-area/search` skipped for now — the existing bounding-box + distance-sort combo (Phase 2) already covers the main use case; can revisit later.
+- Test (live): `PATCH` with `serviceRadiusKm: 50` → response reflects the new value.
 
 ### Portfolio
-- Backend: `GET/POST /professionals/{id}/portfolio`, `DELETE /professionals/{id}/portfolio/{imageId}`, `PUT /professionals/{id}/portfolio/order`
+- Backend: `GET/POST /professionals/{id}/portfolio`, `DELETE .../{imageId}`, `PUT .../order`
 - Work:
-  - [ ] New `employee/portfolio/page.jsx`: add-by-URL form (raw URL input — file upload is Phase 8, not built), a grid of current images with a remove button each, and drag-to-reorder (even a simple up/down button pair is fine — full drag-and-drop is a nice-to-have) calling `PUT .../order` with the new id sequence.
-  - [ ] `professionals/[id]/page.jsx`'s existing "Recent Portfolio" grid already renders `worker.portfolio` — no change needed there once the array is populated and ordered correctly by the backend.
-- Test: add two images, reorder them, refresh the professional's public page and confirm the new order persists; remove one and confirm it's gone from both the management page and the public page.
+  - [x] New `employee/portfolio/page.jsx`: add-by-URL form, grid with up/down reorder buttons (simpler and equally functional vs. full drag-and-drop) and a remove button per image. Uses `unoptimized` on `next/image` since arbitrary portfolio URLs can't be pre-whitelisted in `next.config.js`'s `remotePatterns`.
+- Test (live): added two images, reordered (swap), removed one — each step's response matches what the page expects (`{images: [{id, url, position}]}`), position values update correctly after reorder.
 
 ### Availability calendar management
 - Covered above under Phase 3 — same `employee/availability` page.

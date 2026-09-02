@@ -38,6 +38,8 @@ const EMPLOYEE_LINKS = [
   { href: "/employee/dashboard", label: "Dashboard" },
   { href: "/employee/bookingStatus", label: "Bookings" },
   { href: "/employee/availability", label: "Availability" },
+  { href: "/employee/earnings", label: "Earnings" },
+  { href: "/employee/portfolio", label: "Portfolio" },
   { href: "/employee/reviews", label: "Reviews" },
   { href: "/search", label: "Categories" },
   { href: "/employee/settings", label: "Settings" },
