@@ -9,6 +9,7 @@ import Rating from "@/components/Rating/Rating";
 import Button from "@/components/Button/Button";
 import BookingStatusActions from "@/components/Booking/BookingStatusActions";
 import BookingReviewForm from "@/components/Booking/BookingReviewForm";
+import RescheduleAction from "@/components/Booking/RescheduleAction";
 import { apiFetch } from "@/lib/apiClient";
 
 export default function BookingDetailPage() {
@@ -119,6 +120,14 @@ export default function BookingDetailPage() {
             : []),
         ]}
       />
+
+      {booking.status !== "Cancelled" && booking.status !== "Completed" && booking.professionalId && (
+        <RescheduleAction
+          bookingId={booking._id}
+          professionalId={booking.professionalId}
+          onSuccess={load}
+        />
+      )}
 
       <div className="mt-4 flex flex-wrap gap-3">
         {!booking.amount && booking.status !== "Cancelled" && (

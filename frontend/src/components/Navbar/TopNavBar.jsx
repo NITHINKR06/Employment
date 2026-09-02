@@ -36,6 +36,7 @@ const USER_LINKS = [
 const EMPLOYEE_LINKS = [
   { href: "/employee/dashboard", label: "Dashboard" },
   { href: "/employee/bookingStatus", label: "Bookings" },
+  { href: "/employee/availability", label: "Availability" },
   { href: "/search", label: "Categories" },
   { href: "/employee/settings", label: "Settings" },
 ];

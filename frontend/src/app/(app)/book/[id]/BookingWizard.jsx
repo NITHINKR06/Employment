@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { IoLockClosedOutline } from "react-icons/io5";
@@ -14,15 +14,59 @@ import { apiFetch } from "@/lib/apiClient";
 
 const STEPS = ["Details", "Schedule", "Address", "Payment"];
 
+function formatSlotTime(isoString) {
+  return new Date(isoString).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function formatSlotDay(isoString) {
+  return new Date(isoString).toLocaleDateString([], {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function BookingWizard({ worker }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [details, setDetails] = useState({ category: worker.trade, description: "" });
   const [schedule, setSchedule] = useState({ date: "", time: "" });
+  const [slots, setSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(true);
+  const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [address, setAddress] = useState("");
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState("WEEKLY");
   const [isCreatingBooking, setIsCreatingBooking] = useState(false);
   const [bookingError, setBookingError] = useState("");
   const [createdBooking, setCreatedBooking] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch(`/availability/${worker.id}`)
+      .then((body) => {
+        if (!cancelled && body.success && body.data?.slots) {
+          setSlots(body.data.slots);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [worker.id]);
+
+  const slotsByDay = useMemo(() => {
+    const groups = new Map();
+    for (const slot of slots) {
+      const day = formatSlotDay(slot.startsAt);
+      if (!groups.has(day)) groups.set(day, []);
+      groups.get(day).push(slot);
+    }
+    return groups;
+  }, [slots]);
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
@@ -30,15 +74,42 @@ export default function BookingWizard({ worker }) {
   const scheduledAt =
     schedule.date && schedule.time ? new Date(`${schedule.date}T${schedule.time}`) : null;
 
+  const selectedSlot = slots.find((s) => s.id === selectedSlotId) ?? null;
+  const effectiveScheduledAt = selectedSlot ? new Date(selectedSlot.startsAt) : scheduledAt;
+
+  const canContinueFromSchedule = slots.length > 0 ? Boolean(selectedSlotId) : true;
+
   const handleContinueToPayment = async () => {
     setBookingError("");
     setIsCreatingBooking(true);
     try {
+      if (isRecurring) {
+        if (!effectiveScheduledAt) {
+          throw new Error("Pick a date/time or open slot before setting up a recurring booking");
+        }
+        const body = await apiFetch("/booking-lifecycle/recurring", {
+          method: "POST",
+          body: JSON.stringify({
+            professionalId: worker.id,
+            address,
+            notes: `Category: ${details.category}\n${details.description}`,
+            frequency,
+            startsAt: effectiveScheduledAt.toISOString(),
+          }),
+        });
+        if (!body.success) {
+          throw new Error(body?.error?.message ?? "Could not set up recurring booking");
+        }
+        router.push("/user/bookingStatus");
+        return;
+      }
+
       const body = await apiFetch("/bookings", {
         method: "POST",
         body: JSON.stringify({
           professionalId: worker.id,
-          scheduledAt: scheduledAt ? scheduledAt.toISOString() : undefined,
+          slotId: selectedSlotId || undefined,
+          scheduledAt: !selectedSlotId && scheduledAt ? scheduledAt.toISOString() : undefined,
           address,
           notes: `Category: ${details.category}\n${details.description}`,
         }),
@@ -51,7 +122,11 @@ export default function BookingWizard({ worker }) {
       setCreatedBooking(body.data.booking);
       next();
     } catch (error) {
-      setBookingError(error.message ?? "Could not create booking");
+      setBookingError(
+        error.status === 409
+          ? "That time slot was just booked by someone else — pick another."
+          : error.message ?? "Could not create booking"
+      );
     } finally {
       setIsCreatingBooking(false);
     }
@@ -111,37 +186,72 @@ export default function BookingWizard({ worker }) {
           {step === 1 && (
             <div className="space-y-4 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
               <h2 className="font-display text-headline-sm text-on-surface">Schedule</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-1.5 block text-label-md text-on-surface" htmlFor="date">
-                    Date
-                  </label>
-                  <input
-                    id="date"
-                    type="date"
-                    value={schedule.date}
-                    onChange={(e) => setSchedule({ ...schedule, date: e.target.value })}
-                    className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+
+              {slotsLoading ? (
+                <p className="text-body-md text-on-surface-variant">Loading available times...</p>
+              ) : slots.length > 0 ? (
+                <div className="space-y-4">
+                  {[...slotsByDay.entries()].map(([day, daySlots]) => (
+                    <div key={day}>
+                      <p className="mb-2 text-label-md font-semibold text-on-surface">{day}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {daySlots.map((slot) => (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            onClick={() => setSelectedSlotId(slot.id)}
+                            className={`rounded-lg border px-3 py-2 text-label-md font-semibold transition ${
+                              selectedSlotId === slot.id
+                                ? "border-primary bg-primary text-on-primary"
+                                : "border-outline-variant text-on-surface hover:bg-surface-container-low"
+                            }`}
+                          >
+                            {formatSlotTime(slot.startsAt)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className="mb-1.5 block text-label-md text-on-surface" htmlFor="time">
-                    Time
-                  </label>
-                  <input
-                    id="time"
-                    type="time"
-                    value={schedule.time}
-                    onChange={(e) => setSchedule({ ...schedule, time: e.target.value })}
-                    className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
+              ) : (
+                <>
+                  <p className="text-label-sm text-on-surface-variant">
+                    This professional hasn&apos;t published open time slots yet — pick a preferred date and time instead.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1.5 block text-label-md text-on-surface" htmlFor="date">
+                        Date
+                      </label>
+                      <input
+                        id="date"
+                        type="date"
+                        value={schedule.date}
+                        onChange={(e) => setSchedule({ ...schedule, date: e.target.value })}
+                        className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-label-md text-on-surface" htmlFor="time">
+                        Time
+                      </label>
+                      <input
+                        id="time"
+                        type="time"
+                        value={schedule.time}
+                        onChange={(e) => setSchedule({ ...schedule, time: e.target.value })}
+                        className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div className="flex gap-3">
                 <Button variant="secondary" onClick={back}>
                   Back
                 </Button>
-                <Button onClick={next} className="flex-1">
+                <Button onClick={next} className="flex-1" disabled={!canContinueFromSchedule}>
                   Continue to Address
                 </Button>
               </div>
@@ -163,6 +273,37 @@ export default function BookingWizard({ worker }) {
                   className="w-full rounded border border-outline-variant bg-surface-container-lowest p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
+
+              <label className="flex items-center gap-2.5 text-body-md text-on-surface">
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
+                />
+                Repeat this booking automatically
+              </label>
+              {isRecurring && (
+                <div>
+                  <label className="mb-1.5 block text-label-md text-on-surface" htmlFor="frequency">
+                    Frequency
+                  </label>
+                  <select
+                    id="frequency"
+                    value={frequency}
+                    onChange={(e) => setFrequency(e.target.value)}
+                    className="h-12 w-full rounded border border-outline-variant bg-surface-container-lowest px-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="WEEKLY">Weekly</option>
+                    <option value="BIWEEKLY">Every 2 weeks</option>
+                    <option value="MONTHLY">Monthly</option>
+                  </select>
+                  <p className="mt-1.5 text-label-sm text-on-surface-variant">
+                    We&apos;ll set up a recurring booking at the schedule you picked — no upfront payment step for this option.
+                  </p>
+                </div>
+              )}
+
               {bookingError && (
                 <div className="rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">
                   {bookingError}
@@ -177,7 +318,11 @@ export default function BookingWizard({ worker }) {
                   disabled={!address || isCreatingBooking}
                   className="flex-1"
                 >
-                  {isCreatingBooking ? "Creating booking..." : "Continue to Payment"}
+                  {isCreatingBooking
+                    ? "Saving..."
+                    : isRecurring
+                      ? "Set Up Recurring Booking"
+                      : "Continue to Payment"}
                 </Button>
               </div>
             </div>

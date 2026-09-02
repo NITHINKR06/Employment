@@ -2,7 +2,8 @@
 
 import pytest
 
-from app.core.errors import ForbiddenError, ValidationError
+from app.core.errors import ConflictError, ForbiddenError, ValidationError
+from app.modules.bookings import repository as bookings_repository
 from app.modules.bookings import service
 from app.modules.bookings.models import BookingStatus
 from app.modules.users.models import Role
@@ -112,3 +113,45 @@ async def test_completion_notifies_the_customer_exactly_once(
 
     assert len(calls) == 1
     assert calls[0][0] == customer.id
+
+
+@pytest.mark.asyncio
+async def test_create_booking_with_slot_id_reserves_slot_and_sets_scheduled_at(
+    db, make_user, make_professional, make_time_slot
+):
+    """The Booking row must exist before the slot's booking_id FK points at it —
+    creating booking then reserving (not the reverse) is what keeps this valid
+    against a real foreign-key-enforcing database."""
+    pro_user = await make_user(role=Role.EMPLOYEE)
+    pro = await make_professional(user=pro_user)
+    customer = await make_user(role=Role.USER)
+    slot = await make_time_slot(professional=pro)
+
+    result = await service.create_booking(
+        db, customer, {"professional_id": pro.id, "slot_id": slot.id, "address": "123 Test St"}
+    )
+
+    assert result["date"] == slot.starts_at.strftime("%Y-%m-%d")
+    await db.refresh(slot)
+    assert slot.is_booked is True
+    assert slot.booking_id == result["_id"]
+
+
+@pytest.mark.asyncio
+async def test_create_booking_with_already_booked_slot_leaves_no_orphan_booking(
+    db, make_user, make_professional, make_time_slot
+):
+    pro_user = await make_user(role=Role.EMPLOYEE)
+    pro = await make_professional(user=pro_user)
+    customer = await make_user(role=Role.USER)
+    slot = await make_time_slot(professional=pro, is_booked=True, booking_id="other-booking")
+
+    before = await bookings_repository.find_many_by_professional_id(db, pro.id)
+
+    with pytest.raises(ConflictError):
+        await service.create_booking(
+            db, customer, {"professional_id": pro.id, "slot_id": slot.id, "address": "123 Test St"}
+        )
+
+    after = await bookings_repository.find_many_by_professional_id(db, pro.id)
+    assert len(after) == len(before)

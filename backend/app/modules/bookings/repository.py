@@ -54,6 +54,13 @@ async def find_many_by_professional_id(db: AsyncSession, professional_id: str) -
     return list(result.unique().scalars().all())
 
 
+async def remove(db: AsyncSession, booking_id: str) -> None:
+    booking = await find_by_id(db, booking_id)
+    if booking is not None:
+        await db.delete(booking)
+        await db.commit()
+
+
 async def update_status(db: AsyncSession, booking_id: str, status: BookingStatus) -> Booking:
     booking = await find_by_id(db, booking_id)
     if booking is not None:

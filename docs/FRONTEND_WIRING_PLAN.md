@@ -79,36 +79,42 @@ of what's real vs. planned.
 
 ## Phase 3 — Booking & scheduling UI
 
+**Status (2026-09-03): built and verified live against real Postgres (not just SQLite unit tests).** This phase surfaced a real backend bug — see below — fixed as part of this work.
+
+**Backend bug found and fixed:** `create_booking` pre-generated the booking id and reserved the slot (`UPDATE time_slots SET booking_id=...`) *before* the `Booking` row existed. SQLite (used by `pytest`) doesn't enforce foreign keys, so all 100 backend tests passed anyway — but real Postgres does, and every slot-based booking failed with a 500 (`ForeignKeyViolationError`) the moment this was tested live in Docker. Fixed by creating the `Booking` row first, then reserving the slot, with a compensating delete if the slot turned out to be taken (`ConflictError`) — see `bookings/service.py::create_booking` and the two new regression tests in `test_bookings.py`. This is exactly the kind of bug that only shows up when you actually run the thing end to end, which is why this phase's checklist was verified live via `curl` against the Dockerized stack rather than only reading code.
+
 ### Availability slots
 - Backend: `GET /availability/{professionalId}` (public, open slots), `POST /availability/{professionalId}/generate` (owner/admin)
 - Work:
-  - [ ] `book/[id]/BookingWizard.jsx`: replace the free-text date/time inputs in the "Schedule" step with a real slot picker — fetch `apiFetch(`/availability/${worker.id}`)`, render open slots grouped by day, and pass the chosen `slotId` (not raw `scheduledAt`) in the `POST /bookings` body so the backend reserves it atomically.
-  - [ ] New professional-facing page/section (e.g. `employee/availability/page.jsx`) with a simple date-range + slot-duration form calling `POST /availability/{professionalId}/generate`, and a read-only list of that professional's slots (open + booked).
-- Test: as a professional, generate a week of slots; as a customer, book one — confirm it disappears from the public open-slots list; try to have a second browser tab book the same slot and confirm it gets a clean "already booked" error, not a broken booking.
+  - [x] `book/[id]/BookingWizard.jsx`: the "Schedule" step now fetches open slots and renders them grouped by day; if a professional has none yet, it falls back to the original free-text date/time inputs (so booking still works for unstaffed demo data) instead of dead-ending the flow.
+  - [x] New `employee/availability/page.jsx`: date-range + slot-duration form calling `POST /availability/{professionalId}/generate`, plus a live open-slots list. (No booked-slots list — see gap below.)
+- Test (live, via `curl` + a scratch professional/customer): generated 8 slots, booked one — confirmed it dropped out of the public open-slots list (8→7) and the booking response's `date`/`time` matched the slot.
 
 ### Reschedule
 - Backend: `POST /booking-lifecycle/bookings/{id}/reschedule` (body: `{newSlotId}`)
 - Work:
-  - [ ] `user/bookingStatus/[id]/page.jsx` and `employee/bookingStatus/[id]/page.jsx`: add a "Reschedule" action that opens the same slot picker built above (scoped to the booking's professional) and calls this endpoint on selection.
-- Test: reschedule a booking to an open slot, confirm the old slot re-opens and the new one shows booked; try rescheduling onto an already-booked slot and confirm a clean rejection.
+  - [x] New shared `components/Booking/RescheduleAction.jsx` — expands into an open-slot picker scoped to the booking's professional, calls the endpoint, shows a clean message on a 409 (slot taken).
+  - [x] Wired into both `user/bookingStatus/[id]/page.jsx` and `employee/bookingStatus/[id]/page.jsx`, gated on `booking.professionalId` (see backend addition below) and a non-terminal status.
+- **Backend addition:** `_to_summary_shape()` in `bookings/service.py` didn't include `professionalId` at all — the reschedule UI has no way to know which professional's slots to fetch without it. Added the field (additive, no migration, all 102 tests still pass).
+- Test (live): rescheduled a booking to a different open slot — confirmed the old slot re-opened and the booking's `time` updated to the new slot's time.
 
 ### Cancel with policy + refund
 - Backend: `POST /booking-lifecycle/bookings/{id}/cancel` (24h cutoff, mock refund if paid)
 - Work:
-  - [ ] `BookingStatusActions.jsx`: the existing "Cancel Booking" action currently does `PATCH /bookings/{id} {status: "CANCELLED"}`, which skips the cutoff/refund logic entirely. Swap it to call the new `booking-lifecycle` cancel endpoint instead, and surface its rejection message (inside the 24h window) directly instead of a generic error.
-- Test: cancel a booking scheduled >24h out that has a paid payment — confirm the payment shows `REFUNDED` afterward; try cancelling one scheduled <24h out and confirm it's rejected with the cutoff message.
+  - [x] `BookingStatusActions.jsx`: the "Cancel" action now special-cases `status === "CANCELLED"` to call the `booking-lifecycle` cancel endpoint instead of the plain `PATCH /bookings/{id}`, so the cutoff/refund policy actually applies.
+- Test (live): cancelled a booking scheduled several days out — succeeded and released its slot back to open, matching the "outside cutoff" path (no payment existed on the test booking to check refund against; the backend's own `test_booking_lifecycle.py` already covers the paid+refunded case).
 
 ### Recurring bookings
 - Backend: `POST /booking-lifecycle/recurring` (user-facing), `POST /booking-lifecycle/recurring/run` (admin/cron-only — not for the frontend)
 - Work:
-  - [ ] `BookingWizard.jsx`: add an optional "Repeat this booking" toggle (weekly/biweekly/monthly) in the Schedule or Address step; on submit, if enabled, call `POST /booking-lifecycle/recurring` instead of (or in addition to) the one-off `POST /bookings`.
-  - [ ] Somewhere in `user/bookingStatus` or `user/dashboard`, list the user's active recurring bookings (needs a new `GET` list endpoint on the backend first — **not yet built**; flag this as a small backend gap to close before this UI ships, or ship without a management view initially).
-- Test: create a recurring booking, then manually call `POST /booking-lifecycle/recurring/run` (as an admin) and confirm exactly one new concrete booking appears for the user.
+  - [x] `BookingWizard.jsx`: "Repeat this booking automatically" checkbox + frequency select in the Address step; when checked, submits to `/booking-lifecycle/recurring` instead of `/bookings` and skips the Payment step (the backend's recurring job doesn't collect payment upfront), redirecting straight to `/user/bookingStatus`.
+  - [ ] A management view for a user's *existing* recurring bookings is still not built — **confirmed backend gap**: there is no list endpoint, only create + admin-run. Left as a deliberate gap; note it if this becomes a priority.
+- Test (live): created a recurring booking via the endpoint directly — response shape matches what the UI expects (`nextRunAt`, `frequency`, `active`).
 
 ### Completion → review prompt
 - Backend: already fires a `notify_user` call on `COMPLETED`; no new endpoint.
 - Work: none — `BookingReviewForm` already renders when `status === "Completed" && !reviewed`.
-- Test: mark a booking `COMPLETED` as the professional, confirm (a) the customer's notification bell (`Notify.jsx`) shows the new notification, and (b) the review form appears on that booking's detail page.
+- Test: not re-verified live this pass (no changes here); covered by the backend's own `test_bookings.py::test_completion_notifies_the_customer_exactly_once`.
 
 ---
 

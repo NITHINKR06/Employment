@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import StatBadge from "@/components/Badge/StatBadge";
 import BookingStatusActions from "@/components/Booking/BookingStatusActions";
+import RescheduleAction from "@/components/Booking/RescheduleAction";
 import { apiFetch } from "@/lib/apiClient";
 
 const STATUS_ACTIONS = {
@@ -105,6 +106,14 @@ export default function EmployeeBookingDetailPage() {
         actions={STATUS_ACTIONS[booking.status] ?? []}
         onSuccess={load}
       />
+
+      {booking.status !== "Cancelled" && booking.status !== "Completed" && booking.professionalId && (
+        <RescheduleAction
+          bookingId={booking._id}
+          professionalId={booking.professionalId}
+          onSuccess={load}
+        />
+      )}
 
       <Link href="/employee/bookingStatus" className="mt-4 inline-block text-label-sm text-primary hover:underline">
         &larr; Back to jobs

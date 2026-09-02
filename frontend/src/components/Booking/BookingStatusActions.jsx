@@ -14,10 +14,15 @@ export default function BookingStatusActions({ bookingId, actions, onSuccess }) 
     setError("");
     setPendingStatus(status);
     try {
-      const body = await apiFetch(`/bookings/${bookingId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
-      });
+      // Cancellation goes through booking-lifecycle so the 24h cutoff policy
+      // and mock refund actually apply — a plain status PATCH would skip both.
+      const body =
+        status === "CANCELLED"
+          ? await apiFetch(`/booking-lifecycle/bookings/${bookingId}/cancel`, { method: "POST" })
+          : await apiFetch(`/bookings/${bookingId}`, {
+              method: "PATCH",
+              body: JSON.stringify({ status }),
+            });
       if (!body.success || !body.data?.booking) {
         throw new Error(body?.error?.message ?? "Could not update booking");
       }
