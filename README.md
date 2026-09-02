@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# ProMarket
 
-## Getting Started
+A full-stack local services marketplace — connect with trusted professionals (plumbers, electricians, painters, etc.) near you, book them instantly, pay, and leave reviews. Think **Urban Company / TaskRabbit**, built from scratch.
 
-First, run the development server:
+## What It Does
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+ProMarket bridges the gap between **customers** who need home/local services and **professionals** who offer them. Customers can search by trade, location, and availability, view portfolios and reviews, book a time slot, pay (UPI QR), and rate the work afterward. Professionals get a dashboard to manage their profile, services, bookings, and earnings.
+
+## How It Works
+
+```
+Customer signs up (Firebase Auth)
+  → Searches for a professional (by trade, location, rating)
+  → Views their profile (bio, skills, portfolio, reviews, trust badges)
+  → Books a service (picks a date/time, adds address & notes)
+  → Pays via UPI QR code
+  → After the job, leaves a rating & review
+
+Professional signs up
+  → Creates a profile (trade, hourly rate, skills, portfolio images)
+  → Receives & manages bookings (accept / complete / cancel)
+  → Tracks payments & reviews on their dashboard
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+| Layer | Tech |
+|-------|------|
+| Frontend | Next.js 15, React 19, Tailwind CSS |
+| Backend | Python, FastAPI, SQLAlchemy, Alembic |
+| Database | PostgreSQL 16 (Prisma ORM for frontend, SQLAlchemy for backend) |
+| Auth | Firebase Authentication |
+| Infra | Docker Compose |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quick Start
 
-## Learn More
+### With Docker (recommended)
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Copy env files and fill in your values
+cp frontend/.env.example frontend/.env
+cp backend/.env.example backend/.env
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Start everything (Postgres + backend + frontend)
+just up
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000) for the frontend and [http://localhost:8000/docs](http://localhost:8000/docs) for the API docs.
 
-## Deploy on Vercel
+### Without Docker
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Frontend (in one terminal)
+cd frontend
+pnpm install
+pnpm dev
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Backend (in a separate terminal)
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload
+```
+
+## Project Structure
+
+```
+.
+├── frontend/         # Next.js frontend (src/, public/, prisma/, configs)
+├── backend/          # FastAPI backend (app/, alembic/, tests/)
+├── docker/           # Docker init scripts (init-db.sql)
+├── docs/             # Planning & architecture docs
+├── docker-compose.yml
+├── justfile          # Task runner shortcuts (just up, just down, etc.)
+└── README.md
+```
+
+## Useful Commands
+
+| Command | Description |
+|---------|-------------|
+| `just up` | Build & start all services |
+| `just down` | Stop all containers |
+| `just nuke` | Stop & wipe all data volumes |
+| `just logs backend` | Tail logs for a service |
+| `just test-backend` | Run backend pytest suite |
+| `just migrate` | Apply Alembic migrations |
+| `just shell backend` | Shell into a container |
+
+## Documentation
+
+See the [`docs/`](docs/) directory for detailed planning and architecture docs:
+
+- [Backend Plan (FastAPI)](docs/BACKEND_PLAN.md)
+- [Backend Plan (JS Legacy)](docs/BACKEND_PLAN_JS_LEGACY.md)
+- [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Site Essentials](docs/SITE-ESSENTIALS.md)
