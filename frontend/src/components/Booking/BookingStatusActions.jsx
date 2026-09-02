@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/Button/Button";
 import { apiFetch } from "@/lib/apiClient";
 
-export default function BookingStatusActions({ bookingId, actions }) {
+export default function BookingStatusActions({ bookingId, actions, onSuccess }) {
   const router = useRouter();
   const [pendingStatus, setPendingStatus] = useState(null);
   const [error, setError] = useState("");
@@ -22,6 +22,7 @@ export default function BookingStatusActions({ bookingId, actions }) {
         throw new Error(body?.error?.message ?? "Could not update booking");
       }
       router.refresh();
+      onSuccess?.(body.data.booking);
     } catch (err) {
       setError(err.message);
     } finally {

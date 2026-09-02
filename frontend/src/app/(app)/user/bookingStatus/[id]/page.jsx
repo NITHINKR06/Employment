@@ -1,29 +1,64 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { IoChevronBack, IoCalendarOutline, IoTimeOutline, IoLocationOutline, IoCallOutline } from "react-icons/io5";
+import { IoChevronBack, IoCalendarOutline, IoLocationOutline, IoCallOutline } from "react-icons/io5";
 import StatBadge from "@/components/Badge/StatBadge";
 import Rating from "@/components/Rating/Rating";
 import Button from "@/components/Button/Button";
 import BookingStatusActions from "@/components/Booking/BookingStatusActions";
 import BookingReviewForm from "@/components/Booking/BookingReviewForm";
-import { getBookingById } from "@/server/services/booking.service";
-import { requireAuth } from "@/server/auth/requireAuth";
-import { NotFoundError, ForbiddenError, UnauthorizedError } from "@/server/utils/errors";
+import { apiFetch } from "@/lib/apiClient";
 
-export const dynamic = "force-dynamic";
+export default function BookingDetailPage() {
+  const { id } = useParams();
+  const [booking, setBooking] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-export default async function BookingDetailPage({ params }) {
-  const { id } = await params;
+  const load = useCallback(() => {
+    setIsLoading(true);
+    return apiFetch(`/bookings/${id}`)
+      .then((body) => {
+        if (body.success && body.data?.booking) {
+          setBooking(body.data.booking);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        setError(
+          err.status === 401
+            ? "Please log in to see this booking."
+            : err.status === 403 || err.status === 404
+              ? "Booking not found."
+              : err.message || "Could not load booking"
+        );
+      })
+      .finally(() => setIsLoading(false));
+  }, [id]);
 
-  let booking;
-  try {
-    const user = await requireAuth();
-    booking = await getBookingById(user, id);
-  } catch (error) {
-    if (error instanceof NotFoundError || error instanceof ForbiddenError || error instanceof UnauthorizedError) {
-      notFound();
-    }
-    throw error;
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (isLoading) {
+    return (
+      <div className="container max-w-2xl py-10">
+        <p className="font-display text-headline-sm text-on-surface">Loading booking...</p>
+      </div>
+    );
+  }
+
+  if (error || !booking) {
+    return (
+      <div className="container max-w-2xl py-10">
+        <p className="font-display text-headline-sm text-on-surface">{error || "Booking not found."}</p>
+        <Link href="/user/bookingStatus" className="mt-4 inline-block text-label-md font-medium text-primary hover:underline">
+          &larr; Back to Bookings
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -77,6 +112,7 @@ export default async function BookingDetailPage({ params }) {
 
       <BookingStatusActions
         bookingId={booking._id}
+        onSuccess={load}
         actions={[
           ...(booking.status !== "Cancelled" && booking.status !== "Completed"
             ? [{ status: "CANCELLED", label: "Cancel Booking", variant: "secondary" }]
@@ -94,7 +130,7 @@ export default async function BookingDetailPage({ params }) {
       </div>
 
       {booking.status === "Completed" && !booking.reviewed && (
-        <BookingReviewForm bookingId={booking._id} />
+        <BookingReviewForm bookingId={booking._id} onSuccess={load} />
       )}
     </div>
   );

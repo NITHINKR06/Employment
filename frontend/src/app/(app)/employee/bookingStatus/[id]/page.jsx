@@ -1,12 +1,11 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import StatBadge from "@/components/Badge/StatBadge";
 import BookingStatusActions from "@/components/Booking/BookingStatusActions";
-import { getBookingById } from "@/server/services/booking.service";
-import { requireAuth } from "@/server/auth/requireAuth";
-import { NotFoundError, ForbiddenError, UnauthorizedError } from "@/server/utils/errors";
-
-export const dynamic = "force-dynamic";
+import { apiFetch } from "@/lib/apiClient";
 
 const STATUS_ACTIONS = {
   Pending: [
@@ -22,18 +21,54 @@ const STATUS_ACTIONS = {
   Cancelled: [],
 };
 
-export default async function EmployeeBookingDetailPage({ params }) {
-  const { id } = await params;
+export default function EmployeeBookingDetailPage() {
+  const { id } = useParams();
+  const [booking, setBooking] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  let booking;
-  try {
-    const user = await requireAuth();
-    booking = await getBookingById(user, id);
-  } catch (error) {
-    if (error instanceof NotFoundError || error instanceof ForbiddenError || error instanceof UnauthorizedError) {
-      notFound();
-    }
-    throw error;
+  const load = useCallback(() => {
+    setIsLoading(true);
+    return apiFetch(`/bookings/${id}`)
+      .then((body) => {
+        if (body.success && body.data?.booking) {
+          setBooking(body.data.booking);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        setError(
+          err.status === 401
+            ? "Please log in to see this job."
+            : err.status === 403 || err.status === 404
+              ? "Job not found."
+              : err.message || "Could not load job"
+        );
+      })
+      .finally(() => setIsLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (isLoading) {
+    return (
+      <div className="container max-w-2xl py-10">
+        <p className="font-display text-headline-sm text-on-surface">Loading job...</p>
+      </div>
+    );
+  }
+
+  if (error || !booking) {
+    return (
+      <div className="container max-w-2xl py-10">
+        <p className="font-display text-headline-sm text-on-surface">{error || "Job not found."}</p>
+        <Link href="/employee/bookingStatus" className="mt-4 inline-block text-label-sm text-primary hover:underline">
+          &larr; Back to jobs
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -65,7 +100,11 @@ export default async function EmployeeBookingDetailPage({ params }) {
         </div>
       </div>
 
-      <BookingStatusActions bookingId={booking._id} actions={STATUS_ACTIONS[booking.status] ?? []} />
+      <BookingStatusActions
+        bookingId={booking._id}
+        actions={STATUS_ACTIONS[booking.status] ?? []}
+        onSuccess={load}
+      />
 
       <Link href="/employee/bookingStatus" className="mt-4 inline-block text-label-sm text-primary hover:underline">
         &larr; Back to jobs

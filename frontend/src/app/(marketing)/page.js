@@ -23,7 +23,7 @@ import Button from "@/components/Button/Button";
 import Chip from "@/components/Chip/Chip";
 import VerifiedBadge from "@/components/Badge/VerifiedBadge";
 import Rating from "@/components/Rating/Rating";
-import { listProfessionals } from "@/server/services/professional.service";
+import { serverApiFetch } from "@/lib/serverApiClient";
 
 const POPULAR_TAGS = [
   "Fix a leaking pipe",
@@ -103,7 +103,13 @@ const TRUST_STATS = [
 ];
 
 export default async function Home() {
-  const professionals = await listProfessionals({});
+  let professionals = [];
+  try {
+    const body = await serverApiFetch("/professionals");
+    professionals = body.data.professionals;
+  } catch {
+    // Backend unreachable — render the page without featured pros rather than 500.
+  }
   const topPros = professionals.slice(0, 3);
 
   return (

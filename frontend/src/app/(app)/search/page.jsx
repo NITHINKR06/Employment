@@ -26,7 +26,7 @@ function SearchPageContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("Bangalore");
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 200 });
   const [minRating, setMinRating] = useState(0);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [emergencyOnly, setEmergencyOnly] = useState(false);
@@ -77,25 +77,25 @@ function SearchPageContent() {
         selectedCategories.length === 0 || selectedCategories.includes(worker.trade);
 
       const matchesRate =
-        worker.hourlyRate >= rateRange.min && worker.hourlyRate <= rateRange.max;
+        worker.hourlyRate >= priceRange.min && worker.hourlyRate <= priceRange.max;
 
       const matchesRating = worker.rating >= minRating;
 
       return matchesSearch && matchesCategory && matchesRate && matchesRating;
     });
 
-    if (sort === "rating") list = [...list].sort((a, b) => b.rating - a.rating);
-    if (sort === "price") list = [...list].sort((a, b) => a.hourlyRate - b.hourlyRate);
-    if (sort === "experience") list = [...list].sort((a, b) => b.yearsExperience - a.yearsExperience);
+    if (sortBy === "rating") list = [...list].sort((a, b) => b.rating - a.rating);
+    if (sortBy === "price") list = [...list].sort((a, b) => a.hourlyRate - b.hourlyRate);
+    if (sortBy === "experience") list = [...list].sort((a, b) => b.yearsExperience - a.yearsExperience);
 
     return list;
-  }, [professionals, searchQuery, selectedCategories, rateRange, minRating, sort]);
+  }, [professionals, searchQuery, selectedCategories, priceRange, minRating, sortBy]);
 
   const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategories, rateRange, minRating, sort]);
+  }, [searchQuery, selectedCategories, priceRange, minRating, sortBy]);
 
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
@@ -106,9 +106,11 @@ function SearchPageContent() {
     [results, currentPage]
   );
 
+  const isMapView = viewMode === "map";
+
   const handleClearAll = () => {
     setSelectedCategories([]);
-    setRateRange({ min: 0, max: 200 });
+    setPriceRange({ min: 0, max: 200 });
     setMinRating(0);
     setSearchQuery("");
   };
@@ -150,9 +152,9 @@ function SearchPageContent() {
           categories={categories}
           selectedCategories={selectedCategories}
           onCategoryChange={setSelectedCategories}
-          rateMin={rateRange.min}
-          rateMax={rateRange.max}
-          onRateChange={setRateRange}
+          rateMin={priceRange.min}
+          rateMax={priceRange.max}
+          onRateChange={setPriceRange}
           minRating={minRating}
           onRatingChange={setMinRating}
           onClearAll={handleClearAll}
@@ -173,7 +175,7 @@ function SearchPageContent() {
             <div className="flex items-center gap-3">
               {/* Map / Grid View Toggle Button */}
               <button
-                onClick={() => setIsMapView(!isMapView)}
+                onClick={() => setViewMode(isMapView ? "grid" : "map")}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant/80 bg-surface-container-lowest px-3 py-2 text-label-md font-semibold text-on-surface shadow-sm transition hover:bg-surface-container-low"
               >
                 {isMapView ? <IoGridOutline /> : <IoMapOutline />}
@@ -182,8 +184,8 @@ function SearchPageContent() {
 
               {/* Sort Selection Dropdown */}
               <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
                 className="h-10 rounded-lg border border-outline-variant/80 bg-surface-container-lowest px-3 text-label-md font-semibold text-on-surface shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="rating">Sort: Top Rated</option>

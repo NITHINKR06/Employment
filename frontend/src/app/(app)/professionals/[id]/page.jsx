@@ -12,13 +12,16 @@ import VerifiedBadge from "@/components/Badge/VerifiedBadge";
 import Rating from "@/components/Rating/Rating";
 import Chip from "@/components/Chip/Chip";
 import Button from "@/components/Button/Button";
-import { getProfessionalById, listProfessionals } from "@/server/services/professional.service";
-import { listProfessionalReviews } from "@/server/services/review.service";
-import { NotFoundError } from "@/server/utils/errors";
+import { serverApiFetch, ApiNotFoundError } from "@/lib/serverApiClient";
 
 export async function generateStaticParams() {
-  const professionals = await listProfessionals();
-  return professionals.map((p) => ({ id: p.id }));
+  try {
+    const body = await serverApiFetch("/professionals");
+    return body.data.professionals.map((p) => ({ id: p.id }));
+  } catch {
+    // Backend unreachable at build time — fall back to on-demand rendering.
+    return [];
+  }
 }
 
 export default async function ProfessionalProfilePage({ params }) {
@@ -26,13 +29,15 @@ export default async function ProfessionalProfilePage({ params }) {
 
   let worker;
   try {
-    worker = await getProfessionalById(id);
+    const body = await serverApiFetch(`/professionals/${id}`);
+    worker = body.data.professional;
   } catch (error) {
-    if (error instanceof NotFoundError) notFound();
+    if (error instanceof ApiNotFoundError) notFound();
     throw error;
   }
 
-  const reviews = await listProfessionalReviews(id);
+  const reviewsBody = await serverApiFetch(`/professionals/${id}/reviews`);
+  const reviews = reviewsBody.data.reviews;
 
   return (
     <div className="container py-10">

@@ -1,11 +1,14 @@
 import { notFound } from "next/navigation";
-import { getProfessionalById, listProfessionals } from "@/server/services/professional.service";
-import { NotFoundError } from "@/server/utils/errors";
+import { serverApiFetch, ApiNotFoundError } from "@/lib/serverApiClient";
 import BookingWizard from "./BookingWizard";
 
 export async function generateStaticParams() {
-  const professionals = await listProfessionals();
-  return professionals.map((p) => ({ id: p.id }));
+  try {
+    const body = await serverApiFetch("/professionals");
+    return body.data.professionals.map((p) => ({ id: p.id }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function BookPage({ params }) {
@@ -13,9 +16,10 @@ export default async function BookPage({ params }) {
 
   let worker;
   try {
-    worker = await getProfessionalById(id);
+    const body = await serverApiFetch(`/professionals/${id}`);
+    worker = body.data.professional;
   } catch (error) {
-    if (error instanceof NotFoundError) notFound();
+    if (error instanceof ApiNotFoundError) notFound();
     throw error;
   }
 

@@ -6,7 +6,7 @@ import { IoStar, IoStarOutline } from "react-icons/io5";
 import Button from "@/components/Button/Button";
 import { apiFetch } from "@/lib/apiClient";
 
-export default function BookingReviewForm({ bookingId }) {
+export default function BookingReviewForm({ bookingId, onSuccess }) {
   const router = useRouter();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -28,6 +28,7 @@ export default function BookingReviewForm({ bookingId }) {
       }
       setSubmitted(true);
       router.refresh();
+      onSuccess?.();
     } catch (err) {
       setError(err.message);
     } finally {
