@@ -29,6 +29,7 @@ const USER_LINKS = [
   { href: "/user/dashboard", label: "Dashboard" },
   { href: "/user/bookingStatus", label: "Bookings" },
   { href: "/user/favorites", label: "Favorites" },
+  { href: "/user/disputes", label: "Reports" },
   { href: "/search", label: "Categories" },
   { href: "/user/settings", label: "Settings" },
 ];
@@ -37,6 +38,7 @@ const EMPLOYEE_LINKS = [
   { href: "/employee/dashboard", label: "Dashboard" },
   { href: "/employee/bookingStatus", label: "Bookings" },
   { href: "/employee/availability", label: "Availability" },
+  { href: "/employee/reviews", label: "Reviews" },
   { href: "/search", label: "Categories" },
   { href: "/employee/settings", label: "Settings" },
 ];

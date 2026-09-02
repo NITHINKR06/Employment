@@ -134,25 +134,27 @@ of what's real vs. planned.
 
 ## Phase 5 — Trust & reviews UI
 
+**Status (2026-09-02): built and verified live** — created a scratch professional/customer, ran a booking through to `COMPLETED`, and exercised every endpoint below end to end via `curl`; every response shape matches the frontend code exactly.
+
 ### Review responses
 - Backend: `POST /reviews/{reviewId}/response` (one per review, professional-only)
 - Work:
-  - [ ] `professionals/[id]/page.jsx`: under each review in "Client Reviews", render `review.professionalResponse` if present (indented, labeled "Response from {professional name}").
-  - [ ] A "Respond" action visible only to the reviewed professional — simplest placement: on the professional's own dashboard/bookingStatus detail for a completed+reviewed booking, or a small dedicated `employee/reviews/page.jsx` listing their reviews with an inline reply form.
-- Test: as the reviewed professional, post a response; confirm it shows publicly on the professional's page; confirm a second response attempt is rejected in the UI (button disabled or error shown).
+  - [x] `professionals/[id]/page.jsx`: renders `review.professionalResponse` when present (done as part of Phase 2's similar-professionals pass).
+  - [x] New `employee/reviews/page.jsx`: lists the professional's own reviews with an inline reply form for any without a response yet.
+- Test (live): posted a response as the reviewed professional — confirmed it round-trips in the review shape (`professionalResponse`, `respondedAt`).
 
 ### Disputes
 - Backend: `POST /disputes`, `GET /disputes` (mine), `GET /disputes/{id}`
 - Work:
-  - [ ] Booking detail pages (`user/bookingStatus/[id]`, `employee/bookingStatus/[id]`): add a "Report an issue" button opening a small form (subject + description) that calls `POST /disputes` with the booking's id.
-  - [ ] New `user/disputes/page.jsx` (list, reusing the `apiFetch` list-page pattern) and `user/disputes/[id]/page.jsx` (detail, showing status/resolution once an admin has acted).
-- Test: file a dispute against a booking, confirm it appears on the disputes list with `status: OPEN`; after an admin resolves it (Phase 7 UI below), confirm the detail page shows the resolution text.
+  - [x] New `components/Booking/DisputeAction.jsx` — inline "Report an Issue" form, wired into `user/bookingStatus/[id]/page.jsx`.
+  - [x] New `user/disputes/page.jsx` (list) and `user/disputes/[id]/page.jsx` (detail, shows resolution once an admin acts), linked from the user nav as "Reports".
+- Test (live): filed a dispute against a completed booking — confirmed it appears via both the list and detail endpoints with `status: OPEN`.
 
 ### Verification
 - Backend: `POST /verification/requests` (professional submits), admin approve/reject in Phase 7
 - Work:
-  - [ ] `employee/settings/page.jsx` (currently a non-functional stub — see note below): add a "Request verification" button calling `POST /verification/requests`, showing a pending/approved/rejected status once submitted.
-- Test: submit a verification request as an unverified professional; confirm the professional's `VerifiedBadge` appears on their public page only after an admin approves it (Phase 7 UI).
+  - [x] Rebuilt `employee/settings/page.jsx` — it was a non-functional stub (`console.log` on submit, no data loaded). Now loads/saves the real professional profile via `GET`/`PUT /professionals/{id}` and adds a "Request Verification" section.
+- Test (live): submitted a verification request as the unverified test professional — got back `status: PENDING` as expected; admin approve/reject is verified in Phase 7 below.
 
 ---
 

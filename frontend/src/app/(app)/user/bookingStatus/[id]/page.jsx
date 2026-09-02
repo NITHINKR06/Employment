@@ -10,6 +10,7 @@ import Button from "@/components/Button/Button";
 import BookingStatusActions from "@/components/Booking/BookingStatusActions";
 import BookingReviewForm from "@/components/Booking/BookingReviewForm";
 import RescheduleAction from "@/components/Booking/RescheduleAction";
+import DisputeAction from "@/components/Booking/DisputeAction";
 import { apiFetch } from "@/lib/apiClient";
 
 export default function BookingDetailPage() {
@@ -129,10 +130,11 @@ export default function BookingDetailPage() {
         />
       )}
 
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="mt-4 flex flex-wrap items-start gap-3">
         {!booking.amount && booking.status !== "Cancelled" && (
           <Button href={`/auth/payment?bookingId=${booking._id}`}>Go to Payment Portal</Button>
         )}
+        <DisputeAction bookingId={booking._id} />
         <Button variant="secondary" icon={IoCallOutline}>
           Contact Pro
         </Button>
