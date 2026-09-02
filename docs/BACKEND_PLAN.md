@@ -228,44 +228,46 @@ Remaining before Phase 0 is fully closed: the Cutover items below (frontend not 
 
 ## Phase 2 — Discovery & search
 
+**Status (2026-09-02): built and verified.** All 5 sub-areas landed, full `pytest` suite green.
+
 ### `modules/categories`
 - Build
-  - [ ] `Category` model + migration, backfill `Professional.category_id` from existing `trade` strings, list-with-counts endpoint
+  - [x] `Category` model + migration, backfill `Professional.category_id` from existing `trade` strings, list-with-counts endpoint
 - Tests (`tests/unit/test_categories.py`)
-  - [ ] list returns accurate per-category professional counts
-  - [ ] a category with zero professionals still appears with `count=0`
+  - [x] list returns accurate per-category professional counts
+  - [x] a category with zero professionals still appears with `count=0`
 
 ### `modules/favorites`
 - Build
-  - [ ] `Favorite` model + migration, toggle/list endpoints
+  - [x] `Favorite` model + migration, toggle/list endpoints
 - Tests (`tests/unit/test_favorites.py`)
-  - [ ] toggling twice returns to the un-favorited state (idempotent toggle)
-  - [ ] list-mine only returns the calling user's favorites
-  - [ ] favoriting the same professional twice doesn't create a duplicate row (unique constraint honored)
+  - [x] toggling twice returns to the un-favorited state (idempotent toggle)
+  - [x] list-mine only returns the calling user's favorites
+  - [x] favoriting the same professional twice doesn't create a duplicate row (unique constraint honored)
 
 ### Recently-viewed
 - [ ] Client-only (localStorage) — no backend module, no tests here
 
 ### `modules/professionals` (extended)
 - Build
-  - [ ] `get_similar(id)` service method + endpoint
+  - [x] `get_similar(id)` service method + endpoint
 - Tests (`tests/unit/test_professionals.py`, extended)
-  - [ ] similar results exclude the professional itself
-  - [ ] similar results prioritize same-category matches over others
+  - [x] similar results exclude the professional itself
+  - [x] similar results prioritize same-category matches over others
 
 ### `modules/geocoding`
 - Build
-  - [ ] Nominatim client, throttled to respect 1 req/sec usage policy, endpoint + bounding-box search extension on `professionals`
+  - [x] Nominatim client, throttled to respect 1 req/sec usage policy, endpoint + bounding-box search extension on `professionals`
 - Tests (`tests/unit/test_geocoding.py`)
-  - [ ] client throttles a burst of calls to ≤1/sec (mocked clock, no real network in unit tests)
-  - [ ] a malformed/unresolvable address returns a clean "not found" result, not an unhandled exception
-  - [ ] bounding-box filter on `professionals` excludes out-of-range lat/lng
+  - [x] client throttles a burst of calls to ≤1/sec (mocked clock, no real network in unit tests)
+  - [x] a malformed/unresolvable address returns a clean "not found" result, not an unhandled exception
+  - [x] bounding-box filter on `professionals` excludes out-of-range lat/lng
 
 ### Sort options
 - Build
-  - [ ] query params on existing `professionals` list endpoint (distance/availability/most-booked) — no new module
+  - [x] query params on existing `professionals` list endpoint (distance/availability/most-booked) — no new module
 - Tests
-  - [ ] each sort mode returns results in the expected order against a fixed fixture set
+  - [x] each sort mode returns results in the expected order against a fixed fixture set
 
 ---
 

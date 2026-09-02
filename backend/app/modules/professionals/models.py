@@ -111,6 +111,9 @@ class Professional(Base):
     user_id: Mapped[str] = mapped_column(
         String(26), ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False
     )
+    category_id: Mapped[str | None] = mapped_column(
+        String(26), ForeignKey("categories.id", ondelete="SET NULL"), nullable=True
+    )
     title: Mapped[str] = mapped_column(String, nullable=False)
     trade: Mapped[str] = mapped_column(String, nullable=False)
     years_experience: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

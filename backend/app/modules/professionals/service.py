@@ -55,9 +55,28 @@ async def list_professionals(
     min_rate: float | None = None,
     max_rate: float | None = None,
     min_rating: float | None = None,
+    min_lat: float | None = None,
+    max_lat: float | None = None,
+    min_lng: float | None = None,
+    max_lng: float | None = None,
+    sort: str | None = None,
+    near_lat: float | None = None,
+    near_lng: float | None = None,
 ) -> list[dict]:
     professionals = await repository.find_many(
-        db, trade=trade, search=search, min_rate=min_rate, max_rate=max_rate, min_rating=min_rating
+        db,
+        trade=trade,
+        search=search,
+        min_rate=min_rate,
+        max_rate=max_rate,
+        min_rating=min_rating,
+        min_lat=min_lat,
+        max_lat=max_lat,
+        min_lng=min_lng,
+        max_lng=max_lng,
+        sort=sort,
+        near_lat=near_lat,
+        near_lng=near_lng,
     )
     return [to_public_shape(p) for p in professionals]
 
@@ -67,6 +86,14 @@ async def get_professional_by_id(db: AsyncSession, professional_id: str) -> dict
     if professional is None:
         raise NotFoundError("Professional not found")
     return to_public_shape(professional)
+
+
+async def get_similar_professionals(db: AsyncSession, professional_id: str, *, limit: int = 6) -> list[dict]:
+    professional = await repository.find_by_id(db, professional_id)
+    if professional is None:
+        raise NotFoundError("Professional not found")
+    similar = await repository.find_similar(db, professional, limit=limit)
+    return [to_public_shape(p) for p in similar]
 
 
 async def get_my_professional(db: AsyncSession, user: User) -> dict | None:

@@ -8,6 +8,7 @@ from sqlalchemy import select, or_, func as sa_func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 
+from app.modules.bookings.models import Booking
 from app.modules.professionals.models import (
     Professional,
     ProfessionalSkill,
@@ -37,8 +38,16 @@ async def find_many(
     min_rate: float | None = None,
     max_rate: float | None = None,
     min_rating: float | None = None,
+    min_lat: float | None = None,
+    max_lat: float | None = None,
+    min_lng: float | None = None,
+    max_lng: float | None = None,
+    sort: str | None = None,
+    near_lat: float | None = None,
+    near_lng: float | None = None,
 ) -> list[Professional]:
-    """List/search/filter professionals — port of findMany()."""
+    """List/search/filter professionals — port of findMany(), extended with a
+    bounding-box location filter and distance/availability/most-booked sorting."""
     stmt = select(Professional).options(*_eager_options())
 
     if trade:
@@ -51,6 +60,15 @@ async def find_many(
 
     if min_rating is not None:
         stmt = stmt.where(Professional.rating_avg >= min_rating)
+
+    if min_lat is not None:
+        stmt = stmt.where(Professional.latitude >= min_lat)
+    if max_lat is not None:
+        stmt = stmt.where(Professional.latitude <= max_lat)
+    if min_lng is not None:
+        stmt = stmt.where(Professional.longitude >= min_lng)
+    if max_lng is not None:
+        stmt = stmt.where(Professional.longitude <= max_lng)
 
     if search:
         pattern = f"%{search}%"
@@ -73,9 +91,60 @@ async def find_many(
             )
         )
 
-    stmt = stmt.order_by(Professional.rating_avg.desc())
+    if sort == "most_booked":
+        booking_counts = (
+            select(
+                Booking.professional_id.label("professional_id"),
+                sa_func.count(Booking.id).label("booking_count"),
+            )
+            .group_by(Booking.professional_id)
+            .subquery()
+        )
+        stmt = stmt.outerjoin(booking_counts, booking_counts.c.professional_id == Professional.id)
+        stmt = stmt.order_by(sa_func.coalesce(booking_counts.c.booking_count, 0).desc())
+    elif sort == "availability":
+        stmt = stmt.order_by(Professional.availability.isnot(None).desc(), Professional.rating_avg.desc())
+    else:
+        stmt = stmt.order_by(Professional.rating_avg.desc())
+
     result = await db.execute(stmt)
-    return list(result.unique().scalars().all())
+    professionals = list(result.unique().scalars().all())
+
+    if sort == "distance" and near_lat is not None and near_lng is not None:
+        def _distance_key(professional: Professional) -> float:
+            if professional.latitude is None or professional.longitude is None:
+                return float("inf")
+            return (float(professional.latitude) - near_lat) ** 2 + (
+                float(professional.longitude) - near_lng
+            ) ** 2
+
+        professionals.sort(key=_distance_key)
+
+    return professionals
+
+
+async def find_similar(
+    db: AsyncSession,
+    professional: Professional,
+    *,
+    limit: int = 6,
+) -> list[Professional]:
+    """Professionals similar to the given one, same-category matches ranked
+    ahead of same-trade matches, ahead of everyone else; ties broken by rating."""
+    stmt = select(Professional).options(*_eager_options()).where(Professional.id != professional.id)
+    result = await db.execute(stmt)
+    candidates = list(result.unique().scalars().all())
+
+    def _rank(candidate: Professional) -> tuple[int, float]:
+        same_category = (
+            professional.category_id is not None and candidate.category_id == professional.category_id
+        )
+        same_trade = candidate.trade == professional.trade
+        tier = 0 if same_category else (1 if same_trade else 2)
+        return (tier, -float(candidate.rating_avg))
+
+    candidates.sort(key=_rank)
+    return candidates[:limit]
 
 
 async def find_by_id(db: AsyncSession, professional_id: str) -> Professional | None:

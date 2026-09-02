@@ -22,6 +22,13 @@ async def list_professionals(
     min_rate: float | None = Query(None, alias="minRate", ge=0),
     max_rate: float | None = Query(None, alias="maxRate", ge=0),
     min_rating: float | None = Query(None, alias="minRating", ge=0, le=5),
+    min_lat: float | None = Query(None, alias="minLat"),
+    max_lat: float | None = Query(None, alias="maxLat"),
+    min_lng: float | None = Query(None, alias="minLng"),
+    max_lng: float | None = Query(None, alias="maxLng"),
+    sort: str | None = Query(None, pattern="^(rating|distance|availability|most_booked)$"),
+    near_lat: float | None = Query(None, alias="nearLat"),
+    near_lng: float | None = Query(None, alias="nearLng"),
     db: AsyncSession = Depends(get_db),
 ):
     """List / search / filter professionals (public)."""
@@ -33,7 +40,25 @@ async def list_professionals(
         min_rate=min_rate,
         max_rate=max_rate,
         min_rating=min_rating,
+        min_lat=min_lat,
+        max_lat=max_lat,
+        min_lng=min_lng,
+        max_lng=max_lng,
+        sort=sort,
+        near_lat=near_lat,
+        near_lng=near_lng,
     )
+    return {"success": True, "data": {"professionals": data}}
+
+
+@router.get("/{professional_id}/similar")
+async def get_similar_professionals(
+    professional_id: str,
+    limit: int = Query(6, ge=1, le=20),
+    db: AsyncSession = Depends(get_db),
+):
+    """Professionals similar to the given one (public)."""
+    data = await service.get_similar_professionals(db, professional_id, limit=limit)
     return {"success": True, "data": {"professionals": data}}
 
 

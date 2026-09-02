@@ -25,6 +25,8 @@ from app.modules.payments.models import Payment, PaymentStatus
 from app.modules.reviews.models import Review
 from app.modules.notifications.models import Notification
 from app.modules.contact.models import ContactMessage
+from app.modules.categories.models import Category
+from app.modules.favorites.models import Favorite
 
 
 # ── Engine & Session ──
