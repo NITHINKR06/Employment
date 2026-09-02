@@ -79,6 +79,7 @@ class PortfolioImage(Base):
         String(26), ForeignKey("professionals.id", ondelete="CASCADE"), nullable=False
     )
     url: Mapped[str] = mapped_column(String, nullable=False)
+    position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     professional: Mapped["Professional"] = relationship(back_populates="portfolio_images")
 
@@ -126,6 +127,7 @@ class Professional(Base):
     avatar: Mapped[str | None] = mapped_column(String, nullable=True)
     verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     availability: Mapped[str | None] = mapped_column(String, nullable=True)
+    service_radius_km: Mapped[int] = mapped_column(Integer, default=25, nullable=False)
     rating_avg: Mapped[Decimal] = mapped_column(Numeric(3, 2), default=Decimal("0.00"), nullable=False)
     review_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

@@ -30,11 +30,14 @@ def to_public_shape(professional: Professional) -> dict:
         "latitude": float(professional.latitude) if professional.latitude is not None else None,
         "longitude": float(professional.longitude) if professional.longitude is not None else None,
         "availability": professional.availability,
+        "serviceRadiusKm": professional.service_radius_km,
         "skills": [ps.skill.name for ps in professional.skills],
         "bio": professional.bio,
         "experienceSummary": professional.experience_summary,
         "trustBadges": [b.label for b in professional.trust_badges],
-        "portfolio": [p.url for p in professional.portfolio_images],
+        "portfolio": [
+            p.url for p in sorted(professional.portfolio_images, key=lambda p: p.position)
+        ],
         "servicesOffered": [
             {
                 "id": s.id,

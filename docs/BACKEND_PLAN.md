@@ -356,30 +356,32 @@ Remaining before Phase 0 is fully closed: the Cutover items below (frontend not 
 
 ## Phase 6 — Professional-side tools
 
+**Status (2026-09-02): built and verified.** All 4 sub-areas landed, full `pytest` suite green.
+
 ### `modules/earnings`
 - Build
-  - [ ] read-only aggregation over `bookings`+`payments` services, endpoint
+  - [x] read-only aggregation over `bookings`+`payments` services, endpoint
 - Tests (`tests/unit/test_earnings.py`)
-  - [ ] totals match a hand-computed sum over a fixture set of paid bookings
-  - [ ] unpaid/pending bookings are excluded from the "earned" total but shown separately as "pending"
-  - [ ] a professional only ever sees their own earnings, never another's
+  - [x] totals match a hand-computed sum over a fixture set of paid bookings
+  - [x] unpaid/pending bookings are excluded from the "earned" total but shown separately as "pending"
+  - [x] a professional only ever sees their own earnings, never another's
 
 ### `modules/service_area`
 - Build
-  - [ ] `service_radius_km` column on `professionals`, update endpoint, radius filter reusing `geocoding`
+  - [x] `service_radius_km` column on `professionals`, update endpoint, radius filter reusing `geocoding`
 - Tests (`tests/unit/test_service_area.py`)
-  - [ ] radius update rejects negative/zero values
-  - [ ] search filter correctly includes/excludes professionals at the radius boundary (inclusive boundary test)
+  - [x] radius update rejects negative/zero values
+  - [x] search filter correctly includes/excludes professionals at the radius boundary (inclusive boundary test)
 
 ### `modules/portfolio`
 - Build
-  - [ ] add/remove/reorder images, ownership checks; depends on Phase 8's `uploads` (interim: raw URLs)
+  - [x] add/remove/reorder images, ownership checks; depends on Phase 8's `uploads` (interim: raw URLs)
 - Tests (`tests/unit/test_portfolio.py`)
-  - [ ] only the owning professional can add/remove/reorder their portfolio
-  - [ ] reorder persists the new order and a subsequent list reflects it
+  - [x] only the owning professional can add/remove/reorder their portfolio
+  - [x] reorder persists the new order and a subsequent list reflects it
 
 ### Availability calendar management
-- [ ] professional-facing endpoints reusing `availability` module — covered by `test_availability.py`, no new test file
+- [x] professional-facing endpoints reusing `availability` module — covered by `test_availability.py`, no new test file
 
 ---
 
