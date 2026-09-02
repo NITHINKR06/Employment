@@ -33,6 +33,7 @@ from app.modules.verification.router import router as verification_router
 from app.modules.earnings.router import router as earnings_router
 from app.modules.service_area.router import router as service_area_router
 from app.modules.portfolio.router import router as portfolio_router
+from app.modules.admin.router import router as admin_router
 
 app = FastAPI(
     title="ProMarket API",
@@ -76,6 +77,7 @@ app.include_router(verification_router, prefix=API_V1)
 app.include_router(earnings_router, prefix=API_V1)
 app.include_router(service_area_router, prefix=API_V1)
 app.include_router(portfolio_router, prefix=API_V1)
+app.include_router(admin_router, prefix=API_V1)
 
 
 # ── Health check ──

@@ -53,6 +53,14 @@ async def get_dispute_by_id(db: AsyncSession, user: User, dispute_id: str) -> di
     return _to_shape(dispute)
 
 
+async def list_all_disputes(db: AsyncSession, user: User) -> list[dict]:
+    """Admin-only. Meant to be delegated from the Phase 7 admin panel."""
+    if user.role.value != "ADMIN":
+        raise ForbiddenError()
+    disputes = await repository.find_all(db)
+    return [_to_shape(d) for d in disputes]
+
+
 async def update_dispute_status(
     db: AsyncSession, user: User, dispute_id: str, *, status: str, resolution: str | None = None
 ) -> dict:

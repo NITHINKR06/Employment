@@ -29,3 +29,17 @@ async def get_user_by_id(db: AsyncSession, user_id: str) -> User:
 
 async def update_user(db: AsyncSession, user: User, data: dict) -> User:
     return await repository.update(db, user, data)
+
+
+async def list_users(db: AsyncSession, *, search: str | None = None) -> list[User]:
+    return await repository.find_many(db, search=search)
+
+
+async def suspend_user(db: AsyncSession, user_id: str) -> User:
+    user = await get_user_by_id(db, user_id)
+    return await repository.set_active(db, user, False)
+
+
+async def unsuspend_user(db: AsyncSession, user_id: str) -> User:
+    user = await get_user_by_id(db, user_id)
+    return await repository.set_active(db, user, True)

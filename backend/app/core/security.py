@@ -96,6 +96,9 @@ async def get_current_user(
         await db.commit()
         await db.refresh(user)
 
+    if not user.is_active:
+        raise UnauthorizedError("This account has been suspended")
+
     return user
 
 

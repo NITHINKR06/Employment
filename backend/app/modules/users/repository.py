@@ -1,9 +1,26 @@
 """Users repository — the only place that touches the User table."""
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.users.models import User
+
+
+async def find_many(db: AsyncSession, *, search: str | None = None) -> list[User]:
+    stmt = select(User)
+    if search:
+        pattern = f"%{search}%"
+        stmt = stmt.where(or_(User.name.ilike(pattern), User.email.ilike(pattern)))
+    stmt = stmt.order_by(User.created_at.desc())
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def set_active(db: AsyncSession, user: User, is_active: bool) -> User:
+    user.is_active = is_active
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 async def find_by_id(db: AsyncSession, user_id: str) -> User | None:

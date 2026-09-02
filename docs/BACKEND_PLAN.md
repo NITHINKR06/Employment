@@ -387,14 +387,16 @@ Remaining before Phase 0 is fully closed: the Cutover items below (frontend not 
 
 ## Phase 7 — Admin panel
 
+**Status (2026-09-02): built and verified.** Full `pytest` suite green.
+
 ### `modules/admin`
 - Build
-  - [ ] `require_role("ADMIN")`-gated router; `user_service` (list/search/suspend, reuses `users`/`professionals`), `analytics_service` (aggregates over existing tables), `dispute_service` (thin delegation to `disputes`/`verification`)
+  - [x] `require_role("ADMIN")`-gated router; `user_service` (list/search/suspend, reuses `users`/`professionals`), `analytics_service` (aggregates over existing tables), `dispute_service` (thin delegation to `disputes`/`verification`)
 - Tests (`tests/unit/test_admin.py`)
-  - [ ] every admin route returns 403 for a non-admin caller (parametrized over all admin routes)
-  - [ ] suspend sets a user inactive and a suspended user's subsequent `get_current_user` calls are rejected
-  - [ ] analytics totals match hand-computed fixture sums
-  - [ ] `dispute_service`/verification delegation calls the underlying module's service, not its repository directly (enforces the layering rule via a mock/spy)
+  - [x] every admin route returns 403 for a non-admin caller (parametrized over all admin routes)
+  - [x] suspend sets a user inactive and a suspended user's subsequent `get_current_user` calls are rejected
+  - [x] analytics totals match hand-computed fixture sums
+  - [x] `dispute_service`/verification delegation calls the underlying module's service, not its repository directly (enforces the layering rule via a mock/spy)
 
 ---
 
