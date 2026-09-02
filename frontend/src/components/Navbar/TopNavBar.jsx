@@ -28,6 +28,7 @@ const GUEST_LINKS = [
 const USER_LINKS = [
   { href: "/user/dashboard", label: "Dashboard" },
   { href: "/user/bookingStatus", label: "Bookings" },
+  { href: "/user/favorites", label: "Favorites" },
   { href: "/search", label: "Categories" },
   { href: "/user/settings", label: "Settings" },
 ];

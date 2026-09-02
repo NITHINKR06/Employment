@@ -32,46 +32,40 @@ const POPULAR_TAGS = [
   "House cleaning",
 ];
 
-const CATEGORIES = [
+const CATEGORY_DISPLAY = [
   {
     title: "Plumbing",
     icon: MdOutlineBuild,
-    count: "45+ Verified Pros",
     tag: "Plumbing",
     color: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
   {
     title: "Electrical",
     icon: MdOutlineElectricalServices,
-    count: "38+ Verified Pros",
     tag: "Electrical",
     color: "bg-amber-50 text-amber-700 border-amber-200",
   },
   {
     title: "Painting",
     icon: MdOutlineFormatPaint,
-    count: "29+ Verified Pros",
     tag: "Painting",
     color: "bg-indigo-50 text-indigo-700 border-indigo-200",
   },
   {
     title: "Cleaning",
     icon: MdOutlineCleaningServices,
-    count: "52+ Verified Pros",
     tag: "Cleaning",
     color: "bg-sky-50 text-sky-700 border-sky-200",
   },
   {
     title: "Handyman",
     icon: MdOutlineHomeRepairService,
-    count: "40+ Verified Pros",
     tag: "Handyman",
     color: "bg-rose-50 text-rose-700 border-rose-200",
   },
   {
     title: "HVAC & AC",
     icon: MdOutlineAcUnit,
-    count: "22+ Verified Pros",
     tag: "HVAC",
     color: "bg-teal-50 text-teal-700 border-teal-200",
   },
@@ -104,13 +98,21 @@ const TRUST_STATS = [
 
 export default async function Home() {
   let professionals = [];
+  let categories = [];
   try {
     const body = await serverApiFetch("/professionals");
     professionals = body.data.professionals;
   } catch {
     // Backend unreachable — render the page without featured pros rather than 500.
   }
+  try {
+    const body = await serverApiFetch("/categories");
+    categories = body.data.categories;
+  } catch {
+    // Backend unreachable — category tiles fall back to a 0 count below.
+  }
   const topPros = professionals.slice(0, 3);
+  const categoryCounts = new Map(categories.map((c) => [c.name.toLowerCase(), c.count]));
 
   return (
     <div className="space-y-16 pb-16">
@@ -191,8 +193,9 @@ export default async function Home() {
         </div>
 
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {CATEGORIES.map((cat) => {
+          {CATEGORY_DISPLAY.map((cat) => {
             const Icon = cat.icon;
+            const count = categoryCounts.get(cat.tag.toLowerCase()) ?? 0;
             return (
               <Link
                 key={cat.title}
@@ -205,7 +208,9 @@ export default async function Home() {
                 <h3 className="mt-4 font-display text-label-md font-semibold text-on-surface group-hover:text-primary">
                   {cat.title}
                 </h3>
-                <p className="mt-1 text-label-sm text-on-surface-variant">{cat.count}</p>
+                <p className="mt-1 text-label-sm text-on-surface-variant">
+                  {count} {count === 1 ? "Verified Pro" : "Verified Pros"}
+                </p>
               </Link>
             );
           })}

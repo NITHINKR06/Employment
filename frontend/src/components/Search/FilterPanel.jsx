@@ -13,11 +13,11 @@ export default function FilterPanel({
   onRatingChange,
   onClearAll,
 }) {
-  const toggleCategory = (category) => {
-    if (selectedCategories.includes(category)) {
-      onCategoryChange(selectedCategories.filter((c) => c !== category));
+  const toggleCategory = (categoryName) => {
+    if (selectedCategories.includes(categoryName)) {
+      onCategoryChange(selectedCategories.filter((c) => c !== categoryName));
     } else {
-      onCategoryChange([...selectedCategories, category]);
+      onCategoryChange([...selectedCategories, categoryName]);
     }
   };
 
@@ -42,14 +42,17 @@ export default function FilterPanel({
         <h3 className="text-label-md font-semibold text-on-surface">Category</h3>
         <div className="mt-3 flex flex-col gap-2.5">
           {categories.map((category) => (
-            <label key={category} className="flex cursor-pointer items-center gap-2.5 text-body-md text-on-surface">
-              <input
-                type="checkbox"
-                checked={selectedCategories.includes(category)}
-                onChange={() => toggleCategory(category)}
-                className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
-              />
-              <span className="text-label-md text-on-surface-variant hover:text-on-surface">{category}</span>
+            <label key={category.id ?? category.name} className="flex cursor-pointer items-center justify-between gap-2.5 text-body-md text-on-surface">
+              <span className="flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.includes(category.name)}
+                  onChange={() => toggleCategory(category.name)}
+                  className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
+                />
+                <span className="text-label-md text-on-surface-variant hover:text-on-surface">{category.name}</span>
+              </span>
+              <span className="text-label-sm text-on-surface-variant">{category.count}</span>
             </label>
           ))}
         </div>

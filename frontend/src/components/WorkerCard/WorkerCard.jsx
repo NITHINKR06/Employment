@@ -5,6 +5,7 @@ import VerifiedBadge from "@/components/Badge/VerifiedBadge";
 import Rating from "@/components/Rating/Rating";
 import Chip from "@/components/Chip/Chip";
 import Button from "@/components/Button/Button";
+import FavoriteButton from "@/components/Favorite/FavoriteButton";
 
 function NameLine({ worker, textClass = "text-headline-sm text-on-surface" }) {
   return (
@@ -22,6 +23,9 @@ function FullCard({ worker }) {
         <Image src={worker.avatar} alt={worker.name} fill className="object-cover" />
         <div className="absolute left-3 top-3">
           <Rating value={worker.rating} count={worker.reviewCount} variant="pill" size="sm" />
+        </div>
+        <div className="absolute right-3 top-3">
+          <FavoriteButton professionalId={worker.id} />
         </div>
       </div>
       <div className="p-5">
@@ -51,19 +55,19 @@ function FullCard({ worker }) {
 
 function CompactCard({ worker }) {
   return (
-    <Link
-      href={`/professionals/${worker.id}`}
-      className="flex items-center gap-3 rounded-md border border-outline-variant p-3 transition-colors hover:bg-surface-container-low"
-    >
-      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full">
-        <Image src={worker.avatar} alt={worker.name} fill className="object-cover" />
-      </div>
-      <div className="min-w-0">
-        <NameLine worker={worker} textClass="text-label-md text-on-surface" />
-        <p className="truncate text-label-sm text-on-surface-variant">{worker.title}</p>
-        <Rating value={worker.rating} size="sm" />
-      </div>
-    </Link>
+    <div className="flex items-center gap-3 rounded-md border border-outline-variant p-3 transition-colors hover:bg-surface-container-low">
+      <Link href={`/professionals/${worker.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full">
+          <Image src={worker.avatar} alt={worker.name} fill className="object-cover" />
+        </div>
+        <div className="min-w-0">
+          <NameLine worker={worker} textClass="text-label-md text-on-surface" />
+          <p className="truncate text-label-sm text-on-surface-variant">{worker.title}</p>
+          <Rating value={worker.rating} size="sm" />
+        </div>
+      </Link>
+      <FavoriteButton professionalId={worker.id} className="shrink-0" />
+    </div>
   );
 }
 

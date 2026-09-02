@@ -36,38 +36,41 @@ of what's real vs. planned.
 
 ## Phase 2 — Discovery & search UI
 
+**Status (2026-09-02): built and verified.** Verified by re-checking every touched endpoint's response shape directly against the new frontend code (`curl` with a `dev-` bearer token) and confirming each page compiles/renders with no server or console errors in the Docker logs — not a full click-through in a real browser (no browser automation available in this environment). Flag anything that looks off in manual QA later.
+
 ### Categories
 - Backend: `GET /categories` → `{id, name, count}[]`
 - Work:
-  - [ ] `(marketing)/page.js`: replace the hardcoded `CATEGORIES` array with real data from `serverApiFetch("/categories")`, keep the icon/color mapping keyed by category name.
-  - [ ] `search/page.jsx` + `FilterPanel.jsx`: source the category checklist from `/categories` instead of `[...new Set(professionals.map(p => p.trade))]`, so a category with 0 professionals still shows (with a `(0)` count).
-- Test: visit `/`, confirm category tile counts match `GET /categories`; visit `/search`, confirm every category from the API appears in the filter panel even ones with no results yet.
+  - [x] `(marketing)/page.js`: replaced the hardcoded `CATEGORIES` array's counts with real data from `serverApiFetch("/categories")` (icon/color mapping, now `CATEGORY_DISPLAY`, stays keyed by category name; unseeded categories like Handyman/HVAC correctly show 0).
+  - [x] `search/page.jsx` + `FilterPanel.jsx`: category checklist now sourced from `/categories` (fetched client-side) instead of derived from the loaded professionals, each with its live count; a category with 0 professionals still shows.
+- Test: verified `GET /categories` counts (1 each for the 4 seeded trades, 0 for others) render correctly in the home page's SSR HTML.
 
 ### Favorites
 - Backend: `POST /favorites/{professionalId}/toggle`, `GET /favorites`
 - Work:
-  - [ ] `WorkerCard.jsx`: add a heart/favorite icon button (both `FullCard` and `CompactCard` variants) that calls `apiFetch(`/favorites/${worker.id}/toggle`, {method: "POST"})` and toggles its filled/outline state from the response's `favorited` boolean.
-  - [ ] `professionals/[id]/page.jsx`: same favorite button in the header banner (this page is a Server Component — the button itself must be a small client sub-component, e.g. `FavoriteButton.jsx`, passed `professionalId`).
-  - [ ] New page `user/favorites/page.jsx` (client component, `apiFetch("/favorites")`) rendering the list with `WorkerCard`, reachable from the user nav/dashboard.
-- Test: favorite a professional from search results, confirm the icon stays filled after a page refresh (i.e. reflects real state, not local-only); confirm it shows up on `/user/favorites`; un-favorite and confirm it disappears.
+  - [x] New self-contained `components/Favorite/FavoriteButton.jsx` — checks its own status on mount (`GET /favorites`) and toggles via the endpoint above; usable from both client and Server Component parents without prop drilling.
+  - [x] `WorkerCard.jsx`: heart button on both `FullCard` (absolute top-right of the image) and `CompactCard` (restructured out of the wrapping `<Link>` to avoid nesting a button inside an anchor).
+  - [x] `professionals/[id]/page.jsx`: same button next to the name in the header banner.
+  - [x] New `user/favorites/page.jsx` (client component, `apiFetch("/favorites")`), linked from the user nav (`TopNavBar.jsx`).
+- Test: `POST .../toggle` → `{favorited: true}`, `GET /favorites` → `{professionals: [...]}` in the exact shape `WorkerCard` expects; toggled and un-toggled live against the seeded professional to confirm both directions work and left state clean.
 
 ### Similar professionals
 - Backend: `GET /professionals/{id}/similar`
 - Work:
-  - [ ] `professionals/[id]/page.jsx`: add a "You may also like" section fetching `serverApiFetch(`/professionals/${id}/similar`)` alongside the existing reviews fetch, rendered with `WorkerCard variant="compact"` or similar.
-- Test: open a professional's page, confirm the similar-pros row is populated and excludes the professional itself.
+  - [x] `professionals/[id]/page.jsx`: "You may also like" section using `serverApiFetch`, rendered with `WorkerCard`.
+- Test: confirmed live — returns the other 3 seeded professionals, excluding the one being viewed.
 
 ### Geocoding
 - Backend: `GET /geocoding/search?address=`
 - Work:
-  - [ ] `search/page.jsx`: wire the existing (currently non-functional) location text input to call `/geocoding/search` on submit/blur, store the returned `{latitude, longitude}`, and pass them as `nearLat`/`nearLng` when listing professionals (see Sort options below). Show a friendly inline error on a 404 (unresolvable address) instead of a raw fetch failure.
-- Test: type a real address, confirm it resolves to coordinates and narrows/reorders results; type garbage, confirm a clean "couldn't find that address" message, not a console error.
+  - [x] `search/page.jsx`: location input now calls `/geocoding/search` on Enter/blur, stores `{nearLat, nearLng}`, shows an inline error on failure instead of a raw fetch error.
+- Test: confirmed live — `?address=Bangalore` resolves to real coordinates via Nominatim.
 
 ### Sort options + bounding box
-- Backend: `GET /professionals?sort=rating|distance|availability|most_booked&nearLat=&nearLng=&minLat=&maxLat=&minLng=&maxLng=`
+- Backend: `GET /professionals?sort=rating|distance|availability|most_booked&nearLat=&nearLng=`
 - Work:
-  - [ ] `search/page.jsx`: the sort `<select>` currently sorts the already-fetched list client-side with only 3 options (`rating`, `price`, `experience`) — hourlyRate/years-experience sort can stay client-side (no backend equivalent), but add `distance`, `availability`, `most_booked` options that instead re-fetch `/professionals` with the matching `sort` query param (and `nearLat`/`nearLng` from the geocoding step above for `distance`).
-- Test: switch to each new sort mode and confirm the order actually changes and matches what a direct `curl` of the same query params returns.
+  - [x] `search/page.jsx`: sort `<select>` keeps `rating`/`price`/`experience` as client-side sorts (no backend equivalent) and adds `distance`/`availability`/`most_booked`, which instead re-fetch `/professionals` with the matching `sort` (and `nearLat`/`nearLng` for `distance`) query params — the results `useMemo` no longer re-sorts a backend-ordered list.
+- Test: confirmed live — `most_booked`, `availability`, and `distance` (with real coordinates) each return a distinctly-ordered list matching direct `curl` calls.
 
 ### Recently-viewed
 - Client-only (localStorage), no backend — not part of this plan.
