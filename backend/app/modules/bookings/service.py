@@ -15,6 +15,7 @@ from app.modules.bookings import repository
 from app.modules.bookings.models import Booking, BookingStatus
 from app.modules.notifications import service as notifications_service
 from app.modules.professionals import repository as professional_repo
+from app.modules.sms import service as sms_service
 from app.modules.users.models import User
 
 # ── Status transition table (same as JS) ──
@@ -124,6 +125,10 @@ async def create_booking(db: AsyncSession, user: User, data: dict) -> dict:
             "notes": data.get("notes"),
         },
     )
+    sched = _split_scheduled_at(booking.scheduled_at)
+    await sms_service.send_booking_confirmed(
+        user.phone, name=user.name, date=sched["date"] or "TBD", time=sched["time"] or "TBD"
+    )
     return _to_summary_shape(booking, user.role.value)
 
 
@@ -201,6 +206,10 @@ async def update_booking_status(
         )
 
     updated = await repository.update_status(db, booking_id, new_status)
+
+    await sms_service.send_booking_status_changed(
+        updated.user.phone, name=updated.user.name, status=STATUS_LABELS[new_status]
+    )
 
     if new_status == BookingStatus.CANCELLED:
         await availability_service.release_slot_for_booking(db, booking_id)

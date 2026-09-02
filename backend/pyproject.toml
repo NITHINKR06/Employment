@@ -15,6 +15,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+push = [
+    "pywebpush>=2.0,<3",
+]
 dev = [
     "pytest>=8,<9",
     "pytest-asyncio>=0.24,<1",

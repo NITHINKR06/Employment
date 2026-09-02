@@ -303,21 +303,23 @@ Remaining before Phase 0 is fully closed: the Cutover items below (frontend not 
 
 ## Phase 4 — Communication (SMS + push only)
 
+**Status (2026-09-02): built and verified.** Both sub-areas landed, full `pytest` suite green. `sms` has no router (internal-only, per spec) and no dependency beyond `httpx`, which the app already ships; `push` lazily imports `pywebpush` only inside the actual send call, so the new `pywebpush` optional dependency (`pip install .[push]`) is only needed in an environment that sends real pushes, not for running the app or tests.
+
 ### `modules/sms`
 - Build
-  - [ ] open-source/self-hosted gateway client, templated messages, called internally by `bookings`/`contact` (no router — not client-facing)
+  - [x] open-source/self-hosted gateway client, templated messages, called internally by `bookings`/`contact` (no router — not client-facing)
 - Tests (`tests/unit/test_sms.py`)
-  - [ ] each template (booking confirmed/reminder/status changed) renders with the expected placeholders filled
-  - [ ] gateway client failure (network error) is caught and logged, never raised up to break the calling booking/contact flow
+  - [x] each template (booking confirmed/reminder/status changed) renders with the expected placeholders filled
+  - [x] gateway client failure (network error) is caught and logged, never raised up to break the calling booking/contact flow
 
 ### `modules/push`
 - Build
-  - [ ] `PushSubscription` model + migration, Web Push (VAPID keys, no paid service), subscribe/unsubscribe endpoints, `notifications` fans out to it
+  - [x] `PushSubscription` model + migration, Web Push (VAPID keys, no paid service), subscribe/unsubscribe endpoints, `notifications` fans out to it
 - Tests (`tests/unit/test_push.py`)
-  - [ ] subscribe stores one row per unique endpoint per user (no duplicates)
-  - [ ] unsubscribe removes only the matching endpoint
-  - [ ] a `notify_user` call fans out to all of that user's active subscriptions
-  - [ ] an expired/invalid subscription (410 from push service) is pruned automatically, not retried forever
+  - [x] subscribe stores one row per unique endpoint per user (no duplicates)
+  - [x] unsubscribe removes only the matching endpoint
+  - [x] a `notify_user` call fans out to all of that user's active subscriptions
+  - [x] an expired/invalid subscription (410 from push service) is pruned automatically, not retried forever
 
 ---
 

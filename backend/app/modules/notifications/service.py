@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import NotFoundError
 from app.modules.notifications import repository
 from app.modules.notifications.models import Notification
+from app.modules.push import service as push_service
 from app.modules.users.models import User
 
 
@@ -19,7 +20,9 @@ def _to_shape(notification: Notification) -> dict:
 
 
 async def notify_user(db: AsyncSession, user_id: str, *, title: str, message: str) -> dict:
-    return _to_shape(await repository.create(db, user_id=user_id, title=title, message=message))
+    notification = await repository.create(db, user_id=user_id, title=title, message=message)
+    await push_service.fan_out_to_user(db, user_id, title=title, message=message)
+    return _to_shape(notification)
 
 
 async def list_notifications(db: AsyncSession, user: User) -> list[dict]:

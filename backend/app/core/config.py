@@ -25,6 +25,16 @@ class Settings(BaseSettings):
     # ── CORS ──
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    # ── SMS (self-hosted/open-source gateway) ──
+    sms_gateway_url: str = ""
+    sms_gateway_api_key: str = ""
+    admin_phone_number: str = ""
+
+    # ── Web Push (VAPID, no paid service) ──
+    vapid_public_key: str = ""
+    vapid_private_key: str = ""
+    vapid_subject: str = "mailto:admin@promarket.dev"
+
     # ── Debug ──
     debug: bool = False
 

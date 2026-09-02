@@ -29,6 +29,7 @@ from app.modules.categories.models import Category
 from app.modules.favorites.models import Favorite
 from app.modules.availability.models import TimeSlot
 from app.modules.booking_lifecycle.models import RecurringBooking
+from app.modules.push.models import PushSubscription
 
 
 # ── Engine & Session ──
