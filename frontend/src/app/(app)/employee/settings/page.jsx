@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
 import VerifiedBadge from "@/components/Badge/VerifiedBadge";
+import PushToggle from "@/components/Notification/PushToggle";
 import { apiFetch } from "@/lib/apiClient";
 
 export default function EmployeeSettingsPage() {
@@ -180,6 +181,13 @@ export default function EmployeeSettingsPage() {
           {isSaving ? "Saving..." : "Save Changes"}
         </Button>
       </form>
+
+      <div className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
+        <h2 className="font-display text-headline-sm text-on-surface">Notifications</h2>
+        <div className="mt-3">
+          <PushToggle />
+        </div>
+      </div>
 
       <form onSubmit={handleSaveRadius} className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
         <h2 className="font-display text-headline-sm text-on-surface">Service Area</h2>

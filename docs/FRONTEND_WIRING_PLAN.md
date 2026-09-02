@@ -1,5 +1,7 @@
 # Frontend Wiring Plan — connecting Phases 2–7 to the UI
 
+**All phases below (2, 3, 4, 5, 6, 7) are now built and verified — 2026-09-02/03.** Phase 8 (uploads, geocoding caching, e2e/CI, SEO/PWA) is intentionally on hold, per the same convention as `BACKEND_PLAN.md`.
+
 `docs/BACKEND_PLAN.md` Phases 0–7 are done and tested at the API level (see
 that file's per-phase `pytest` counts), but **the Next.js frontend was never
 updated to call most of it**. Phase 0/1 endpoints (professionals, bookings,
@@ -120,12 +122,15 @@ of what's real vs. planned.
 
 ## Phase 4 — Communication UI
 
+**Status (2026-09-02): built and verified as far as this environment allows.** Generated a real VAPID keypair (`cryptography`'s EC P-256, base64url-encoded — the standard `web-push generate-vapid-keys` format) and documented the generation command in `.env.example`. Confirmed the key is correctly compiled into both settings pages' JS chunks. Subscribe/unsubscribe verified live via `curl` against the real backend. **Not verified**: an actual push notification being delivered and shown by the OS — that needs a real browser with a live `PushSubscription`, which isn't available in this environment (no browser automation here), and `pywebpush` itself isn't installed (it's the optional `push` extra, lazily imported only inside the send call) — install with `pip install .[push]` before relying on real delivery.
+
 ### Push notifications
 - Backend: `POST /push/subscribe`, `POST /push/unsubscribe` (VAPID Web Push)
 - Work:
-  - [ ] A service worker (`public/sw.js`) handling `push` events.
-  - [ ] Settings page (`user/settings`, `employee/settings`) toggle: "Enable push notifications" — on enable, register the service worker, call `PushManager.subscribe()` with the VAPID public key (needs `NEXT_PUBLIC_VAPID_PUBLIC_KEY` exposed from `backend`'s `vapid_public_key`), then `POST /push/subscribe` with the resulting subscription; on disable, `POST /push/unsubscribe`.
-- Test: enable push in one browser, trigger a notification (e.g. complete a booking) from another session, confirm an OS-level push notification appears. This needs real VAPID keys generated and set in `backend/.env` — they're empty by default.
+  - [x] `public/sw.js` — handles `push` (shows a notification) and `notificationclick` (focuses/opens the app) events.
+  - [x] `lib/pushClient.js` — `subscribeToPush()`/`unsubscribeFromPush()`, registers the service worker and calls the VAPID-keyed `PushManager.subscribe()`.
+  - [x] New `components/Notification/PushToggle.jsx` — a checkbox wired into both `user/settings` and `employee/settings` (both of which were non-functional `console.log`-only stubs before this pass — rebuilt to actually load/save via `GET`/`PATCH /settings`).
+- Test (live): `POST /push/subscribe` with a synthetic subscription → `{id, endpoint}`; `POST /push/unsubscribe` → 204. Both match the frontend's expectations exactly.
 
 ### SMS
 - Backend-internal only (`sms` module has no router) — nothing for the frontend to call. No work here.
