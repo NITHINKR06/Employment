@@ -24,6 +24,8 @@ from app.modules.settings.router import router as settings_router
 from app.modules.categories.router import router as categories_router
 from app.modules.favorites.router import router as favorites_router
 from app.modules.geocoding.router import router as geocoding_router
+from app.modules.availability.router import router as availability_router
+from app.modules.booking_lifecycle.router import router as booking_lifecycle_router
 
 app = FastAPI(
     title="ProMarket API",
@@ -58,6 +60,8 @@ app.include_router(settings_router, prefix=API_V1)
 app.include_router(categories_router, prefix=API_V1)
 app.include_router(favorites_router, prefix=API_V1)
 app.include_router(geocoding_router, prefix=API_V1)
+app.include_router(availability_router, prefix=API_V1)
+app.include_router(booking_lifecycle_router, prefix=API_V1)
 
 
 # ── Health check ──

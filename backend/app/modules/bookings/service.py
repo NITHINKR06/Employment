@@ -7,10 +7,13 @@ from datetime import datetime
 from urllib.parse import quote
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from ulid import ULID
 
 from app.core.errors import ForbiddenError, NotFoundError, ValidationError
+from app.modules.availability import service as availability_service
 from app.modules.bookings import repository
 from app.modules.bookings.models import Booking, BookingStatus
+from app.modules.notifications import service as notifications_service
 from app.modules.professionals import repository as professional_repo
 from app.modules.users.models import User
 
@@ -100,13 +103,23 @@ async def create_booking(db: AsyncSession, user: User, data: dict) -> dict:
     ):
         raise ValidationError("Service does not belong to this professional")
 
+    # Pre-generate the id so a slot reservation (which needs a booking_id) can
+    # happen before the Booking row exists — reservation is atomic and, if it
+    # fails, nothing about this booking is ever written.
+    booking_id = str(ULID())
+    scheduled_at = data.get("scheduled_at")
+    if data.get("slot_id"):
+        slot = await availability_service.reserve_slot(db, data["slot_id"], booking_id)
+        scheduled_at = slot.starts_at
+
     booking = await repository.create(
         db,
         {
+            "id": booking_id,
             "user_id": user.id,
             "professional_id": professional.id,
             "service_id": data.get("service_id"),
-            "scheduled_at": data.get("scheduled_at"),
+            "scheduled_at": scheduled_at,
             "address": data.get("address"),
             "notes": data.get("notes"),
         },
@@ -188,4 +201,15 @@ async def update_booking_status(
         )
 
     updated = await repository.update_status(db, booking_id, new_status)
+
+    if new_status == BookingStatus.CANCELLED:
+        await availability_service.release_slot_for_booking(db, booking_id)
+    elif new_status == BookingStatus.COMPLETED:
+        await notifications_service.notify_user(
+            db,
+            updated.user_id,
+            title="Job completed",
+            message=f"Your booking with {updated.professional.user.name} is complete. Leave a review!",
+        )
+
     return _to_summary_shape(updated, "EMPLOYEE" if info["is_professional"] else "USER")

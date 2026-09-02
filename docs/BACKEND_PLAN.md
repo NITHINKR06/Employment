@@ -273,29 +273,31 @@ Remaining before Phase 0 is fully closed: the Cutover items below (frontend not 
 
 ## Phase 3 — Booking & scheduling
 
+**Status (2026-09-02): built and verified.** All 3 sub-areas landed, full `pytest` suite green. Recurring bookings use a cron-triggered admin endpoint (`POST /booking-lifecycle/recurring/run`) rather than an in-process APScheduler job — simpler to test and to trigger from an external scheduler (e.g. a host-level cron hitting the endpoint) without adding a background-scheduling dependency to the app process.
+
 ### `modules/availability`
 - Build
-  - [ ] `TimeSlot` model + migration, generate/list/reserve slots, endpoints; `bookings` module calls into this via its service on create/cancel
+  - [x] `TimeSlot` model + migration, generate/list/reserve slots, endpoints; `bookings` module calls into this via its service on create/cancel
 - Tests (`tests/unit/test_availability.py`)
-  - [ ] listing open slots excludes already-`is_booked` slots
-  - [ ] reserving a slot on booking creation is atomic — two concurrent reservation attempts on the same slot: one wins, one gets a clean conflict error (not a corrupted double-booking)
-  - [ ] releasing a slot on booking cancellation makes it reservable again
+  - [x] listing open slots excludes already-`is_booked` slots
+  - [x] reserving a slot on booking creation is atomic — two concurrent reservation attempts on the same slot: one wins, one gets a clean conflict error (not a corrupted double-booking)
+  - [x] releasing a slot on booking cancellation makes it reservable again
 
 ### `modules/booking_lifecycle`
 - Build
-  - [ ] reschedule (validates against `availability`), `RecurringBooking` model + migration + a scheduled job (APScheduler or a cron-triggered endpoint) to spin up concrete bookings, cancellation policy + refund against the still-mocked `payments` module
+  - [x] reschedule (validates against `availability`), `RecurringBooking` model + migration + a scheduled job (APScheduler or a cron-triggered endpoint) to spin up concrete bookings, cancellation policy + refund against the still-mocked `payments` module
 - Tests (`tests/unit/test_booking_lifecycle.py`)
-  - [ ] reschedule to an already-booked slot is rejected
-  - [ ] reschedule to an open slot releases the old slot and reserves the new one
-  - [ ] recurring booking job creates exactly one new `Booking` per due cycle, none for cycles not yet due
-  - [ ] cancellation inside the cutoff window is rejected (or partially refunded, per policy); outside the window is allowed with full refund
-  - [ ] refund only ever calls the mock `payments` service, never a real gateway (asserted via mock call inspection)
+  - [x] reschedule to an already-booked slot is rejected
+  - [x] reschedule to an open slot releases the old slot and reserves the new one
+  - [x] recurring booking job creates exactly one new `Booking` per due cycle, none for cycles not yet due
+  - [x] cancellation inside the cutoff window is rejected (or partially refunded, per policy); outside the window is allowed with full refund
+  - [x] refund only ever calls the mock `payments` service, never a real gateway (asserted via mock call inspection)
 
 ### Job completion → review prompt
 - Build
-  - [ ] extend `bookings` service's `COMPLETED` transition to call `notifications`
+  - [x] extend `bookings` service's `COMPLETED` transition to call `notifications`
 - Tests
-  - [ ] transitioning a booking to `COMPLETED` triggers exactly one `notify_user` call to the customer
+  - [x] transitioning a booking to `COMPLETED` triggers exactly one `notify_user` call to the customer
 
 ---
 

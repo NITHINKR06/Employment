@@ -36,3 +36,8 @@ class NotFoundError(AppError):
 class ValidationError(AppError):
     def __init__(self, message: str = "Invalid input", details: dict | list | None = None):
         super().__init__(message=message, status_code=400, code="VALIDATION_ERROR", details=details)
+
+
+class ConflictError(AppError):
+    def __init__(self, message: str = "This resource was just taken by someone else"):
+        super().__init__(message=message, status_code=409, code="CONFLICT")

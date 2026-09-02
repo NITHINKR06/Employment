@@ -11,6 +11,7 @@ class CreateBookingRequest(BaseModel):
 
     professional_id: str = Field(min_length=1)
     service_id: str | None = None
+    slot_id: str | None = None
     scheduled_at: datetime | None = None
     address: str = Field(min_length=1)
     notes: str | None = None

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import ForbiddenError, NotFoundError, ValidationError
 from app.modules.bookings import repository as booking_repo
 from app.modules.payments import repository
-from app.modules.payments.models import Payment
+from app.modules.payments.models import Payment, PaymentStatus
 from app.modules.users.models import User
 
 
@@ -52,6 +52,19 @@ async def pay_for_booking(
         provider=f"mock-{method or 'upi'}",
         provider_ref=f"MOCK-{uuid.uuid4()}",
     )
+    return _to_public_shape(payment)
+
+
+async def refund_payment(db: AsyncSession, payment_id: str) -> dict:
+    """Mock refund — marks a PAID payment REFUNDED. Never calls a real gateway."""
+    payment = await repository.find_by_id(db, payment_id)
+    if payment is None:
+        raise NotFoundError("Payment not found")
+    if payment.status != PaymentStatus.PAID:
+        raise ValidationError("Only a paid payment can be refunded")
+    payment.status = PaymentStatus.REFUNDED
+    await db.commit()
+    await db.refresh(payment)
     return _to_public_shape(payment)
 
 

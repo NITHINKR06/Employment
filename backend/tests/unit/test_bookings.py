@@ -87,3 +87,28 @@ async def test_list_mine_returns_correct_shape(db, make_user, make_professional,
     employee_bookings = await service.list_my_bookings(db, pro_user)
     assert len(employee_bookings) == 1
     assert employee_bookings[0]["name"] == "Customer"
+
+
+@pytest.mark.asyncio
+async def test_completion_notifies_the_customer_exactly_once(
+    db, make_user, make_professional, make_booking, monkeypatch
+):
+    """Transitioning a booking to COMPLETED triggers exactly one notify_user call."""
+    from app.modules.bookings import service as bookings_service
+
+    pro_user = await make_user(role=Role.EMPLOYEE)
+    pro = await make_professional(user=pro_user)
+    customer = await make_user(role=Role.USER)
+    booking = await make_booking(user=customer, professional=pro, status=BookingStatus.IN_PROGRESS)
+
+    calls = []
+
+    async def fake_notify_user(db, user_id, *, title, message):
+        calls.append((user_id, title, message))
+
+    monkeypatch.setattr(bookings_service.notifications_service, "notify_user", fake_notify_user)
+
+    await service.update_booking_status(db, pro_user, booking.id, "COMPLETED")
+
+    assert len(calls) == 1
+    assert calls[0][0] == customer.id

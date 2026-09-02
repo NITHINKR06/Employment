@@ -27,6 +27,8 @@ from app.modules.notifications.models import Notification
 from app.modules.contact.models import ContactMessage
 from app.modules.categories.models import Category
 from app.modules.favorites.models import Favorite
+from app.modules.availability.models import TimeSlot
+from app.modules.booking_lifecycle.models import RecurringBooking
 
 
 # ── Engine & Session ──
@@ -163,6 +165,38 @@ async def make_booking(db: AsyncSession, make_user, make_professional):
         await db.commit()
         await db.refresh(booking)
         return booking
+    return _make
+
+
+@pytest_asyncio.fixture
+async def make_time_slot(db: AsyncSession, make_professional):
+    """Factory fixture: create a TimeSlot."""
+    from datetime import datetime, timedelta
+
+    async def _make(
+        *,
+        professional: Professional | None = None,
+        starts_at: datetime | None = None,
+        ends_at: datetime | None = None,
+        is_booked: bool = False,
+        booking_id: str | None = None,
+    ) -> TimeSlot:
+        if professional is None:
+            professional = await make_professional()
+        starts_at = starts_at or datetime(2026, 1, 1, 9, 0)
+        ends_at = ends_at or (starts_at + timedelta(hours=1))
+        slot = TimeSlot(
+            id=_next_id(),
+            professional_id=professional.id,
+            starts_at=starts_at,
+            ends_at=ends_at,
+            is_booked=is_booked,
+            booking_id=booking_id,
+        )
+        db.add(slot)
+        await db.commit()
+        await db.refresh(slot)
+        return slot
     return _make
 
 
