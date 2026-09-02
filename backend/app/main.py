@@ -27,6 +27,9 @@ from app.modules.geocoding.router import router as geocoding_router
 from app.modules.availability.router import router as availability_router
 from app.modules.booking_lifecycle.router import router as booking_lifecycle_router
 from app.modules.push.router import router as push_router
+from app.modules.review_response.router import router as review_response_router
+from app.modules.disputes.router import router as disputes_router
+from app.modules.verification.router import router as verification_router
 
 app = FastAPI(
     title="ProMarket API",
@@ -64,6 +67,9 @@ app.include_router(geocoding_router, prefix=API_V1)
 app.include_router(availability_router, prefix=API_V1)
 app.include_router(booking_lifecycle_router, prefix=API_V1)
 app.include_router(push_router, prefix=API_V1)
+app.include_router(review_response_router, prefix=API_V1)
+app.include_router(disputes_router, prefix=API_V1)
+app.include_router(verification_router, prefix=API_V1)
 
 
 # ── Health check ──

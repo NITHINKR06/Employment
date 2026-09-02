@@ -11,13 +11,15 @@ from app.modules.reviews.models import Review
 from app.modules.users.models import User
 
 
-def _to_public_shape(review: Review) -> dict:
+def to_public_shape(review: Review) -> dict:
     """Port of toPublicShape() from review.service.js."""
     return {
         "id": review.id,
         "author": review.booking.user.name,
         "rating": review.rating,
         "comment": review.comment,
+        "professionalResponse": review.professional_response,
+        "respondedAt": review.responded_at.isoformat() if review.responded_at else None,
         "createdAt": review.created_at.isoformat() if review.created_at else None,
     }
 
@@ -56,10 +58,10 @@ async def create_review(
 
     # Return the freshly created review
     reviews = await repository.find_many_by_professional_id(db, booking.professional_id)
-    return _to_public_shape(reviews[0])
+    return to_public_shape(reviews[0])
 
 
 async def list_professional_reviews(db: AsyncSession, professional_id: str) -> list[dict]:
     """List reviews for a professional (public, no auth required)."""
     reviews = await repository.find_many_by_professional_id(db, professional_id)
-    return [_to_public_shape(r) for r in reviews]
+    return [to_public_shape(r) for r in reviews]

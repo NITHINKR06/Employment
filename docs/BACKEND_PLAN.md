@@ -325,30 +325,32 @@ Remaining before Phase 0 is fully closed: the Cutover items below (frontend not 
 
 ## Phase 5 — Trust & reviews (no photo uploads)
 
+**Status (2026-09-02): built and verified.** All 3 sub-areas landed, full `pytest` suite green.
+
 ### `modules/review_response`
 - Build
-  - [ ] nullable `professional_response`/`responded_at` columns on `reviews`, one-response-per-review endpoint
+  - [x] nullable `professional_response`/`responded_at` columns on `reviews`, one-response-per-review endpoint
 - Tests (`tests/unit/test_review_response.py`)
-  - [ ] only the reviewed professional can respond (403 for anyone else)
-  - [ ] a second response attempt on the same review is rejected
+  - [x] only the reviewed professional can respond (403 for anyone else)
+  - [x] a second response attempt on the same review is rejected
 
 ### `modules/disputes`
 - Build
-  - [ ] `Dispute` model + migration, create/list/detail endpoints, admin-only status update (delegated from `admin`)
+  - [x] `Dispute` model + migration, create/list/detail endpoints, admin-only status update (delegated from `admin`)
 - Tests (`tests/unit/test_disputes.py`)
-  - [ ] create requires an authenticated user
-  - [ ] list-mine only returns the calling user's own disputes (not other users')
-  - [ ] non-admin cannot change `status`
-  - [ ] admin status update from `OPEN→RESOLVED` persists `resolution` text
+  - [x] create requires an authenticated user
+  - [x] list-mine only returns the calling user's own disputes (not other users')
+  - [x] non-admin cannot change `status`
+  - [x] admin status update from `OPEN→RESOLVED` persists `resolution` text
 
 ### `modules/verification`
 - Build
-  - [ ] `VerificationRequest` model + migration, submit endpoint, admin approve/reject flips `professionals.verified`
+  - [x] `VerificationRequest` model + migration, submit endpoint, admin approve/reject flips `professionals.verified`
 - Tests (`tests/unit/test_verification.py`)
-  - [ ] submit requires the caller to own a `Professional` profile
-  - [ ] admin approve sets `professionals.verified=True` and request `status=APPROVED`
-  - [ ] admin reject leaves `verified=False` and records `reviewed_by`/`reviewed_at`
-  - [ ] a non-admin cannot approve/reject
+  - [x] submit requires the caller to own a `Professional` profile
+  - [x] admin approve sets `professionals.verified=True` and request `status=APPROVED`
+  - [x] admin reject leaves `verified=False` and records `reviewed_by`/`reviewed_at`
+  - [x] a non-admin cannot approve/reject
 
 ---
 

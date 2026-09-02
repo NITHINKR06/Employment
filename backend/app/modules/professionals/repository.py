@@ -272,6 +272,13 @@ async def remove(db: AsyncSession, professional_id: str) -> None:
         await db.commit()
 
 
+async def set_verified(db: AsyncSession, professional_id: str, verified: bool) -> None:
+    professional = await find_by_id(db, professional_id)
+    if professional is not None:
+        professional.verified = verified
+        await db.commit()
+
+
 async def update_rating(
     db: AsyncSession,
     professional_id: str,

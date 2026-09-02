@@ -1,10 +1,13 @@
 """Reviews repository — port of review.repository.js."""
 
+from datetime import datetime, timezone
+
 from sqlalchemy import select, func as sa_func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.modules.bookings.models import Booking
+from app.modules.professionals.models import Professional
 from app.modules.reviews.models import Review
 
 
@@ -12,6 +15,27 @@ async def find_by_booking_id(db: AsyncSession, booking_id: str) -> Review | None
     stmt = select(Review).where(Review.booking_id == booking_id)
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
+
+
+async def find_by_id(db: AsyncSession, review_id: str) -> Review | None:
+    stmt = (
+        select(Review)
+        .options(
+            joinedload(Review.booking).joinedload(Booking.user),
+            joinedload(Review.booking).joinedload(Booking.professional).joinedload(Professional.user),
+        )
+        .where(Review.id == review_id)
+    )
+    result = await db.execute(stmt)
+    return result.unique().scalar_one_or_none()
+
+
+async def add_response(db: AsyncSession, review: Review, response: str) -> Review:
+    review.professional_response = response
+    review.responded_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(review)
+    return review
 
 
 async def create(db: AsyncSession, *, booking_id: str, rating: int, comment: str | None) -> Review:

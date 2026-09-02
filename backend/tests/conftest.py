@@ -30,6 +30,8 @@ from app.modules.favorites.models import Favorite
 from app.modules.availability.models import TimeSlot
 from app.modules.booking_lifecycle.models import RecurringBooking
 from app.modules.push.models import PushSubscription
+from app.modules.disputes.models import Dispute
+from app.modules.verification.models import VerificationRequest
 
 
 # ── Engine & Session ──
@@ -198,6 +200,30 @@ async def make_time_slot(db: AsyncSession, make_professional):
         await db.commit()
         await db.refresh(slot)
         return slot
+    return _make
+
+
+@pytest_asyncio.fixture
+async def make_review(db: AsyncSession, make_booking):
+    """Factory fixture: create a Review."""
+    async def _make(
+        *,
+        booking: Booking | None = None,
+        rating: int = 5,
+        comment: str | None = "Great work",
+    ) -> Review:
+        if booking is None:
+            booking = await make_booking(status=BookingStatus.COMPLETED)
+        review = Review(
+            id=_next_id(),
+            booking_id=booking.id,
+            rating=rating,
+            comment=comment,
+        )
+        db.add(review)
+        await db.commit()
+        await db.refresh(review)
+        return review
     return _make
 
 
