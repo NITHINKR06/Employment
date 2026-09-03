@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { IoWarningOutline } from "react-icons/io5";
+import { IoWarningOutline, IoTrashOutline } from "react-icons/io5";
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
 import VerifiedBadge from "@/components/Badge/VerifiedBadge";
@@ -36,6 +36,10 @@ export default function EmployeeSettingsPage() {
   const [coords, setCoords] = useState(null); // { latitude, longitude } | null
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState("");
+  const [services, setServices] = useState([]);
+  const [isSavingServices, setIsSavingServices] = useState(false);
+  const [servicesError, setServicesError] = useState("");
+  const [servicesSaved, setServicesSaved] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +60,13 @@ export default function EmployeeSettingsPage() {
           bio: pro.bio ?? "",
         });
         setServiceRadiusKm(pro.serviceRadiusKm ?? 25);
+        setServices(
+          (pro.servicesOffered ?? []).map((s) => ({
+            title: s.title ?? "",
+            subtext: s.subtext ?? "",
+            price: s.price ?? "",
+          }))
+        );
         if (pro.latitude != null && pro.longitude != null) {
           setCoords({ latitude: pro.latitude, longitude: pro.longitude });
         }
@@ -141,6 +152,59 @@ export default function EmployeeSettingsPage() {
       setRadiusError(err.message);
     } finally {
       setIsSavingRadius(false);
+    }
+  };
+
+  const handleServiceChange = (index, field, value) => {
+    setServices((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
+  };
+
+  const handleAddService = () => {
+    setServices((prev) => [...prev, { title: "", subtext: "", price: "" }]);
+  };
+
+  const handleRemoveService = (index) => {
+    setServices((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveServices = async (e) => {
+    e.preventDefault();
+    if (!professional) return;
+    setServicesError("");
+    setServicesSaved(false);
+    const trimmed = services.map((s) => ({ ...s, title: s.title.trim() }));
+    if (trimmed.some((s) => !s.title)) {
+      setServicesError("Every service needs a title.");
+      return;
+    }
+    setIsSavingServices(true);
+    try {
+      const body = await apiFetch(`/professionals/${professional.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          servicesOffered: trimmed.map((s) => ({
+            title: s.title,
+            subtext: s.subtext.trim() || null,
+            price: s.price === "" ? null : Number(s.price),
+          })),
+        }),
+      });
+      if (!body.success || !body.data?.professional) {
+        throw new Error(body?.error?.message ?? "Could not save services");
+      }
+      setProfessional(body.data.professional);
+      setServices(
+        (body.data.professional.servicesOffered ?? []).map((s) => ({
+          title: s.title ?? "",
+          subtext: s.subtext ?? "",
+          price: s.price ?? "",
+        }))
+      );
+      setServicesSaved(true);
+    } catch (err) {
+      setServicesError(err.message);
+    } finally {
+      setIsSavingServices(false);
     }
   };
 
@@ -291,6 +355,65 @@ export default function EmployeeSettingsPage() {
         </div>
         {radiusError && <p className="mt-2 text-label-sm font-semibold text-error">{radiusError}</p>}
         {radiusSaved && <p className="mt-2 text-label-sm font-semibold text-primary">Saved!</p>}
+      </form>
+
+      <form onSubmit={handleSaveServices} className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
+        <h2 className="font-display text-headline-sm text-on-surface">Services Offered</h2>
+        <p className="mt-1 text-body-md text-on-surface-variant">
+          These show up on your public profile so customers can pick a specific service to book.
+        </p>
+        <div className="mt-4 space-y-4">
+          {services.map((service, index) => (
+            <div
+              key={index}
+              className="flex flex-col gap-3 rounded-lg border border-outline-variant p-3 sm:flex-row sm:items-end"
+            >
+              <TextField
+                id={`service-title-${index}`}
+                label="Title"
+                className="flex-1"
+                value={service.title}
+                onChange={(e) => handleServiceChange(index, "title", e.target.value)}
+              />
+              <TextField
+                id={`service-subtext-${index}`}
+                label="Description"
+                className="flex-1"
+                value={service.subtext}
+                onChange={(e) => handleServiceChange(index, "subtext", e.target.value)}
+              />
+              <TextField
+                id={`service-price-${index}`}
+                type="number"
+                label="Price ($)"
+                className="w-full sm:w-28"
+                value={service.price}
+                onChange={(e) => handleServiceChange(index, "price", e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => handleRemoveService(index)}
+                className="flex shrink-0 items-center justify-center rounded-lg border border-outline-variant p-2.5 text-on-surface-variant hover:text-error"
+                aria-label="Remove service"
+              >
+                <IoTrashOutline />
+              </button>
+            </div>
+          ))}
+          {services.length === 0 && (
+            <p className="text-body-md text-on-surface-variant">No services added yet.</p>
+          )}
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <Button type="button" variant="secondary" onClick={handleAddService}>
+            + Add Service
+          </Button>
+          <Button type="submit" disabled={isSavingServices}>
+            {isSavingServices ? "Saving..." : "Save Services"}
+          </Button>
+        </div>
+        {servicesError && <p className="mt-2 text-label-sm font-semibold text-error">{servicesError}</p>}
+        {servicesSaved && <p className="mt-2 text-label-sm font-semibold text-primary">Saved!</p>}
       </form>
 
       <div className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
