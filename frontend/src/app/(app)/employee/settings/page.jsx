@@ -246,10 +246,12 @@ export default function EmployeeSettingsPage() {
   }
 
   return (
-    <div className="container max-w-2xl py-10">
+    <div className="container max-w-6xl py-10">
       <h1 className="font-display text-headline-md text-on-surface">Professional Settings</h1>
 
-      <form onSubmit={handleSave} className="mt-6 space-y-5 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="space-y-6 lg:col-span-2">
+      <form onSubmit={handleSave} className="space-y-5 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
         <TextField id="title" label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
         <TextField id="trade" label="Trade / category" value={form.trade} onChange={(e) => setForm({ ...form, trade: e.target.value })} />
         <TextField
@@ -328,36 +330,7 @@ export default function EmployeeSettingsPage() {
         </Button>
       </form>
 
-      <div className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
-        <h2 className="font-display text-headline-sm text-on-surface">Notifications</h2>
-        <div className="mt-3">
-          <PushToggle />
-        </div>
-      </div>
-
-      <form onSubmit={handleSaveRadius} className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
-        <h2 className="font-display text-headline-sm text-on-surface">Service Area</h2>
-        <p className="mt-1 text-body-md text-on-surface-variant">
-          How far you're willing to travel for a job.
-        </p>
-        <div className="mt-3 flex items-end gap-3">
-          <TextField
-            id="serviceRadiusKm"
-            type="number"
-            label="Radius (km)"
-            value={serviceRadiusKm}
-            onChange={(e) => setServiceRadiusKm(e.target.value)}
-            className="max-w-xs"
-          />
-          <Button type="submit" disabled={isSavingRadius}>
-            {isSavingRadius ? "Saving..." : "Save"}
-          </Button>
-        </div>
-        {radiusError && <p className="mt-2 text-label-sm font-semibold text-error">{radiusError}</p>}
-        {radiusSaved && <p className="mt-2 text-label-sm font-semibold text-primary">Saved!</p>}
-      </form>
-
-      <form onSubmit={handleSaveServices} className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
+      <form onSubmit={handleSaveServices} className="rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
         <h2 className="font-display text-headline-sm text-on-surface">Services Offered</h2>
         <p className="mt-1 text-body-md text-on-surface-variant">
           These show up on your public profile so customers can pick a specific service to book.
@@ -415,8 +388,39 @@ export default function EmployeeSettingsPage() {
         {servicesError && <p className="mt-2 text-label-sm font-semibold text-error">{servicesError}</p>}
         {servicesSaved && <p className="mt-2 text-label-sm font-semibold text-primary">Saved!</p>}
       </form>
+      </div>
 
-      <div className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
+      <div className="space-y-6 lg:col-span-1">
+      <div className="rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
+        <h2 className="font-display text-headline-sm text-on-surface">Notifications</h2>
+        <div className="mt-3">
+          <PushToggle />
+        </div>
+      </div>
+
+      <form onSubmit={handleSaveRadius} className="rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
+        <h2 className="font-display text-headline-sm text-on-surface">Service Area</h2>
+        <p className="mt-1 text-body-md text-on-surface-variant">
+          How far you're willing to travel for a job.
+        </p>
+        <div className="mt-3 flex items-end gap-3">
+          <TextField
+            id="serviceRadiusKm"
+            type="number"
+            label="Radius (km)"
+            value={serviceRadiusKm}
+            onChange={(e) => setServiceRadiusKm(e.target.value)}
+            className="max-w-xs"
+          />
+          <Button type="submit" disabled={isSavingRadius}>
+            {isSavingRadius ? "Saving..." : "Save"}
+          </Button>
+        </div>
+        {radiusError && <p className="mt-2 text-label-sm font-semibold text-error">{radiusError}</p>}
+        {radiusSaved && <p className="mt-2 text-label-sm font-semibold text-primary">Saved!</p>}
+      </form>
+
+      <div className="rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
         <h2 className="font-display text-headline-sm text-on-surface">Verification</h2>
         {professional.verified ? (
           <p className="mt-2 flex items-center gap-2 text-body-md text-on-surface-variant">
@@ -441,6 +445,8 @@ export default function EmployeeSettingsPage() {
             )}
           </>
         )}
+      </div>
+      </div>
       </div>
     </div>
   );
