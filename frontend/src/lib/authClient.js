@@ -28,8 +28,14 @@ function friendlyMessage(error) {
   return FRIENDLY_ERRORS[error?.code] ?? "Something went wrong. Please try again.";
 }
 
-async function exchangeForSession(_firebaseUser, _role) {
-  const body = await apiFetch("/auth/me");
+async function exchangeForSession(_firebaseUser, role) {
+  // POST /auth/session (not GET /auth/me) — only this endpoint can apply a
+  // chosen role, and only the very first time this Firebase account is ever
+  // seen; every later call here or elsewhere leaves an existing role alone.
+  const body = await apiFetch("/auth/session", {
+    method: "POST",
+    body: JSON.stringify({ role: role ?? null }),
+  });
   if (!body.success || !body.data?.user) {
     throw new Error(body?.error?.message ?? "Could not start session");
   }

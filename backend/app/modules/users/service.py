@@ -4,7 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import NotFoundError
 from app.modules.users import repository
-from app.modules.users.models import User
+from app.modules.users.models import Role, User
+
+# Only these roles are ever choosable by a user at signup — ADMIN is never
+# settable through this path, it's granted out-of-band (see the admin panel's
+# own onboarding, which has no self-serve path by design).
+SELF_SERVE_ROLES = {"USER", "EMPLOYEE"}
 
 
 async def get_or_create_user(
@@ -13,10 +18,14 @@ async def get_or_create_user(
     firebase_uid: str,
     email: str,
     name: str,
+    role: str | None = None,
 ) -> User:
-    """Upsert-on-login: creates with role=USER on first visit, returns existing otherwise."""
+    """Upsert-on-login. `role` (USER or EMPLOYEE only) only ever applies the
+    first time this firebase_uid is seen — an existing account's role is
+    never changed by a later call, so this can't be used to self-promote."""
+    desired_role = Role(role) if role in SELF_SERVE_ROLES else Role.USER
     return await repository.upsert_on_login(
-        db, firebase_uid=firebase_uid, email=email, name=name
+        db, firebase_uid=firebase_uid, email=email, name=name, role=desired_role
     )
 
 

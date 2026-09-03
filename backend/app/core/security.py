@@ -54,6 +54,36 @@ def _extract_bearer_token(request: Request) -> str | None:
     return None
 
 
+async def verify_firebase_token(request: Request) -> dict:
+    """Verify the bearer token and return the caller's identity claims.
+
+    Does not touch the database — callers decide what to do with the
+    identity (upsert with a default role, upsert with a chosen role, etc).
+    """
+    token = _extract_bearer_token(request)
+    if not token:
+        raise UnauthorizedError()
+
+    if token.startswith("dev-"):
+        return {
+            "firebase_uid": token,
+            "email": f"{token}@promarket.dev",
+            "name": f"Dev User ({token})",
+        }
+
+    try:
+        _get_firebase_app()
+        decoded = firebase_auth.verify_id_token(token)
+    except Exception:
+        raise UnauthorizedError("Invalid or expired token")
+
+    return {
+        "firebase_uid": decoded["uid"],
+        "email": decoded.get("email", ""),
+        "name": decoded.get("name", decoded.get("email", "")),
+    }
+
+
 async def get_current_user(
     request: Request,
     db: AsyncSession = Depends(get_db),
@@ -63,23 +93,8 @@ async def get_current_user(
     Usage in a route:
         user: User = Depends(get_current_user)
     """
-    token = _extract_bearer_token(request)
-    if not token:
-        raise UnauthorizedError()
-
-    if token.startswith("dev-"):
-        firebase_uid = token
-        email = f"{token}@promarket.dev"
-        name = f"Dev User ({token})"
-    else:
-        try:
-            _get_firebase_app()
-            decoded = firebase_auth.verify_id_token(token)
-            firebase_uid = decoded["uid"]
-            email = decoded.get("email", "")
-            name = decoded.get("name", decoded.get("email", ""))
-        except Exception:
-            raise UnauthorizedError("Invalid or expired token")
+    claims = await verify_firebase_token(request)
+    firebase_uid = claims["firebase_uid"]
 
     # Upsert: look up by firebase_uid; create if first login.
     stmt = select(User).where(User.firebase_uid == firebase_uid)
@@ -89,8 +104,8 @@ async def get_current_user(
     if user is None:
         user = User(
             firebase_uid=firebase_uid,
-            email=email,
-            name=name,
+            email=claims["email"],
+            name=claims["name"],
         )
         db.add(user)
         await db.commit()
