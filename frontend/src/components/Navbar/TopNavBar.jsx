@@ -22,6 +22,7 @@ import { getNavLinks } from "@/components/Navbar/navLinks";
 
 export default function TopNavBar({ variant = "marketing", onBellClick }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const hasUnreadNotifications = notifications.some((notification) => !notification.read);
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
@@ -36,6 +37,11 @@ export default function TopNavBar({ variant = "marketing", onBellClick }) {
     router.push("/");
   };
 
+  const handleGetIn = () => {
+    setTransitioning(true);
+    setTimeout(() => router.push("/search"), 650);
+  };
+
   if (variant === "minimal") {
     return (
       <header className="w-full bg-transparent">
@@ -45,6 +51,43 @@ export default function TopNavBar({ variant = "marketing", onBellClick }) {
           </Link>
           <ThemeToggle />
         </div>
+      </header>
+    );
+  }
+
+  if (variant === "gate") {
+    return (
+      <header className="sticky top-0 z-50 w-full bg-surface shadow-sm">
+        <div className="container flex h-20 items-center justify-between">
+          <Link href="/" className="font-display text-headline-md font-bold text-primary">
+            {SITE_NAME}
+          </Link>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <motion.button
+              type="button"
+              onClick={handleGetIn}
+              disabled={transitioning}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              className="rounded-full bg-primary px-6 py-2.5 text-label-md font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-container hover:text-on-primary-container disabled:opacity-80"
+            >
+              Get In
+            </motion.button>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {transitioning && (
+            <motion.div
+              initial={{ clipPath: "circle(0% at 90% 10%)" }}
+              animate={{ clipPath: "circle(150% at 90% 10%)" }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              className="fixed inset-0 z-[100] bg-primary"
+              aria-hidden="true"
+            />
+          )}
+        </AnimatePresence>
       </header>
     );
   }
