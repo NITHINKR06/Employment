@@ -347,7 +347,7 @@ export default function BookingWizard({ worker }) {
         <aside className="h-fit space-y-4 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-2 lg:sticky lg:top-24">
           <div className="flex items-center gap-3">
             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full">
-              <Image src={worker.avatar} alt={worker.name} fill className="object-cover" />
+              <Image src={worker.avatar || "/profile.jpg"} alt={worker.name} fill className="object-cover" />
             </div>
             <div>
               <p className="inline-flex items-center gap-1 text-label-md font-semibold text-on-surface">

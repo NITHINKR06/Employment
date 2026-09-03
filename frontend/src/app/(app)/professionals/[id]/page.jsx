@@ -57,7 +57,7 @@ export default async function ProfessionalProfilePage({ params }) {
           {/* Profile Header Banner */}
           <div className="flex flex-col gap-6 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-6 shadow-elevation-1 sm:flex-row sm:items-start">
             <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-full border-4 border-primary/20 shadow-elevation-1">
-              <Image src={worker.avatar} alt={worker.name} fill className="object-cover" />
+              <Image src={worker.avatar || "/profile.jpg"} alt={worker.name} fill className="object-cover" />
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">

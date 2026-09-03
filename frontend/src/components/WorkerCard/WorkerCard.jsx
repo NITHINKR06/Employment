@@ -20,7 +20,7 @@ function FullCard({ worker }) {
   return (
     <div className="overflow-hidden rounded-lg bg-surface-container-lowest shadow-elevation-1 transition-shadow hover:shadow-elevation-2">
       <div className="relative h-48 w-full">
-        <Image src={worker.avatar} alt={worker.name} fill className="object-cover" />
+        <Image src={worker.avatar || "/profile.jpg"} alt={worker.name} fill className="object-cover" />
         <div className="absolute left-3 top-3">
           <Rating value={worker.rating} count={worker.reviewCount} variant="pill" size="sm" />
         </div>
@@ -58,7 +58,7 @@ function CompactCard({ worker }) {
     <div className="flex items-center gap-3 rounded-md border border-outline-variant p-3 transition-colors hover:bg-surface-container-low">
       <Link href={`/professionals/${worker.id}`} className="flex min-w-0 flex-1 items-center gap-3">
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full">
-          <Image src={worker.avatar} alt={worker.name} fill className="object-cover" />
+          <Image src={worker.avatar || "/profile.jpg"} alt={worker.name} fill className="object-cover" />
         </div>
         <div className="min-w-0">
           <NameLine worker={worker} textClass="text-label-md text-on-surface" />
@@ -75,7 +75,7 @@ function SummaryCard({ worker }) {
   return (
     <div className="flex items-center gap-3">
       <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
-        <Image src={worker.avatar} alt={worker.name} fill className="object-cover" />
+        <Image src={worker.avatar || "/profile.jpg"} alt={worker.name} fill className="object-cover" />
       </div>
       <div className="min-w-0">
         <NameLine worker={worker} textClass="text-label-md text-on-surface" />

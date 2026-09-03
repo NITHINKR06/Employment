@@ -241,7 +241,7 @@ export default async function Home() {
                 <div className="p-6">
                   <div className="flex items-start gap-4">
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-primary/20">
-                      <Image src={worker.avatar} alt={worker.name} fill className="object-cover" />
+                      <Image src={worker.avatar || "/profile.jpg"} alt={worker.name} fill className="object-cover" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
