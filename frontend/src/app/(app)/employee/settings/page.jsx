@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { IoWarningOutline } from "react-icons/io5";
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
 import VerifiedBadge from "@/components/Badge/VerifiedBadge";
@@ -195,6 +196,12 @@ export default function EmployeeSettingsPage() {
           onChange={(e) => setForm({ ...form, hourlyRate: e.target.value })}
         />
         <div>
+          <p className="mb-1.5 flex items-start gap-1.5 rounded-lg bg-primary-container/10 p-2.5 text-label-sm text-on-surface-variant">
+            <IoWarningOutline className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+            Your map pin is only set when you click &quot;Locate on Map&quot; and it succeeds.
+            If you change the text below, click it again before saving — otherwise your
+            old pin stays in place even though the address text has changed.
+          </p>
           <div className="flex items-end gap-3">
             <TextField
               id="location"
@@ -239,6 +246,13 @@ export default function EmployeeSettingsPage() {
             className="w-full rounded border border-outline-variant bg-surface p-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
+        {!coords && form.location.trim() && form.location !== (professional.location ?? "") && (
+          <div className="flex items-start gap-1.5 rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">
+            <IoWarningOutline className="mt-0.5 shrink-0" aria-hidden="true" />
+            You changed the address but haven&apos;t clicked &quot;Locate on Map&quot; yet —
+            saving now will keep your previous map pin, not this new address.
+          </div>
+        )}
         {saveError && (
           <div className="rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">
             {saveError}
