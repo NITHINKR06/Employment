@@ -126,12 +126,14 @@ export default function EmployeeAvailabilityPage() {
             <h2 className="font-display text-headline-sm text-on-surface">Generate slots</h2>
             <div className="flex items-start gap-1.5 rounded-lg bg-primary-container/10 p-2.5 text-label-sm text-on-surface-variant">
               <IoInformationCircleOutline className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
-              <span>
-                Pick a date range and a slot length, then hit &quot;Generate&quot; — this creates
-                bookable slots every day in that range from 9am to 5pm. Re-generating over dates
-                you&apos;ve already covered adds duplicate slots rather than skipping them, so
-                pick a fresh range each time (e.g. next week) instead of overlapping a previous one.
-              </span>
+              <ol className="list-decimal space-y-1 pl-4">
+                <li>Pick a start and end date, and a slot length.</li>
+                <li>Click &quot;Generate&quot; — it creates bookable slots every day in that range, 9am to 5pm.</li>
+                <li>
+                  Use a fresh date range each time (e.g. next week) — re-generating over dates
+                  you&apos;ve already covered creates duplicate slots instead of skipping them.
+                </li>
+              </ol>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <TextField
