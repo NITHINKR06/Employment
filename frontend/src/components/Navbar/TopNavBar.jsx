@@ -18,38 +18,7 @@ import ThemeToggle from "@/components/Navbar/ThemeToggle";
 import { SITE_NAME } from "@/lib/constants";
 import { notifications } from "@/data/notifications";
 import { useAuth } from "@/lib/AuthProvider";
-
-/* ── Nav links by auth state ─────────────────────────────────── */
-const GUEST_LINKS = [
-  { href: "/search", label: "Categories" },
-  { href: "/about", label: "How it Works" },
-];
-
-const USER_LINKS = [
-  { href: "/user/dashboard", label: "Dashboard" },
-  { href: "/user/bookingStatus", label: "Bookings" },
-  { href: "/user/favorites", label: "Favorites" },
-  { href: "/user/disputes", label: "Reports" },
-  { href: "/search", label: "Categories" },
-  { href: "/user/settings", label: "Settings" },
-];
-
-const EMPLOYEE_LINKS = [
-  { href: "/employee/dashboard", label: "Dashboard" },
-  { href: "/employee/bookingStatus", label: "Bookings" },
-  { href: "/employee/availability", label: "Availability" },
-  { href: "/employee/earnings", label: "Earnings" },
-  { href: "/employee/portfolio", label: "Portfolio" },
-  { href: "/employee/reviews", label: "Reviews" },
-  { href: "/search", label: "Categories" },
-  { href: "/employee/settings", label: "Settings" },
-];
-
-function getNavLinks(user) {
-  if (!user) return GUEST_LINKS;
-  if (user.role === "EMPLOYEE") return EMPLOYEE_LINKS;
-  return USER_LINKS;
-}
+import { getNavLinks } from "@/components/Navbar/navLinks";
 
 export default function TopNavBar({ variant = "marketing", onBellClick }) {
   const [menuOpen, setMenuOpen] = useState(false);
