@@ -331,7 +331,7 @@ export default function EmployeeDashboardPage() {
         {/* Left Sidebar Profile Section */}
         <div className="flex flex-col items-center border-b border-outline-variant/60 p-6 md:w-1/3 md:border-b-0 md:border-r">
           <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-primary/20 shadow-elevation-1">
-            <Image src={professional.avatar} alt="Profile Photo" fill className="object-cover" />
+            <Image src={professional.avatar || "/profile.jpg"} alt="Profile Photo" fill className="object-cover" />
           </div>
           <div className="mt-4 text-center">
             <h1 className="font-display text-headline-md text-on-surface">{professional.name}</h1>

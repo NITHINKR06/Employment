@@ -41,3 +41,37 @@ async def test_get_user_by_id_raises_not_found(db):
     """get_user_by_id raises NotFoundError for an unknown id."""
     with pytest.raises(NotFoundError):
         await service.get_user_by_id(db, "nonexistent-id")
+
+
+@pytest.mark.asyncio
+async def test_first_login_applies_a_chosen_self_serve_role(db):
+    """A signup flow can choose EMPLOYEE at first login (e.g. 'I offer a service')."""
+    user = await service.get_or_create_user(
+        db, firebase_uid="new-pro", email="pro@test.com", name="New Pro", role="EMPLOYEE"
+    )
+    assert user.role == Role.EMPLOYEE
+
+
+@pytest.mark.asyncio
+async def test_role_param_never_changes_an_existing_users_role(db):
+    """The role hint only ever applies to a brand-new account — never a returning one."""
+    user = await service.get_or_create_user(
+        db, firebase_uid="existing-user", email="existing@test.com", name="Existing", role="USER"
+    )
+    assert user.role == Role.USER
+
+    # A later "login" that happens to pass role=EMPLOYEE must not promote them.
+    user2 = await service.get_or_create_user(
+        db, firebase_uid="existing-user", email="existing@test.com", name="Existing", role="EMPLOYEE"
+    )
+    assert user2.role == Role.USER
+    assert user2.id == user.id
+
+
+@pytest.mark.asyncio
+async def test_role_param_cannot_be_used_to_self_serve_admin(db):
+    """ADMIN is never settable through the self-serve signup path."""
+    user = await service.get_or_create_user(
+        db, firebase_uid="sneaky", email="sneaky@test.com", name="Sneaky", role="ADMIN"
+    )
+    assert user.role == Role.USER

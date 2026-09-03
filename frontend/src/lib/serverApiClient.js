@@ -20,7 +20,13 @@ export async function serverApiFetch(endpoint, options = {}) {
   const response = await fetch(url, { cache: "no-store", ...options });
 
   const contentType = response.headers.get("content-type");
-  const data = contentType && contentType.includes("application/json") ? await response.json() : null;
+  // 204/205 are "null body" statuses per the Fetch spec — response.json()
+  // always throws on one of these even when Content-Type still says JSON.
+  const hasNullBody = response.status === 204 || response.status === 205;
+  const data =
+    !hasNullBody && contentType && contentType.includes("application/json")
+      ? await response.json()
+      : null;
 
   if (response.status === 404) {
     throw new ApiNotFoundError(data?.error?.message || "Not found");

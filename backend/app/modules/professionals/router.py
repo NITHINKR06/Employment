@@ -1,6 +1,6 @@
 """Professionals router — parse request → call service → return response."""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
@@ -121,6 +121,7 @@ async def delete_professional(
     professional_id: str,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Response:
     """Delete a professional profile (owner or admin)."""
     await service.delete_professional(db, user, professional_id)
+    return Response(status_code=204)

@@ -7,9 +7,8 @@ from datetime import datetime
 from urllib.parse import quote
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from ulid import ULID
 
-from app.core.errors import ForbiddenError, NotFoundError, ValidationError
+from app.core.errors import ConflictError, ForbiddenError, NotFoundError, ValidationError
 from app.modules.availability import service as availability_service
 from app.modules.bookings import repository
 from app.modules.bookings.models import Booking, BookingStatus
@@ -64,6 +63,7 @@ def _to_summary_shape(booking: Booking, viewer_role: str) -> dict:
 
     return {
         "_id": booking.id,
+        "professionalId": booking.professional_id,
         "name": counterpart_name,
         "experience": booking.professional.years_experience,
         "status": STATUS_LABELS[booking.status],
@@ -104,27 +104,31 @@ async def create_booking(db: AsyncSession, user: User, data: dict) -> dict:
     ):
         raise ValidationError("Service does not belong to this professional")
 
-    # Pre-generate the id so a slot reservation (which needs a booking_id) can
-    # happen before the Booking row exists — reservation is atomic and, if it
-    # fails, nothing about this booking is ever written.
-    booking_id = str(ULID())
-    scheduled_at = data.get("scheduled_at")
-    if data.get("slot_id"):
-        slot = await availability_service.reserve_slot(db, data["slot_id"], booking_id)
-        scheduled_at = slot.starts_at
-
     booking = await repository.create(
         db,
         {
-            "id": booking_id,
             "user_id": user.id,
             "professional_id": professional.id,
             "service_id": data.get("service_id"),
-            "scheduled_at": scheduled_at,
+            "scheduled_at": data.get("scheduled_at"),
             "address": data.get("address"),
             "notes": data.get("notes"),
         },
     )
+
+    # The slot reservation's booking_id column has a real FK constraint, so
+    # the Booking row must exist before we can point a slot at it — reserve
+    # only after create, and clean up the booking if the slot is already gone.
+    if data.get("slot_id"):
+        try:
+            slot = await availability_service.reserve_slot(db, data["slot_id"], booking.id)
+        except ConflictError:
+            await repository.remove(db, booking.id)
+            raise
+        booking.scheduled_at = slot.starts_at
+        await db.commit()
+        booking = await repository.find_by_id(db, booking.id)  # type: ignore[assignment]
+
     sched = _split_scheduled_at(booking.scheduled_at)
     await sms_service.send_booking_confirmed(
         user.phone, name=user.name, date=sched["date"] or "TBD", time=sched["time"] or "TBD"

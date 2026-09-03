@@ -28,6 +28,8 @@ const GUEST_LINKS = [
 const USER_LINKS = [
   { href: "/user/dashboard", label: "Dashboard" },
   { href: "/user/bookingStatus", label: "Bookings" },
+  { href: "/user/favorites", label: "Favorites" },
+  { href: "/user/disputes", label: "Reports" },
   { href: "/search", label: "Categories" },
   { href: "/user/settings", label: "Settings" },
 ];
@@ -35,6 +37,10 @@ const USER_LINKS = [
 const EMPLOYEE_LINKS = [
   { href: "/employee/dashboard", label: "Dashboard" },
   { href: "/employee/bookingStatus", label: "Bookings" },
+  { href: "/employee/availability", label: "Availability" },
+  { href: "/employee/earnings", label: "Earnings" },
+  { href: "/employee/portfolio", label: "Portfolio" },
+  { href: "/employee/reviews", label: "Reviews" },
   { href: "/search", label: "Categories" },
   { href: "/employee/settings", label: "Settings" },
 ];

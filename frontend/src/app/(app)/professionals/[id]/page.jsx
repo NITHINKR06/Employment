@@ -12,6 +12,8 @@ import VerifiedBadge from "@/components/Badge/VerifiedBadge";
 import Rating from "@/components/Rating/Rating";
 import Chip from "@/components/Chip/Chip";
 import Button from "@/components/Button/Button";
+import FavoriteButton from "@/components/Favorite/FavoriteButton";
+import WorkerCard from "@/components/WorkerCard/WorkerCard";
 import { serverApiFetch, ApiNotFoundError } from "@/lib/serverApiClient";
 
 export async function generateStaticParams() {
@@ -39,6 +41,14 @@ export default async function ProfessionalProfilePage({ params }) {
   const reviewsBody = await serverApiFetch(`/professionals/${id}/reviews`);
   const reviews = reviewsBody.data.reviews;
 
+  let similar = [];
+  try {
+    const similarBody = await serverApiFetch(`/professionals/${id}/similar`);
+    similar = similarBody.data.professionals;
+  } catch {
+    // Non-critical section — render the page without it rather than 500.
+  }
+
   return (
     <div className="container py-10">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -47,7 +57,7 @@ export default async function ProfessionalProfilePage({ params }) {
           {/* Profile Header Banner */}
           <div className="flex flex-col gap-6 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-6 shadow-elevation-1 sm:flex-row sm:items-start">
             <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-full border-4 border-primary/20 shadow-elevation-1">
-              <Image src={worker.avatar} alt={worker.name} fill className="object-cover" />
+              <Image src={worker.avatar || "/profile.jpg"} alt={worker.name} fill className="object-cover" />
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -55,6 +65,7 @@ export default async function ProfessionalProfilePage({ params }) {
                   {worker.name}
                 </h1>
                 {worker.verified && <VerifiedBadge size="md" />}
+                <FavoriteButton professionalId={worker.id} className="ml-1" />
               </div>
               <p className="mt-1 font-display text-label-md font-semibold text-on-surface-variant">
                 {worker.title}
@@ -129,6 +140,7 @@ export default async function ProfessionalProfilePage({ params }) {
                     src={src}
                     alt={`${worker.name} portfolio ${i + 1}`}
                     fill
+                    unoptimized
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-on-surface/20 opacity-0 transition-opacity group-hover:opacity-100" />
@@ -162,11 +174,31 @@ export default async function ProfessionalProfilePage({ params }) {
                       <Rating value={rev.rating} size="sm" />
                     </div>
                     {rev.comment && <p className="mt-2 text-body-md text-on-surface-variant">{rev.comment}</p>}
+                    {rev.professionalResponse && (
+                      <div className="mt-3 rounded-lg bg-surface-container-low p-3 text-body-md text-on-surface-variant">
+                        <p className="text-label-sm font-semibold text-on-surface">
+                          Response from {worker.name}
+                        </p>
+                        <p className="mt-1">{rev.professionalResponse}</p>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
             </div>
           </div>
+
+          {/* Similar Professionals */}
+          {similar.length > 0 && (
+            <div className="rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-6 shadow-elevation-1">
+              <h2 className="font-display text-headline-sm text-on-surface">You may also like</h2>
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {similar.map((s) => (
+                  <WorkerCard key={s.id} worker={s} variant="full" />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Sticky Booking Box */}

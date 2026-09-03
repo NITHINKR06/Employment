@@ -13,6 +13,12 @@ export async function apiFetch(endpoint, options = {}) {
   if (typeof window !== "undefined") {
     try {
       const auth = getFirebaseAuth();
+      // On a fresh page load, Firebase restores the persisted session
+      // asynchronously — auth.currentUser reads null until that finishes, so
+      // a call fired immediately on mount (e.g. from a useEffect) loses this
+      // race and looks logged-out even though the user has a valid session.
+      // authStateReady() resolves once that initial restore has happened.
+      await auth.authStateReady();
       const currentUser = auth.currentUser;
       if (currentUser) {
         const idToken = await currentUser.getIdToken();
@@ -26,7 +32,11 @@ export async function apiFetch(endpoint, options = {}) {
   const response = await fetch(url, { ...options, headers });
   const contentType = response.headers.get("content-type");
   let data = null;
-  if (contentType && contentType.includes("application/json")) {
+  // 204/205 are "null body" statuses per the Fetch spec — browsers discard
+  // whatever bytes the server actually sent, so response.json() on one of
+  // these always throws even when the Content-Type header still says JSON.
+  const hasNullBody = response.status === 204 || response.status === 205;
+  if (!hasNullBody && contentType && contentType.includes("application/json")) {
     data = await response.json();
   }
 

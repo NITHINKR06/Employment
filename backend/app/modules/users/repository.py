@@ -3,7 +3,7 @@
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.users.models import User
+from app.modules.users.models import Role, User
 
 
 async def find_many(db: AsyncSession, *, search: str | None = None) -> list[User]:
@@ -41,13 +41,16 @@ async def upsert_on_login(
     firebase_uid: str,
     email: str,
     name: str,
+    role: Role = Role.USER,
 ) -> User:
-    """Find by firebase_uid; if missing, create with role=USER. Never overwrites role."""
+    """Find by firebase_uid; if missing, create with the given role (defaults to
+    USER). `role` only ever applies to that first creation — an existing user's
+    role is never touched here, by design (this is not a privilege-escalation path)."""
     user = await find_by_firebase_uid(db, firebase_uid)
     if user is not None:
         return user
 
-    user = User(firebase_uid=firebase_uid, email=email, name=name)
+    user = User(firebase_uid=firebase_uid, email=email, name=name, role=role)
     db.add(user)
     await db.commit()
     await db.refresh(user)

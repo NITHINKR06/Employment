@@ -33,6 +33,8 @@ class CreateProfessionalRequest(BaseModel):
     bio: str | None = None
     experience_summary: str | None = None
     location: str | None = None
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
     avatar: str | None = None
     availability: str | None = None
     skills: list[str] = Field(default_factory=list)
@@ -51,6 +53,8 @@ class UpdateProfessionalRequest(BaseModel):
     bio: str | None = None
     experience_summary: str | None = None
     location: str | None = None
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
     avatar: str | None = None
     availability: str | None = None
     skills: list[str] | None = None

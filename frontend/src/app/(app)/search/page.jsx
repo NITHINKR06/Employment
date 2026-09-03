@@ -17,20 +17,24 @@ const ProfessionalsMap = dynamic(() => import("@/components/Search/Professionals
   ),
 });
 
+const BACKEND_SORT_MODES = new Set(["distance", "availability", "most_booked"]);
+
 function SearchPageContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
 
   const [professionals, setProfessionals] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("Bangalore");
+  const [locationQuery, setLocationQuery] = useState("");
+  const [locationError, setLocationError] = useState("");
+  const [nearLat, setNearLat] = useState(null);
+  const [nearLng, setNearLng] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 200 });
   const [minRating, setMinRating] = useState(0);
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [emergencyOnly, setEmergencyOnly] = useState(false);
-  const [sortBy, setSortBy] = useState("recommended");
+  const [sortBy, setSortBy] = useState("rating");
   const [viewMode, setViewMode] = useState("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 6;
@@ -42,9 +46,30 @@ function SearchPageContent() {
   }, [initialCategory]);
 
   useEffect(() => {
+    apiFetch("/categories")
+      .then((body) => {
+        if (body.success && body.data?.categories) {
+          setCategories(body.data.categories);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Server-driven sort modes need a re-fetch (the backend orders the results);
+  // client-side modes (rating/price/experience) just re-sort what's fetched.
+  useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    apiFetch("/professionals")
+    const params = new URLSearchParams();
+    if (BACKEND_SORT_MODES.has(sortBy)) {
+      params.set("sort", sortBy);
+      if (sortBy === "distance" && nearLat != null && nearLng != null) {
+        params.set("nearLat", nearLat);
+        params.set("nearLng", nearLng);
+      }
+    }
+    const query = params.toString();
+    apiFetch(`/professionals${query ? `?${query}` : ""}`)
       .then((body) => {
         if (!cancelled && body.success && body.data?.professionals) {
           setProfessionals(body.data.professionals);
@@ -57,12 +82,30 @@ function SearchPageContent() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [sortBy, nearLat, nearLng]);
 
-  const categories = useMemo(
-    () => [...new Set(professionals.map((p) => p.trade))],
-    [professionals]
-  );
+  const handleLocationSearch = async () => {
+    if (!locationQuery.trim()) {
+      setNearLat(null);
+      setNearLng(null);
+      setLocationError("");
+      return;
+    }
+    setLocationError("");
+    try {
+      const body = await apiFetch(`/geocoding/search?address=${encodeURIComponent(locationQuery)}`);
+      setNearLat(body.data.latitude);
+      setNearLng(body.data.longitude);
+    } catch (err) {
+      setNearLat(null);
+      setNearLng(null);
+      setLocationError(
+        err.status === 404
+          ? "Couldn't find that exact address — try a simpler version, like just the area or city."
+          : "Could not resolve that location"
+      );
+    }
+  };
 
   const results = useMemo(() => {
     let list = professionals.filter((worker) => {
@@ -84,9 +127,13 @@ function SearchPageContent() {
       return matchesSearch && matchesCategory && matchesRate && matchesRating;
     });
 
-    if (sortBy === "rating") list = [...list].sort((a, b) => b.rating - a.rating);
-    if (sortBy === "price") list = [...list].sort((a, b) => a.hourlyRate - b.hourlyRate);
-    if (sortBy === "experience") list = [...list].sort((a, b) => b.yearsExperience - a.yearsExperience);
+    // Backend sort modes already return results in the right order — re-sorting
+    // client-side here would undo e.g. distance ordering.
+    if (!BACKEND_SORT_MODES.has(sortBy)) {
+      if (sortBy === "rating") list = [...list].sort((a, b) => b.rating - a.rating);
+      if (sortBy === "price") list = [...list].sort((a, b) => a.hourlyRate - b.hourlyRate);
+      if (sortBy === "experience") list = [...list].sort((a, b) => b.yearsExperience - a.yearsExperience);
+    }
 
     return list;
   }, [professionals, searchQuery, selectedCategories, priceRange, minRating, sortBy]);
@@ -140,10 +187,27 @@ function SearchPageContent() {
             <input
               type="text"
               placeholder="Bangalore, IN"
+              value={locationQuery}
+              onChange={(e) => setLocationQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleLocationSearch();
+                }
+              }}
+              onBlur={handleLocationSearch}
               className="h-11 w-full bg-transparent text-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none"
             />
           </div>
         </div>
+        {locationError && (
+          <p className="mt-2 text-label-sm font-medium text-error">{locationError}</p>
+        )}
+        {nearLat != null && nearLng != null && !locationError && (
+          <p className="mt-2 text-label-sm text-on-surface-variant">
+            Sorting by distance uses this location — pick &quot;Sort: Distance&quot; below.
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-8 md:flex-row">
@@ -191,6 +255,9 @@ function SearchPageContent() {
                 <option value="rating">Sort: Top Rated</option>
                 <option value="price">Sort: Price (low to high)</option>
                 <option value="experience">Sort: Years of Experience</option>
+                <option value="distance">Sort: Distance (nearest)</option>
+                <option value="availability">Sort: Availability</option>
+                <option value="most_booked">Sort: Most Booked</option>
               </select>
             </div>
           </div>

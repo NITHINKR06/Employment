@@ -2,8 +2,16 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
+
+
+class CreateSessionRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+
+    # Only meaningful the first time this account is ever seen — see
+    # users.service.get_or_create_user. Never lets an existing user change role.
+    role: str | None = Field(default=None, pattern=r"^(USER|EMPLOYEE)$")
 
 
 class UserResponse(BaseModel):

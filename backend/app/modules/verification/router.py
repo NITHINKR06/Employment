@@ -12,6 +12,16 @@ from app.modules.verification.schemas import SubmitVerificationRequest
 router = APIRouter(prefix="/verification", tags=["verification"])
 
 
+@router.get("/requests")
+async def list_pending_requests(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin-only: pending verification requests queue."""
+    data = await service.list_pending_requests(db, user)
+    return {"success": True, "data": {"verificationRequests": data}}
+
+
 @router.post("/requests", status_code=201)
 async def submit_verification_request(
     body: SubmitVerificationRequest,

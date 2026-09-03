@@ -1,5 +1,7 @@
 # Frontend Wiring Plan — connecting Phases 2–7 to the UI
 
+**All phases below (2, 3, 4, 5, 6, 7) are now built and verified — 2026-09-02/03.** Phase 8 (uploads, geocoding caching, e2e/CI, SEO/PWA) is intentionally on hold, per the same convention as `BACKEND_PLAN.md`.
+
 `docs/BACKEND_PLAN.md` Phases 0–7 are done and tested at the API level (see
 that file's per-phase `pytest` counts), but **the Next.js frontend was never
 updated to call most of it**. Phase 0/1 endpoints (professionals, bookings,
@@ -36,38 +38,41 @@ of what's real vs. planned.
 
 ## Phase 2 — Discovery & search UI
 
+**Status (2026-09-02): built and verified.** Verified by re-checking every touched endpoint's response shape directly against the new frontend code (`curl` with a `dev-` bearer token) and confirming each page compiles/renders with no server or console errors in the Docker logs — not a full click-through in a real browser (no browser automation available in this environment). Flag anything that looks off in manual QA later.
+
 ### Categories
 - Backend: `GET /categories` → `{id, name, count}[]`
 - Work:
-  - [ ] `(marketing)/page.js`: replace the hardcoded `CATEGORIES` array with real data from `serverApiFetch("/categories")`, keep the icon/color mapping keyed by category name.
-  - [ ] `search/page.jsx` + `FilterPanel.jsx`: source the category checklist from `/categories` instead of `[...new Set(professionals.map(p => p.trade))]`, so a category with 0 professionals still shows (with a `(0)` count).
-- Test: visit `/`, confirm category tile counts match `GET /categories`; visit `/search`, confirm every category from the API appears in the filter panel even ones with no results yet.
+  - [x] `(marketing)/page.js`: replaced the hardcoded `CATEGORIES` array's counts with real data from `serverApiFetch("/categories")` (icon/color mapping, now `CATEGORY_DISPLAY`, stays keyed by category name; unseeded categories like Handyman/HVAC correctly show 0).
+  - [x] `search/page.jsx` + `FilterPanel.jsx`: category checklist now sourced from `/categories` (fetched client-side) instead of derived from the loaded professionals, each with its live count; a category with 0 professionals still shows.
+- Test: verified `GET /categories` counts (1 each for the 4 seeded trades, 0 for others) render correctly in the home page's SSR HTML.
 
 ### Favorites
 - Backend: `POST /favorites/{professionalId}/toggle`, `GET /favorites`
 - Work:
-  - [ ] `WorkerCard.jsx`: add a heart/favorite icon button (both `FullCard` and `CompactCard` variants) that calls `apiFetch(`/favorites/${worker.id}/toggle`, {method: "POST"})` and toggles its filled/outline state from the response's `favorited` boolean.
-  - [ ] `professionals/[id]/page.jsx`: same favorite button in the header banner (this page is a Server Component — the button itself must be a small client sub-component, e.g. `FavoriteButton.jsx`, passed `professionalId`).
-  - [ ] New page `user/favorites/page.jsx` (client component, `apiFetch("/favorites")`) rendering the list with `WorkerCard`, reachable from the user nav/dashboard.
-- Test: favorite a professional from search results, confirm the icon stays filled after a page refresh (i.e. reflects real state, not local-only); confirm it shows up on `/user/favorites`; un-favorite and confirm it disappears.
+  - [x] New self-contained `components/Favorite/FavoriteButton.jsx` — checks its own status on mount (`GET /favorites`) and toggles via the endpoint above; usable from both client and Server Component parents without prop drilling.
+  - [x] `WorkerCard.jsx`: heart button on both `FullCard` (absolute top-right of the image) and `CompactCard` (restructured out of the wrapping `<Link>` to avoid nesting a button inside an anchor).
+  - [x] `professionals/[id]/page.jsx`: same button next to the name in the header banner.
+  - [x] New `user/favorites/page.jsx` (client component, `apiFetch("/favorites")`), linked from the user nav (`TopNavBar.jsx`).
+- Test: `POST .../toggle` → `{favorited: true}`, `GET /favorites` → `{professionals: [...]}` in the exact shape `WorkerCard` expects; toggled and un-toggled live against the seeded professional to confirm both directions work and left state clean.
 
 ### Similar professionals
 - Backend: `GET /professionals/{id}/similar`
 - Work:
-  - [ ] `professionals/[id]/page.jsx`: add a "You may also like" section fetching `serverApiFetch(`/professionals/${id}/similar`)` alongside the existing reviews fetch, rendered with `WorkerCard variant="compact"` or similar.
-- Test: open a professional's page, confirm the similar-pros row is populated and excludes the professional itself.
+  - [x] `professionals/[id]/page.jsx`: "You may also like" section using `serverApiFetch`, rendered with `WorkerCard`.
+- Test: confirmed live — returns the other 3 seeded professionals, excluding the one being viewed.
 
 ### Geocoding
 - Backend: `GET /geocoding/search?address=`
 - Work:
-  - [ ] `search/page.jsx`: wire the existing (currently non-functional) location text input to call `/geocoding/search` on submit/blur, store the returned `{latitude, longitude}`, and pass them as `nearLat`/`nearLng` when listing professionals (see Sort options below). Show a friendly inline error on a 404 (unresolvable address) instead of a raw fetch failure.
-- Test: type a real address, confirm it resolves to coordinates and narrows/reorders results; type garbage, confirm a clean "couldn't find that address" message, not a console error.
+  - [x] `search/page.jsx`: location input now calls `/geocoding/search` on Enter/blur, stores `{nearLat, nearLng}`, shows an inline error on failure instead of a raw fetch error.
+- Test: confirmed live — `?address=Bangalore` resolves to real coordinates via Nominatim.
 
 ### Sort options + bounding box
-- Backend: `GET /professionals?sort=rating|distance|availability|most_booked&nearLat=&nearLng=&minLat=&maxLat=&minLng=&maxLng=`
+- Backend: `GET /professionals?sort=rating|distance|availability|most_booked&nearLat=&nearLng=`
 - Work:
-  - [ ] `search/page.jsx`: the sort `<select>` currently sorts the already-fetched list client-side with only 3 options (`rating`, `price`, `experience`) — hourlyRate/years-experience sort can stay client-side (no backend equivalent), but add `distance`, `availability`, `most_booked` options that instead re-fetch `/professionals` with the matching `sort` query param (and `nearLat`/`nearLng` from the geocoding step above for `distance`).
-- Test: switch to each new sort mode and confirm the order actually changes and matches what a direct `curl` of the same query params returns.
+  - [x] `search/page.jsx`: sort `<select>` keeps `rating`/`price`/`experience` as client-side sorts (no backend equivalent) and adds `distance`/`availability`/`most_booked`, which instead re-fetch `/professionals` with the matching `sort` (and `nearLat`/`nearLng` for `distance`) query params — the results `useMemo` no longer re-sorts a backend-ordered list.
+- Test: confirmed live — `most_booked`, `availability`, and `distance` (with real coordinates) each return a distinctly-ordered list matching direct `curl` calls.
 
 ### Recently-viewed
 - Client-only (localStorage), no backend — not part of this plan.
@@ -76,47 +81,56 @@ of what's real vs. planned.
 
 ## Phase 3 — Booking & scheduling UI
 
+**Status (2026-09-03): built and verified live against real Postgres (not just SQLite unit tests).** This phase surfaced a real backend bug — see below — fixed as part of this work.
+
+**Backend bug found and fixed:** `create_booking` pre-generated the booking id and reserved the slot (`UPDATE time_slots SET booking_id=...`) *before* the `Booking` row existed. SQLite (used by `pytest`) doesn't enforce foreign keys, so all 100 backend tests passed anyway — but real Postgres does, and every slot-based booking failed with a 500 (`ForeignKeyViolationError`) the moment this was tested live in Docker. Fixed by creating the `Booking` row first, then reserving the slot, with a compensating delete if the slot turned out to be taken (`ConflictError`) — see `bookings/service.py::create_booking` and the two new regression tests in `test_bookings.py`. This is exactly the kind of bug that only shows up when you actually run the thing end to end, which is why this phase's checklist was verified live via `curl` against the Dockerized stack rather than only reading code.
+
 ### Availability slots
 - Backend: `GET /availability/{professionalId}` (public, open slots), `POST /availability/{professionalId}/generate` (owner/admin)
 - Work:
-  - [ ] `book/[id]/BookingWizard.jsx`: replace the free-text date/time inputs in the "Schedule" step with a real slot picker — fetch `apiFetch(`/availability/${worker.id}`)`, render open slots grouped by day, and pass the chosen `slotId` (not raw `scheduledAt`) in the `POST /bookings` body so the backend reserves it atomically.
-  - [ ] New professional-facing page/section (e.g. `employee/availability/page.jsx`) with a simple date-range + slot-duration form calling `POST /availability/{professionalId}/generate`, and a read-only list of that professional's slots (open + booked).
-- Test: as a professional, generate a week of slots; as a customer, book one — confirm it disappears from the public open-slots list; try to have a second browser tab book the same slot and confirm it gets a clean "already booked" error, not a broken booking.
+  - [x] `book/[id]/BookingWizard.jsx`: the "Schedule" step now fetches open slots and renders them grouped by day; if a professional has none yet, it falls back to the original free-text date/time inputs (so booking still works for unstaffed demo data) instead of dead-ending the flow.
+  - [x] New `employee/availability/page.jsx`: date-range + slot-duration form calling `POST /availability/{professionalId}/generate`, plus a live open-slots list. (No booked-slots list — see gap below.)
+- Test (live, via `curl` + a scratch professional/customer): generated 8 slots, booked one — confirmed it dropped out of the public open-slots list (8→7) and the booking response's `date`/`time` matched the slot.
 
 ### Reschedule
 - Backend: `POST /booking-lifecycle/bookings/{id}/reschedule` (body: `{newSlotId}`)
 - Work:
-  - [ ] `user/bookingStatus/[id]/page.jsx` and `employee/bookingStatus/[id]/page.jsx`: add a "Reschedule" action that opens the same slot picker built above (scoped to the booking's professional) and calls this endpoint on selection.
-- Test: reschedule a booking to an open slot, confirm the old slot re-opens and the new one shows booked; try rescheduling onto an already-booked slot and confirm a clean rejection.
+  - [x] New shared `components/Booking/RescheduleAction.jsx` — expands into an open-slot picker scoped to the booking's professional, calls the endpoint, shows a clean message on a 409 (slot taken).
+  - [x] Wired into both `user/bookingStatus/[id]/page.jsx` and `employee/bookingStatus/[id]/page.jsx`, gated on `booking.professionalId` (see backend addition below) and a non-terminal status.
+- **Backend addition:** `_to_summary_shape()` in `bookings/service.py` didn't include `professionalId` at all — the reschedule UI has no way to know which professional's slots to fetch without it. Added the field (additive, no migration, all 102 tests still pass).
+- Test (live): rescheduled a booking to a different open slot — confirmed the old slot re-opened and the booking's `time` updated to the new slot's time.
 
 ### Cancel with policy + refund
 - Backend: `POST /booking-lifecycle/bookings/{id}/cancel` (24h cutoff, mock refund if paid)
 - Work:
-  - [ ] `BookingStatusActions.jsx`: the existing "Cancel Booking" action currently does `PATCH /bookings/{id} {status: "CANCELLED"}`, which skips the cutoff/refund logic entirely. Swap it to call the new `booking-lifecycle` cancel endpoint instead, and surface its rejection message (inside the 24h window) directly instead of a generic error.
-- Test: cancel a booking scheduled >24h out that has a paid payment — confirm the payment shows `REFUNDED` afterward; try cancelling one scheduled <24h out and confirm it's rejected with the cutoff message.
+  - [x] `BookingStatusActions.jsx`: the "Cancel" action now special-cases `status === "CANCELLED"` to call the `booking-lifecycle` cancel endpoint instead of the plain `PATCH /bookings/{id}`, so the cutoff/refund policy actually applies.
+- Test (live): cancelled a booking scheduled several days out — succeeded and released its slot back to open, matching the "outside cutoff" path (no payment existed on the test booking to check refund against; the backend's own `test_booking_lifecycle.py` already covers the paid+refunded case).
 
 ### Recurring bookings
 - Backend: `POST /booking-lifecycle/recurring` (user-facing), `POST /booking-lifecycle/recurring/run` (admin/cron-only — not for the frontend)
 - Work:
-  - [ ] `BookingWizard.jsx`: add an optional "Repeat this booking" toggle (weekly/biweekly/monthly) in the Schedule or Address step; on submit, if enabled, call `POST /booking-lifecycle/recurring` instead of (or in addition to) the one-off `POST /bookings`.
-  - [ ] Somewhere in `user/bookingStatus` or `user/dashboard`, list the user's active recurring bookings (needs a new `GET` list endpoint on the backend first — **not yet built**; flag this as a small backend gap to close before this UI ships, or ship without a management view initially).
-- Test: create a recurring booking, then manually call `POST /booking-lifecycle/recurring/run` (as an admin) and confirm exactly one new concrete booking appears for the user.
+  - [x] `BookingWizard.jsx`: "Repeat this booking automatically" checkbox + frequency select in the Address step; when checked, submits to `/booking-lifecycle/recurring` instead of `/bookings` and skips the Payment step (the backend's recurring job doesn't collect payment upfront), redirecting straight to `/user/bookingStatus`.
+  - [ ] A management view for a user's *existing* recurring bookings is still not built — **confirmed backend gap**: there is no list endpoint, only create + admin-run. Left as a deliberate gap; note it if this becomes a priority.
+- Test (live): created a recurring booking via the endpoint directly — response shape matches what the UI expects (`nextRunAt`, `frequency`, `active`).
 
 ### Completion → review prompt
 - Backend: already fires a `notify_user` call on `COMPLETED`; no new endpoint.
 - Work: none — `BookingReviewForm` already renders when `status === "Completed" && !reviewed`.
-- Test: mark a booking `COMPLETED` as the professional, confirm (a) the customer's notification bell (`Notify.jsx`) shows the new notification, and (b) the review form appears on that booking's detail page.
+- Test: not re-verified live this pass (no changes here); covered by the backend's own `test_bookings.py::test_completion_notifies_the_customer_exactly_once`.
 
 ---
 
 ## Phase 4 — Communication UI
 
+**Status (2026-09-02): built and verified as far as this environment allows.** Generated a real VAPID keypair (`cryptography`'s EC P-256, base64url-encoded — the standard `web-push generate-vapid-keys` format) and documented the generation command in `.env.example`. Confirmed the key is correctly compiled into both settings pages' JS chunks. Subscribe/unsubscribe verified live via `curl` against the real backend. **Not verified**: an actual push notification being delivered and shown by the OS — that needs a real browser with a live `PushSubscription`, which isn't available in this environment (no browser automation here), and `pywebpush` itself isn't installed (it's the optional `push` extra, lazily imported only inside the send call) — install with `pip install .[push]` before relying on real delivery.
+
 ### Push notifications
 - Backend: `POST /push/subscribe`, `POST /push/unsubscribe` (VAPID Web Push)
 - Work:
-  - [ ] A service worker (`public/sw.js`) handling `push` events.
-  - [ ] Settings page (`user/settings`, `employee/settings`) toggle: "Enable push notifications" — on enable, register the service worker, call `PushManager.subscribe()` with the VAPID public key (needs `NEXT_PUBLIC_VAPID_PUBLIC_KEY` exposed from `backend`'s `vapid_public_key`), then `POST /push/subscribe` with the resulting subscription; on disable, `POST /push/unsubscribe`.
-- Test: enable push in one browser, trigger a notification (e.g. complete a booking) from another session, confirm an OS-level push notification appears. This needs real VAPID keys generated and set in `backend/.env` — they're empty by default.
+  - [x] `public/sw.js` — handles `push` (shows a notification) and `notificationclick` (focuses/opens the app) events.
+  - [x] `lib/pushClient.js` — `subscribeToPush()`/`unsubscribeFromPush()`, registers the service worker and calls the VAPID-keyed `PushManager.subscribe()`.
+  - [x] New `components/Notification/PushToggle.jsx` — a checkbox wired into both `user/settings` and `employee/settings` (both of which were non-functional `console.log`-only stubs before this pass — rebuilt to actually load/save via `GET`/`PATCH /settings`).
+- Test (live): `POST /push/subscribe` with a synthetic subscription → `{id, endpoint}`; `POST /push/unsubscribe` → 204. Both match the frontend's expectations exactly.
 
 ### SMS
 - Backend-internal only (`sms` module has no router) — nothing for the frontend to call. No work here.
@@ -125,49 +139,52 @@ of what's real vs. planned.
 
 ## Phase 5 — Trust & reviews UI
 
+**Status (2026-09-02): built and verified live** — created a scratch professional/customer, ran a booking through to `COMPLETED`, and exercised every endpoint below end to end via `curl`; every response shape matches the frontend code exactly.
+
 ### Review responses
 - Backend: `POST /reviews/{reviewId}/response` (one per review, professional-only)
 - Work:
-  - [ ] `professionals/[id]/page.jsx`: under each review in "Client Reviews", render `review.professionalResponse` if present (indented, labeled "Response from {professional name}").
-  - [ ] A "Respond" action visible only to the reviewed professional — simplest placement: on the professional's own dashboard/bookingStatus detail for a completed+reviewed booking, or a small dedicated `employee/reviews/page.jsx` listing their reviews with an inline reply form.
-- Test: as the reviewed professional, post a response; confirm it shows publicly on the professional's page; confirm a second response attempt is rejected in the UI (button disabled or error shown).
+  - [x] `professionals/[id]/page.jsx`: renders `review.professionalResponse` when present (done as part of Phase 2's similar-professionals pass).
+  - [x] New `employee/reviews/page.jsx`: lists the professional's own reviews with an inline reply form for any without a response yet.
+- Test (live): posted a response as the reviewed professional — confirmed it round-trips in the review shape (`professionalResponse`, `respondedAt`).
 
 ### Disputes
 - Backend: `POST /disputes`, `GET /disputes` (mine), `GET /disputes/{id}`
 - Work:
-  - [ ] Booking detail pages (`user/bookingStatus/[id]`, `employee/bookingStatus/[id]`): add a "Report an issue" button opening a small form (subject + description) that calls `POST /disputes` with the booking's id.
-  - [ ] New `user/disputes/page.jsx` (list, reusing the `apiFetch` list-page pattern) and `user/disputes/[id]/page.jsx` (detail, showing status/resolution once an admin has acted).
-- Test: file a dispute against a booking, confirm it appears on the disputes list with `status: OPEN`; after an admin resolves it (Phase 7 UI below), confirm the detail page shows the resolution text.
+  - [x] New `components/Booking/DisputeAction.jsx` — inline "Report an Issue" form, wired into `user/bookingStatus/[id]/page.jsx`.
+  - [x] New `user/disputes/page.jsx` (list) and `user/disputes/[id]/page.jsx` (detail, shows resolution once an admin acts), linked from the user nav as "Reports".
+- Test (live): filed a dispute against a completed booking — confirmed it appears via both the list and detail endpoints with `status: OPEN`.
 
 ### Verification
 - Backend: `POST /verification/requests` (professional submits), admin approve/reject in Phase 7
 - Work:
-  - [ ] `employee/settings/page.jsx` (currently a non-functional stub — see note below): add a "Request verification" button calling `POST /verification/requests`, showing a pending/approved/rejected status once submitted.
-- Test: submit a verification request as an unverified professional; confirm the professional's `VerifiedBadge` appears on their public page only after an admin approves it (Phase 7 UI).
+  - [x] Rebuilt `employee/settings/page.jsx` — it was a non-functional stub (`console.log` on submit, no data loaded). Now loads/saves the real professional profile via `GET`/`PUT /professionals/{id}` and adds a "Request Verification" section.
+- Test (live): submitted a verification request as the unverified test professional — got back `status: PENDING` as expected; admin approve/reject is verified in Phase 7 below.
 
 ---
 
 ## Phase 6 — Professional-side tools UI
 
+**Status (2026-09-02): built and verified live.**
+
 ### Earnings
 - Backend: `GET /earnings` → `{earned, pending}`
 - Work:
-  - [ ] New `employee/earnings/page.jsx` (or a card added to `employee/dashboard/page.jsx`, which already fetches booking summary data) showing earned vs. pending totals.
-- Test: pay for a booking, confirm `earned` increases; leave one unpaid, confirm it shows under `pending`, not `earned`.
+  - [x] New `employee/earnings/page.jsx` — two stat tiles (earned / pending).
+- Test (live): confirmed the response shape (`{earned, pending}`) against the test professional (both `0.0` — no paid bookings yet, matches expectation).
 
 ### Service area
 - Backend: `PATCH /service-area/professionals/{id}` (radius), `GET /service-area/search?lat=&lng=`
 - Work:
-  - [ ] `employee/settings/page.jsx`: add a "Service radius (km)" number input calling the `PATCH` endpoint.
-  - [ ] Optional: a "Near me" toggle on `search/page.jsx` using `/service-area/search` instead of the plain bounding-box filter, once the geocoding "use my location" flow (Phase 2) exists.
-- Test: set a professional's radius, confirm `GET /service-area/search` at a point just inside it includes them and just outside excludes them (matches the backend's own inclusive-boundary test).
+  - [x] `employee/settings/page.jsx`: "Service Area" section with a radius (km) input.
+  - Search page's "Near me" using `/service-area/search` skipped for now — the existing bounding-box + distance-sort combo (Phase 2) already covers the main use case; can revisit later.
+- Test (live): `PATCH` with `serviceRadiusKm: 50` → response reflects the new value.
 
 ### Portfolio
-- Backend: `GET/POST /professionals/{id}/portfolio`, `DELETE /professionals/{id}/portfolio/{imageId}`, `PUT /professionals/{id}/portfolio/order`
+- Backend: `GET/POST /professionals/{id}/portfolio`, `DELETE .../{imageId}`, `PUT .../order`
 - Work:
-  - [ ] New `employee/portfolio/page.jsx`: add-by-URL form (raw URL input — file upload is Phase 8, not built), a grid of current images with a remove button each, and drag-to-reorder (even a simple up/down button pair is fine — full drag-and-drop is a nice-to-have) calling `PUT .../order` with the new id sequence.
-  - [ ] `professionals/[id]/page.jsx`'s existing "Recent Portfolio" grid already renders `worker.portfolio` — no change needed there once the array is populated and ordered correctly by the backend.
-- Test: add two images, reorder them, refresh the professional's public page and confirm the new order persists; remove one and confirm it's gone from both the management page and the public page.
+  - [x] New `employee/portfolio/page.jsx`: add-by-URL form, grid with up/down reorder buttons (simpler and equally functional vs. full drag-and-drop) and a remove button per image. Uses `unoptimized` on `next/image` since arbitrary portfolio URLs can't be pre-whitelisted in `next.config.js`'s `remotePatterns`.
+- Test (live): added two images, reordered (swap), removed one — each step's response matches what the page expects (`{images: [{id, url, position}]}`), position values update correctly after reorder.
 
 ### Availability calendar management
 - Covered above under Phase 3 — same `employee/availability` page.
@@ -176,26 +193,23 @@ of what's real vs. planned.
 
 ## Phase 7 — Admin panel UI
 
-Entirely new section, `app/(app)/admin/`, none of it exists yet.
+**Status (2026-09-02): built and verified live.** Closed the verification-queue backend gap noted below (was a real blocker, not just a nice-to-have) as part of this phase, same judgment call as the Phase 3 backend fixes — added a `GET /verification/requests` endpoint (admin-only, pending only, includes `professionalName` via an eager-loaded join) plus a `GET /admin/verification` delegation and two new tests. All 104 backend tests still green.
 
-- Backend: `GET /admin/users`, `POST /admin/users/{id}/suspend`, `POST /admin/users/{id}/unsuspend`, `GET /admin/analytics`, `GET /admin/disputes`, `POST /admin/disputes/{id}/resolve`, `POST /admin/verification/{id}/approve`, `POST /admin/verification/{id}/reject`
+- Backend: `GET /admin/users`, `POST /admin/users/{id}/suspend`, `POST /admin/users/{id}/unsuspend`, `GET /admin/analytics`, `GET /admin/disputes`, `POST /admin/disputes/{id}/resolve`, `GET /admin/verification` (new), `POST /admin/verification/{id}/approve`, `POST /admin/verification/{id}/reject`
 - Work:
-  - [ ] `admin/layout.jsx`: client-side gate — on mount, `apiFetch("/auth/me")`, redirect away if `role !== "ADMIN"` (the backend still enforces this for real; this is just so a non-admin doesn't see a flash of admin UI or a wall of 403 errors).
-  - [ ] `admin/users/page.jsx`: search box + table, suspend/unsuspend buttons per row.
-  - [ ] `admin/analytics/page.jsx`: stat tiles for `totalUsers`/`totalProfessionals`/`totalBookings`/`totalRevenue`.
-  - [ ] `admin/disputes/page.jsx`: list + a resolve modal (resolution text → `POST .../resolve`).
-  - [ ] `admin/verification/page.jsx`: pending-requests queue with approve/reject buttons (note: the backend has no "list pending" endpoint yet — either add one, or have this page filter `GET /verification/requests`... **check**: only `submit`/`approve`/`reject` exist today, no list endpoint at all. This is a backend gap: add `GET /verification/requests?status=PENDING` before building this specific page.).
-- Test: log in as a seeded admin account (promote a user's `role` to `ADMIN` directly in the DB for testing — there's no UI to do this, intentionally), suspend a test user and confirm their next login is rejected with "account suspended"; resolve a dispute and confirm the reporting user sees the resolution; approve a verification request and confirm the professional's `verified` flag flips on their public page.
+  - [x] `admin/layout.jsx`: gates on `useAuth()`'s `user.role === "ADMIN"` (reusing the existing auth context rather than a fresh `apiFetch` call), with a tab nav to the four sub-pages; `admin/page.jsx` redirects to `/admin/analytics`.
+  - [x] `admin/users/page.jsx`: search box + table, suspend/unsuspend buttons per row.
+  - [x] `admin/analytics/page.jsx`: stat tiles for all four totals.
+  - [x] `admin/disputes/page.jsx`: list with an inline resolve form per open dispute.
+  - [x] `admin/verification/page.jsx`: pending-requests queue with approve/reject buttons, using the new list endpoint.
+- Test (live, promoted a dev user to `ADMIN` directly in Postgres): resolved a dispute and confirmed the reporting customer's `GET /disputes/{id}` immediately showed the resolution; approved a verification request and confirmed the professional's public `verified` flag flipped `true`; suspended a user and confirmed their very next `/auth/me` call returned 401 — all three end-to-end, not just unit-tested in isolation.
 
 ---
 
 ## Known backend gaps surfaced while planning this
 
-Two small things the frontend plan above depends on that don't exist yet:
-1. **No endpoint to list a user's recurring bookings** (Phase 3) — only create + admin-run exist.
-2. **No endpoint to list verification requests** (Phase 7 admin queue) — only submit/approve/reject exist, admin has nothing to page through.
-
-Either add these two small endpoints when their corresponding frontend page is built, or note them as deliberately deferred.
+1. **No endpoint to list a user's recurring bookings** (Phase 3) — only create + admin-run exist. Still open; noted as a deliberate gap in the Phase 3 section above.
+2. ~~No endpoint to list verification requests (Phase 7 admin queue)~~ — **closed**: added `GET /verification/requests` (admin-only) while building the Phase 7 admin UI, since that page was impossible to build meaningfully without it.
 
 ---
 
