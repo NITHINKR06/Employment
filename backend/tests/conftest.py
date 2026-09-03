@@ -186,7 +186,9 @@ async def make_time_slot(db: AsyncSession, make_professional):
     ) -> TimeSlot:
         if professional is None:
             professional = await make_professional()
-        starts_at = starts_at or datetime(2026, 1, 1, 9, 0)
+        # Each call defaults to its own hour slot — same professional_id +
+        # starts_at is now rejected by a DB uniqueness constraint.
+        starts_at = starts_at or (datetime(2026, 1, 1, 9, 0) + timedelta(hours=_counter))
         ends_at = ends_at or (starts_at + timedelta(hours=1))
         slot = TimeSlot(
             id=_next_id(),

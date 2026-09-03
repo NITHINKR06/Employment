@@ -129,10 +129,7 @@ export default function EmployeeAvailabilityPage() {
               <ol className="list-decimal space-y-1 pl-4">
                 <li>Pick a start and end date, and a slot length.</li>
                 <li>Click &quot;Generate&quot; — it creates bookable slots every day in that range, 9am to 5pm.</li>
-                <li>
-                  Use a fresh date range each time (e.g. next week) — re-generating over dates
-                  you&apos;ve already covered creates duplicate slots instead of skipping them.
-                </li>
+                <li>It&apos;s safe to run again later to extend your range — dates you&apos;ve already covered are skipped, not duplicated.</li>
               </ol>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
