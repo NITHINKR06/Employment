@@ -82,7 +82,9 @@ export default function EmployeeSettingsPage() {
     } catch (err) {
       setCoords(null);
       setGeocodeError(
-        err.status === 404 ? "Couldn't find that address" : "Could not resolve that location"
+        err.status === 404
+          ? "Couldn't find that exact address — try a simpler version, like just the street, area, or city."
+          : "Could not resolve that location"
       );
     } finally {
       setIsGeocoding(false);

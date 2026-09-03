@@ -19,7 +19,17 @@ export default function LocationPickerMap({ latitude, longitude }) {
   const position = [latitude, longitude];
   return (
     <div className="h-56 w-full overflow-hidden rounded-lg border border-outline-variant">
-      <MapContainer center={position} zoom={14} scrollWheelZoom={false} className="h-full w-full">
+      {/* react-leaflet only applies `center`/`zoom` on MapContainer's first
+          mount — it won't re-pan an already-mounted map when they change on a
+          later render. Keying on the coordinates forces a full remount (and
+          therefore a re-center) every time a new address is located. */}
+      <MapContainer
+        key={`${latitude},${longitude}`}
+        center={position}
+        zoom={14}
+        scrollWheelZoom={false}
+        className="h-full w-full"
+      >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

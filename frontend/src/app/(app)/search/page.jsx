@@ -100,7 +100,9 @@ function SearchPageContent() {
       setNearLat(null);
       setNearLng(null);
       setLocationError(
-        err.status === 404 ? "Couldn't find that address" : "Could not resolve that location"
+        err.status === 404
+          ? "Couldn't find that exact address — try a simpler version, like just the area or city."
+          : "Could not resolve that location"
       );
     }
   };
