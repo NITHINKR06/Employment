@@ -1,6 +1,6 @@
 """Push subscription router."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
@@ -27,5 +27,10 @@ async def unsubscribe(
     body: UnsubscribeRequest,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Response:
+    # An explicit empty Response, not `return None` — FastAPI would otherwise
+    # serialize None to a literal "null" body with a JSON content-type, which
+    # browsers pair with a 204's spec-mandated null body and then choke trying
+    # to JSON.parse an empty string.
     await service.unsubscribe(db, user, body.endpoint)
+    return Response(status_code=204)

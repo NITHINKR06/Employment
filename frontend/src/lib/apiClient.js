@@ -26,7 +26,11 @@ export async function apiFetch(endpoint, options = {}) {
   const response = await fetch(url, { ...options, headers });
   const contentType = response.headers.get("content-type");
   let data = null;
-  if (contentType && contentType.includes("application/json")) {
+  // 204/205 are "null body" statuses per the Fetch spec — browsers discard
+  // whatever bytes the server actually sent, so response.json() on one of
+  // these always throws even when the Content-Type header still says JSON.
+  const hasNullBody = response.status === 204 || response.status === 205;
+  if (!hasNullBody && contentType && contentType.includes("application/json")) {
     data = await response.json();
   }
 
