@@ -140,6 +140,7 @@ export default async function ProfessionalProfilePage({ params }) {
                     src={src}
                     alt={`${worker.name} portfolio ${i + 1}`}
                     fill
+                    unoptimized
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-on-surface/20 opacity-0 transition-opacity group-hover:opacity-100" />
