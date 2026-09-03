@@ -13,6 +13,12 @@ export async function apiFetch(endpoint, options = {}) {
   if (typeof window !== "undefined") {
     try {
       const auth = getFirebaseAuth();
+      // On a fresh page load, Firebase restores the persisted session
+      // asynchronously — auth.currentUser reads null until that finishes, so
+      // a call fired immediately on mount (e.g. from a useEffect) loses this
+      // race and looks logged-out even though the user has a valid session.
+      // authStateReady() resolves once that initial restore has happened.
+      await auth.authStateReady();
       const currentUser = auth.currentUser;
       if (currentUser) {
         const idToken = await currentUser.getIdToken();
