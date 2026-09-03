@@ -77,6 +77,20 @@ async def test_update_403_for_non_owner(db, make_user, make_professional):
 
 
 @pytest.mark.asyncio
+async def test_update_persists_latitude_and_longitude(db, make_user, make_professional):
+    """Updating a professional's location can also set its geocoded coordinates."""
+    owner = await make_user(role=Role.EMPLOYEE)
+    pro = await make_professional(user=owner)
+
+    result = await service.update_professional(
+        db, owner, pro.id, {"location": "Nitte, Karnataka", "latitude": 13.1723, "longitude": 74.9298}
+    )
+
+    assert result["latitude"] == 13.1723
+    assert result["longitude"] == 74.9298
+
+
+@pytest.mark.asyncio
 async def test_delete_403_for_non_owner(db, make_user, make_professional):
     """Delete raises 403 when the caller doesn't own the professional profile."""
     owner = await make_user(role=Role.EMPLOYEE)

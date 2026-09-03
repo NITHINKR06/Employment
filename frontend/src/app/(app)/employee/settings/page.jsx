@@ -1,11 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
 import VerifiedBadge from "@/components/Badge/VerifiedBadge";
 import PushToggle from "@/components/Notification/PushToggle";
 import { apiFetch } from "@/lib/apiClient";
+
+const LocationPickerMap = dynamic(() => import("@/components/Search/LocationPickerMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-56 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-low">
+      <p className="text-label-sm text-on-surface-variant">Loading map...</p>
+    </div>
+  ),
+});
 
 export default function EmployeeSettingsPage() {
   const [professional, setProfessional] = useState(null);
@@ -22,6 +32,9 @@ export default function EmployeeSettingsPage() {
   const [isSavingRadius, setIsSavingRadius] = useState(false);
   const [radiusError, setRadiusError] = useState("");
   const [radiusSaved, setRadiusSaved] = useState(false);
+  const [coords, setCoords] = useState(null); // { latitude, longitude } | null
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -42,6 +55,9 @@ export default function EmployeeSettingsPage() {
           bio: pro.bio ?? "",
         });
         setServiceRadiusKm(pro.serviceRadiusKm ?? 25);
+        if (pro.latitude != null && pro.longitude != null) {
+          setCoords({ latitude: pro.latitude, longitude: pro.longitude });
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -55,6 +71,23 @@ export default function EmployeeSettingsPage() {
       cancelled = true;
     };
   }, []);
+
+  const handleLocateOnMap = async () => {
+    if (!form.location.trim()) return;
+    setGeocodeError("");
+    setIsGeocoding(true);
+    try {
+      const body = await apiFetch(`/geocoding/search?address=${encodeURIComponent(form.location)}`);
+      setCoords({ latitude: body.data.latitude, longitude: body.data.longitude });
+    } catch (err) {
+      setCoords(null);
+      setGeocodeError(
+        err.status === 404 ? "Couldn't find that address" : "Could not resolve that location"
+      );
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -71,6 +104,7 @@ export default function EmployeeSettingsPage() {
           hourlyRate: Number(form.hourlyRate) || 0,
           location: form.location,
           bio: form.bio,
+          ...(coords ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
         }),
       });
       if (!body.success || !body.data?.professional) {
@@ -158,7 +192,39 @@ export default function EmployeeSettingsPage() {
           value={form.hourlyRate}
           onChange={(e) => setForm({ ...form, hourlyRate: e.target.value })}
         />
-        <TextField id="location" label="Location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+        <div>
+          <div className="flex items-end gap-3">
+            <TextField
+              id="location"
+              label="Location"
+              className="flex-1"
+              value={form.location}
+              onChange={(e) => {
+                setForm({ ...form, location: e.target.value });
+                setCoords(null); // stale pin — re-locate before saving if the text changed
+              }}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleLocateOnMap}
+              disabled={isGeocoding || !form.location.trim()}
+            >
+              {isGeocoding ? "Locating..." : "Locate on Map"}
+            </Button>
+          </div>
+          {geocodeError && (
+            <p className="mt-1.5 text-label-sm font-semibold text-error">{geocodeError}</p>
+          )}
+          {coords && (
+            <div className="mt-3">
+              <LocationPickerMap latitude={coords.latitude} longitude={coords.longitude} />
+              <p className="mt-1.5 text-label-sm text-on-surface-variant">
+                This pin is what customers will see on the search map — save to confirm it.
+              </p>
+            </div>
+          )}
+        </div>
         <div>
           <label className="mb-1.5 block text-label-md text-on-surface" htmlFor="bio">
             Bio
