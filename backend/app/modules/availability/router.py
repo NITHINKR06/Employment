@@ -39,3 +39,14 @@ async def list_open_slots(
     """List a professional's open (unbooked) time slots (public)."""
     data = await service.list_open_slots(db, professional_id)
     return {"success": True, "data": {"slots": data}}
+
+
+@router.delete("/{professional_id}")
+async def delete_all_open_slots(
+    professional_id: str,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete all of a professional's open (unbooked) slots (owner or admin)."""
+    deleted_count = await service.delete_open_slots(db, user, professional_id)
+    return {"success": True, "data": {"deletedCount": deleted_count}}
