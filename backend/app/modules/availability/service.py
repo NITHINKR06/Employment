@@ -58,6 +58,15 @@ async def list_open_slots(db: AsyncSession, professional_id: str) -> list[dict]:
     return [_to_shape(s) for s in slots]
 
 
+async def delete_open_slots(db: AsyncSession, user: User, professional_id: str) -> int:
+    professional = await professionals_repository.find_by_id(db, professional_id)
+    if professional is None:
+        raise NotFoundError("Professional not found")
+    if professional.user_id != user.id and user.role.value != "ADMIN":
+        raise ForbiddenError()
+    return await repository.delete_open_slots(db, professional_id)
+
+
 async def reserve_slot(db: AsyncSession, slot_id: str, booking_id: str) -> TimeSlot:
     slot = await repository.find_by_id(db, slot_id)
     if slot is None:

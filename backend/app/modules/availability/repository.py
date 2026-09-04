@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.availability.models import TimeSlot
@@ -92,3 +92,13 @@ async def release_by_booking_id(db: AsyncSession, booking_id: str) -> None:
     )
     await db.execute(stmt)
     await db.commit()
+
+
+async def delete_open_slots(db: AsyncSession, professional_id: str) -> int:
+    """Delete all unbooked slots for a professional. Booked slots are left untouched."""
+    stmt = delete(TimeSlot).where(
+        TimeSlot.professional_id == professional_id, TimeSlot.is_booked.is_(False)
+    )
+    result = await db.execute(stmt)
+    await db.commit()
+    return result.rowcount
