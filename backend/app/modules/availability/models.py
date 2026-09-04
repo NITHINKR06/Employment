@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ulid import ULID
 
@@ -35,6 +35,9 @@ class TimeSlot(Base):
     __table_args__ = (
         Index("ix_time_slots_professional_id", "professional_id"),
         Index("ix_time_slots_booking_id", "booking_id"),
+        UniqueConstraint(
+            "professional_id", "starts_at", name="uq_time_slots_professional_starts_at"
+        ),
     )
 
 

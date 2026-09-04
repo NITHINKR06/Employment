@@ -11,10 +11,29 @@ from app.modules.availability.models import TimeSlot
 async def create_many(
     db: AsyncSession, professional_id: str, windows: list[tuple[datetime, datetime]]
 ) -> list[TimeSlot]:
+    """Insert slots, skipping any that already exist for this professional at
+    that start time — makes re-running slot generation over an overlapping
+    range idempotent instead of duplicating. A uniqueness constraint on
+    (professional_id, starts_at) is the actual backstop against a race
+    between the read below and the insert; this check just avoids relying on
+    that constraint to reject most repeat calls as an error."""
+    if not windows:
+        return []
+    starts_at_values = [starts_at for starts_at, _ in windows]
+    existing = await db.execute(
+        select(TimeSlot.starts_at).where(
+            TimeSlot.professional_id == professional_id,
+            TimeSlot.starts_at.in_(starts_at_values),
+        )
+    )
+    already_covered = {row[0] for row in existing}
     slots = [
         TimeSlot(professional_id=professional_id, starts_at=starts_at, ends_at=ends_at)
         for starts_at, ends_at in windows
+        if starts_at not in already_covered
     ]
+    if not slots:
+        return []
     db.add_all(slots)
     await db.commit()
     for slot in slots:

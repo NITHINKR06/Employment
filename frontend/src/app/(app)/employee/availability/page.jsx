@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { IoInformationCircleOutline } from "react-icons/io5";
 import Button from "@/components/Button/Button";
 import TextField from "@/components/TextField/TextField";
 import { apiFetch } from "@/lib/apiClient";
@@ -123,6 +124,14 @@ export default function EmployeeAvailabilityPage() {
             className="mt-6 space-y-4 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1"
           >
             <h2 className="font-display text-headline-sm text-on-surface">Generate slots</h2>
+            <div className="flex items-start gap-1.5 rounded-lg bg-primary-container/10 p-2.5 text-label-sm text-on-surface-variant">
+              <IoInformationCircleOutline className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+              <ol className="list-decimal space-y-1 pl-4">
+                <li>Pick a start and end date, and a slot length.</li>
+                <li>Click &quot;Generate&quot; — it creates bookable slots every day in that range, 9am to 5pm.</li>
+                <li>It&apos;s safe to run again later to extend your range — dates you&apos;ve already covered are skipped, not duplicated.</li>
+              </ol>
+            </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <TextField
                 id="startDate"
