@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/lib/AuthProvider";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 const ADMIN_LINKS = [
   { href: "/admin/analytics", label: "Analytics" },
@@ -12,10 +12,10 @@ const ADMIN_LINKS = [
 ];
 
 export default function AdminLayout({ children }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useRequireAuth();
   const pathname = usePathname();
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="container py-10">
         <p className="text-body-md text-on-surface-variant">Loading...</p>
@@ -25,7 +25,7 @@ export default function AdminLayout({ children }) {
 
   // Cosmetic-only gate — the backend independently enforces require_role("ADMIN")
   // on every /admin/* endpoint, this just avoids flashing the UI at non-admins.
-  if (!user || user.role !== "ADMIN") {
+  if (user.role !== "ADMIN") {
     return (
       <div className="container py-10">
         <p className="rounded-lg border border-outline-variant bg-surface-container-lowest p-8 text-center text-body-md text-on-surface-variant">
