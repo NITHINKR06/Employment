@@ -16,8 +16,8 @@ import {
 } from "react-icons/io5";
 import ThemeToggle from "@/components/Navbar/ThemeToggle";
 import { SITE_NAME } from "@/lib/constants";
-import { notifications } from "@/data/notifications";
 import { useAuth } from "@/lib/AuthProvider";
+import { useUnreadNotifications } from "@/lib/useUnreadNotifications";
 import { getNavLinks } from "@/components/Navbar/navLinks";
 
 function isLinkActive(pathname, href) {
@@ -63,7 +63,7 @@ export default function Sidebar({ onBellClick }) {
 
   const isLoggedIn = !isLoading && !!user;
   const navLinks = getNavLinks(isLoggedIn ? user : null);
-  const hasUnreadNotifications = notifications.some((notification) => !notification.read);
+  const hasUnreadNotifications = useUnreadNotifications(isLoggedIn);
 
   const handleLogout = async () => {
     await logout();

@@ -7,11 +7,10 @@ import Button from "@/components/Button/Button";
 import BookingSummaryRow from "@/components/Booking/BookingSummaryRow";
 import WorkerCard from "@/components/WorkerCard/WorkerCard";
 import NotificationsPanel from "@/components/Notification/NotificationsPanel";
-import { notifications as initialNotifications } from "@/data/notifications";
 import { apiFetch } from "@/lib/apiClient";
 
 export default function UserDashboardPage() {
-  const [notificationsList, setNotificationsList] = useState(initialNotifications);
+  const [notificationsList, setNotificationsList] = useState([]);
   const [user, setUser] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [professionals, setProfessionals] = useState([]);
@@ -38,7 +37,7 @@ export default function UserDashboardPage() {
           timestamp: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "",
           read: Boolean(n.readAt),
         }));
-        if (liveNotifs.length > 0) setNotificationsList(liveNotifs);
+        setNotificationsList(liveNotifs);
       }
     }).finally(() => {
       if (!cancelled) setIsLoading(false);
@@ -138,7 +137,14 @@ export default function UserDashboardPage() {
             <NotificationsPanel
               notifications={notificationsList}
               variant="full"
-              onClearAll={() => setNotificationsList([])}
+              onClearAll={async () => {
+                setNotificationsList([]);
+                try {
+                  await apiFetch("/notifications", { method: "DELETE" });
+                } catch (err) {
+                  // ignore
+                }
+              }}
             />
           </div>
 
