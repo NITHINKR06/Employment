@@ -3,13 +3,33 @@
 import { useState } from "react";
 import TextField from "@/components/TextField/TextField";
 import Button from "@/components/Button/Button";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    const form = e.target;
+    const name = form["contact-name"].value.trim();
+    const email = form["contact-email"].value.trim();
+    const message = form["contact-message"].value.trim();
+
+    setError(null);
+    setSubmitting(true);
+    try {
+      await apiFetch("/contact", {
+        method: "POST",
+        body: JSON.stringify({ name, email, message }),
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -47,21 +67,23 @@ export default function ContactForm() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
-              <TextField id="contact-name" label="Name" required />
-              <TextField id="contact-email" type="email" label="Email" required />
+              <TextField id="contact-name" name="contact-name" label="Name" required />
+              <TextField id="contact-email" name="contact-email" type="email" label="Email" required />
               <div>
                 <label htmlFor="contact-message" className="mb-1.5 block text-label-md text-on-surface">
                   Message
                 </label>
                 <textarea
                   id="contact-message"
+                  name="contact-message"
                   rows={4}
                   required
                   className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-4 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
-              <Button type="submit" className="w-full">
-                Send Message
+              {error && <p className="text-label-sm text-error">{error}</p>}
+              <Button type="submit" disabled={submitting} className="w-full">
+                {submitting ? "Sending..." : "Send Message"}
               </Button>
             </form>
           )}
