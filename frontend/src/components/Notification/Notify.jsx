@@ -3,12 +3,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { IoCloseSharp } from "react-icons/io5";
-import { notifications as initialNotifications } from "@/data/notifications";
 import NotificationsPanel from "./NotificationsPanel";
 import { apiFetch } from "@/lib/apiClient";
 
 export default function Notify({ open, onClose }) {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     if (open) {
@@ -22,7 +21,7 @@ export default function Notify({ open, onClose }) {
               timestamp: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "",
               read: Boolean(n.readAt),
             }));
-            if (liveNotifs.length > 0) setNotifications(liveNotifs);
+            setNotifications(liveNotifs);
           }
         })
         .catch(() => {});

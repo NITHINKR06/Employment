@@ -9,6 +9,7 @@ const ADMIN_LINKS = [
   { href: "/admin/users", label: "Users" },
   { href: "/admin/disputes", label: "Disputes" },
   { href: "/admin/verification", label: "Verification" },
+  { href: "/admin/messages", label: "Messages" },
 ];
 
 export default function AdminLayout({ children }) {

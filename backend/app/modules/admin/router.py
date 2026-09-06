@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.core.security import require_role
-from app.modules.admin import analytics_service, dispute_service, user_service
+from app.modules.admin import analytics_service, dispute_service, message_service, user_service
 from app.modules.admin.schemas import ResolveDisputeRequest
 from app.modules.users.models import User
 
@@ -69,6 +69,15 @@ async def resolve_dispute(
 ):
     data = await dispute_service.resolve_dispute(db, user, dispute_id, resolution=body.resolution)
     return {"success": True, "data": {"dispute": data}}
+
+
+@router.get("/messages")
+async def list_contact_messages(
+    user: User = Depends(require_role("ADMIN")),
+    db: AsyncSession = Depends(get_db),
+):
+    data = await message_service.list_all_messages(db, user)
+    return {"success": True, "data": {"messages": data}}
 
 
 @router.get("/verification")

@@ -23,6 +23,11 @@ async def set_active(db: AsyncSession, user: User, is_active: bool) -> User:
     return user
 
 
+async def find_admin_ids(db: AsyncSession) -> list[str]:
+    result = await db.execute(select(User.id).where(User.role == Role.ADMIN))
+    return list(result.scalars().all())
+
+
 async def find_by_id(db: AsyncSession, user_id: str) -> User | None:
     stmt = select(User).where(User.id == user_id)
     result = await db.execute(stmt)

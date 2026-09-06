@@ -16,17 +16,17 @@ import {
 import Button from "@/components/Button/Button";
 import ThemeToggle from "@/components/Navbar/ThemeToggle";
 import { SITE_NAME } from "@/lib/constants";
-import { notifications } from "@/data/notifications";
 import { useAuth } from "@/lib/AuthProvider";
+import { useUnreadNotifications } from "@/lib/useUnreadNotifications";
 import { getNavLinks } from "@/components/Navbar/navLinks";
 
 export default function TopNavBar({ variant = "marketing", onBellClick }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
-  const hasUnreadNotifications = notifications.some((notification) => !notification.read);
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const isLoggedIn = !isLoading && !!user;
+  const hasUnreadNotifications = useUnreadNotifications(isLoggedIn);
 
   const navLinks = getNavLinks(isLoggedIn ? user : null);
   const settingsHref = user?.role === "EMPLOYEE" ? "/employee/settings" : "/user/settings";
