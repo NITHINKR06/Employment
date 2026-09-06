@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { IoInformationCircleOutline } from "react-icons/io5";
 import Button from "@/components/Button/Button";
+import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
 import TextField from "@/components/TextField/TextField";
 import { apiFetch } from "@/lib/apiClient";
 
@@ -38,6 +39,9 @@ export default function EmployeeAvailabilityPage() {
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const loadSlots = useCallback((professionalId) => {
     return apiFetch(`/availability/${professionalId}`)
@@ -97,6 +101,30 @@ export default function EmployeeAvailabilityPage() {
       setGenerateError(err.message ?? "Could not generate slots");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleDeleteAllClick = () => {
+    if (!professional || slots.length === 0) return;
+    setDeleteError("");
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteAllConfirm = async () => {
+    if (!professional) return;
+    setDeleteError("");
+    setIsDeleting(true);
+    try {
+      const body = await apiFetch(`/availability/${professional.id}`, { method: "DELETE" });
+      if (!body.success) {
+        throw new Error(body?.error?.message ?? "Could not delete slots");
+      }
+      await loadSlots(professional.id);
+      setIsDeleteDialogOpen(false);
+    } catch (err) {
+      setDeleteError(err.message ?? "Could not delete slots");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -166,12 +194,29 @@ export default function EmployeeAvailabilityPage() {
           </form>
 
           <div className="mt-6 rounded-lg bg-surface-container-lowest p-6 shadow-elevation-1">
-            <h2 className="font-display text-headline-sm text-on-surface">
-              Open slots ({openSlots.length})
-            </h2>
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="font-display text-headline-sm text-on-surface">
+                Open slots ({openSlots.length})
+              </h2>
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                className="!border-error !text-error shrink-0"
+                disabled={isDeleting || openSlots.length === 0}
+                onClick={handleDeleteAllClick}
+              >
+                Delete all slots
+              </Button>
+            </div>
             <p className="mt-1 text-label-sm text-on-surface-variant">
               Once a customer books one, it disappears from this list.
             </p>
+            {deleteError && (
+              <div className="mt-3 rounded-lg bg-error-container/20 p-3 text-label-sm font-semibold text-error">
+                {deleteError}
+              </div>
+            )}
             <div className="mt-3 flex flex-wrap gap-2">
               {openSlots.length === 0 ? (
                 <p className="text-body-md text-on-surface-variant">No open slots yet.</p>
@@ -189,6 +234,17 @@ export default function EmployeeAvailabilityPage() {
           </div>
         </>
       )}
+
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        title="Delete all open slots?"
+        description={`This will permanently delete all ${slots.length} open slot(s). This cannot be undone.`}
+        confirmLabel="Delete all"
+        danger
+        isConfirming={isDeleting}
+        onConfirm={handleDeleteAllConfirm}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+      />
     </div>
   );
 }
